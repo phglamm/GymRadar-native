@@ -56,7 +56,7 @@ export default function LoginScreen() {
     }
   };
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <Image
         source={require("../../assets/LogoColor.png")}
         style={styles.logo}
@@ -71,7 +71,7 @@ export default function LoginScreen() {
             value={phone}
             onChangeText={setPhone}
             placeholder="0123456789"
-            placeholderTextColor="#1A191A"
+            placeholderTextColor="#A39F9F"
             style={styles.input}
             keyboardType="phone-pad"
           />
@@ -83,7 +83,7 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               placeholder="********"
               secureTextEntry={secureText}
-              placeholderTextColor="#1A191A"
+              placeholderTextColor="#A39F9F"
               style={styles.passwordInput}
             />
             <TouchableOpacity
@@ -93,7 +93,7 @@ export default function LoginScreen() {
               <FontAwesome
                 name={secureText ? "eye-slash" : "eye"}
                 size={24}
-                color="#1A191A"
+                color="#ED2A46"
               />
             </TouchableOpacity>
           </View>
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#1A191A",
     backgroundColor: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 14,
   },
   passwordContainer: {
     flexDirection: "row",

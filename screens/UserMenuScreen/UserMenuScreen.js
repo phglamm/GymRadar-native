@@ -46,7 +46,7 @@ export default function UserMenuScreen() {
     },
   ];
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <LinearGradient colors={["#FF914D", "#ED2A46"]}>
         <View style={styles.userInfo}>
           <Image

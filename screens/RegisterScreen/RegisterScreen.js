@@ -28,7 +28,6 @@ export default function RegisterScreen() {
   const [secureText, setSecureText] = useState(true);
   const [secureConfirmText, setSecureConfirmText] = useState(true);
   const navigation = useNavigation();
-
   const handleRegister = async () => {
     if (!name || !phone || !password || !confirmPassword) {
       Toast.show({
@@ -67,7 +66,7 @@ export default function RegisterScreen() {
         text2: "Đăng ký thành công",
       });
 
-      navigation.navigate("Login");
+      navigation.replace("Login");
     } catch (error) {
       Toast.show({
         type: "error",
@@ -82,11 +81,11 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1 }}>
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={{ flex: 1 }}>
             <Image
               source={require("../../assets/LogoColor.png")}
               style={styles.logo}
@@ -102,7 +101,7 @@ export default function RegisterScreen() {
                   value={name}
                   onChangeText={setName}
                   placeholder="Nguyễn Văn A"
-                  placeholderTextColor="#1A191A"
+                  placeholderTextColor="#A39F9F"
                   style={styles.input}
                 />
 
@@ -111,7 +110,7 @@ export default function RegisterScreen() {
                   value={email}
                   onChangeText={setEmail}
                   placeholder="nguyenvana@email.com"
-                  placeholderTextColor="#1A191A"
+                  placeholderTextColor="#A39F9F"
                   style={styles.input}
                 />
 
@@ -120,7 +119,7 @@ export default function RegisterScreen() {
                   value={phone}
                   onChangeText={setPhone}
                   placeholder="0123456789"
-                  placeholderTextColor="#1A191A"
+                  placeholderTextColor="#A39F9F"
                   style={styles.input}
                   keyboardType="phone-pad"
                 />
@@ -132,7 +131,7 @@ export default function RegisterScreen() {
                     onChangeText={setPassword}
                     placeholder="********"
                     secureTextEntry={secureText}
-                    placeholderTextColor="#1A191A"
+                    placeholderTextColor="#A39F9F"
                     style={styles.passwordInput}
                   />
                   <TouchableOpacity
@@ -142,7 +141,7 @@ export default function RegisterScreen() {
                     <FontAwesome
                       name={secureText ? "eye-slash" : "eye"}
                       size={24}
-                      color="#1A191A"
+                      color="#ED2A46"
                     />
                   </TouchableOpacity>
                 </View>
@@ -154,7 +153,7 @@ export default function RegisterScreen() {
                     onChangeText={setConfirmPassword}
                     placeholder="********"
                     secureTextEntry={secureConfirmText}
-                    placeholderTextColor="#1A191A"
+                    placeholderTextColor="#A39F9F"
                     style={styles.passwordInput}
                   />
                   <TouchableOpacity
@@ -164,7 +163,7 @@ export default function RegisterScreen() {
                     <FontAwesome
                       name={secureConfirmText ? "eye-slash" : "eye"}
                       size={24}
-                      color="#1A191A"
+                      color="#ED2A46"
                     />
                   </TouchableOpacity>
                 </View>
@@ -188,15 +187,15 @@ export default function RegisterScreen() {
               Bạn đã có tài khoản?
               <Text
                 style={styles.loginText}
-                onPress={() => navigation.navigate("Login")}
+                onPress={() => navigation.goBack()}
               >
                 {" "}
                 Đăng nhập
               </Text>
             </Text>
-          </ScrollView>
-        </View>
-      </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -234,7 +233,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#1A191A",
     backgroundColor: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 13,
   },
   passwordContainer: {
     flexDirection: "row",
@@ -248,7 +247,7 @@ const styles = StyleSheet.create({
     height: 40,
     paddingHorizontal: 15,
     color: "#1A191A",
-    fontSize: 16,
+    fontSize: 13,
   },
   eyeIcon: {
     padding: 10,

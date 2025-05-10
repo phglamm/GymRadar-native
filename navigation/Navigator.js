@@ -9,7 +9,8 @@ import SplashScreen from "../screens/SplashSreen/SplashSreen";
 import UserMenuScreen from "../screens/UserMenuScreen/UserMenuScreen";
 import LoginScreen from "../screens/LoginScreen/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen/RegisterScreen";
-
+import { Platform } from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
   const Stack = createNativeStackNavigator();
@@ -133,7 +134,19 @@ export default function Navigator() {
   };
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        screenOptions={({ navigation, route }) => ({
+          headerTitleAlign: "center",
+          headerShown: false,
+          headerTintColor: "#ED2A46", // back button arrow color
+          headerLeft: (props) =>
+            navigation.canGoBack() ? (
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="caret-back" size={30} color="#ED2A46" />
+              </TouchableOpacity>
+            ) : null,
+        })}
+      >
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen
           name="Login"
@@ -141,7 +154,6 @@ export default function Navigator() {
           options={{
             headerShown: true,
             title: "Đăng Nhập",
-            headerTintColor: "#fff", // back button & title color
             headerTitleAlign: "center",
             headerTitleStyle: {
               fontWeight: "bold",
@@ -157,7 +169,6 @@ export default function Navigator() {
           options={{
             headerShown: true,
             title: "Đăng Ký",
-            headerTintColor: "#ED2A46", // back button & title color
             headerTitleAlign: "center",
             headerTitleStyle: {
               fontWeight: "bold",
