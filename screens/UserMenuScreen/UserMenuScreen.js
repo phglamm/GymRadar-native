@@ -4,8 +4,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "react-native";
-import { FontAwesome, MaterialIcons, Entypo } from "@expo/vector-icons";
+import {
+  FontAwesome,
+  MaterialIcons,
+  Entypo,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 export default function UserMenuScreen() {
   const [user, setUser] = useState(null);
@@ -23,28 +29,50 @@ export default function UserMenuScreen() {
     {
       icon: <FontAwesome name="user" size={30} color="#ED2A46" />,
       label: "Tài Khoản",
+      navigation: "UserMenu",
     },
     {
       icon: <FontAwesome name="address-card" size={30} color="#ED2A46" />,
       label: "Hồ Sơ",
+      navigation: "UserMenu",
     },
     {
       icon: <MaterialIcons name="settings" size={30} color="#ED2A46" />,
       label: "Cài Đặt",
+      navigation: "SettingScreen",
     },
     {
       icon: <Entypo name="ticket" size={30} color="#ED2A46" />,
       label: "Ưu Đãi",
+      navigation: "UserMenu",
     },
     {
       icon: <FontAwesome name="history" size={30} color="#ED2A46" />,
       label: "Lịch Sử Giao Dịch",
+      navigation: "UserMenu",
     },
     {
       icon: <Entypo name="help" size={30} color="#ED2A46" />,
       label: "Câu Hỏi Thường Gặp",
+      navigation: "UserMenu",
+    },
+    {
+      icon: <FontAwesome name="th-large" size={30} color="#ED2A46" />,
+      label: "Tiện Ích Khác",
+      navigation: "UserMenu",
+    },
+    {
+      icon: <MaterialCommunityIcons name="logout" size={30} color="#ED2A46" />,
+      label: "Đăng Xuất",
+      navigation: "UserMenu",
+      onPress: async () => {
+        await AsyncStorage.removeItem("user");
+        await AsyncStorage.removeItem("token");
+        navigation.replace("Login");
+      },
     },
   ];
+  const navigation = useNavigation();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <LinearGradient colors={["#FF914D", "#ED2A46"]}>
@@ -72,15 +100,19 @@ export default function UserMenuScreen() {
 
       <View style={styles.widgetContainer}>
         {menuItems.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.widget}>
+          <TouchableOpacity
+            key={index}
+            style={styles.widget}
+            onPress={() =>
+              item.onPress
+                ? item.onPress()
+                : navigation.navigate(item.navigation)
+            }
+          >
             {item.icon}
             <Text style={styles.widgetText}>{item.label}</Text>
           </TouchableOpacity>
         ))}
-        <TouchableOpacity style={styles.fullWidthWidget}>
-          <FontAwesome name="th-large" size={30} color="#ED2A46" />
-          <Text style={styles.widgetText}>Tiện Ích Khác</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -124,7 +156,7 @@ const styles = {
     width: "48%",
     backgroundColor: "#fff",
     borderRadius: 12,
-    paddingVertical: 40,
+    paddingVertical: 35,
     alignItems: "center",
     justifyContent: "center",
     marginVertical: 8,

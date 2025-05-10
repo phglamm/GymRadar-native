@@ -53,17 +53,17 @@ export default function RegisterScreen() {
       name,
       phone,
       password,
+      email,
     };
 
     try {
-      const response = await authService.register(requestData); // ✅ await it
       console.log("Registering user:", requestData);
+      const response = await authService.register(requestData); // ✅ await it
       console.log("Registration response:", response);
 
       Toast.show({
         type: "success",
-        text1: "Đăng ký",
-        text2: "Đăng ký thành công",
+        text1: "Đăng ký thành công",
       });
 
       navigation.replace("Login");

@@ -11,6 +11,8 @@ import LoginScreen from "../screens/LoginScreen/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen/RegisterScreen";
 import { Platform } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import SettingScreen from "../screens/SettingScreen/SettingScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
   const Stack = createNativeStackNavigator();
@@ -52,6 +54,11 @@ export default function Navigator() {
         <Stack.Screen
           name="User Menu"
           component={UserMenuScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="SettingScreen"
+          component={SettingScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

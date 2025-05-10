@@ -10,6 +10,7 @@ import { Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import authService from "../../services/authService";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -35,16 +36,24 @@ export default function LoginScreen() {
       const response = await authService.login(requestData); // ✅ await it
       console.log("login user:", requestData);
       console.log("Login response:", response);
-
+      AsyncStorage.setItem("token", JSON.stringify(response.data.accessToken));
+      const user = {
+        id: response.data.id,
+        phone: response.data.phone,
+        role: response.data.role,
+      };
+      AsyncStorage.setItem("user", JSON.stringify(user));
+      console.log("User data saved:", user);
       Toast.show({
         type: "success",
-        text1: "Đăng nhập",
-        text2: "Đăng nhập thành công",
+        text1: "Đăng nhập thành công",
       });
 
-      navigation.replace("MainApp", {
-        screen: "Trang chủ",
-      });
+      if (response.data.role === "USER") {
+        navigation.replace("MainApp", {
+          screen: "Trang chủ",
+        });
+      }
     } catch (error) {
       Toast.show({
         type: "error",
@@ -180,7 +189,7 @@ const styles = StyleSheet.create({
     height: 50,
     paddingHorizontal: 15,
     color: "#1A191A",
-    fontSize: 16,
+    fontSize: 14,
   },
   eyeIcon: {
     padding: 10,

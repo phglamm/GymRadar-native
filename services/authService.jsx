@@ -1,7 +1,8 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 const request = async (method, url, data = null, headers = {}, params = {}) => {
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+  console.log(API_BASE_URL);
   try {
     const response = await axios({
       method,
@@ -21,8 +22,8 @@ const request = async (method, url, data = null, headers = {}, params = {}) => {
 };
 
 const authService = {
-  login: (loginData) => request("POST", "user/auth", loginData),
-  register: (registerData) => request("POST", `user/register`, registerData),
+  login: (loginData) => request("POST", "v1/auth", loginData),
+  register: (registerData) => request("POST", `v1/account`, registerData),
 };
 
 export default authService;
