@@ -1,18 +1,31 @@
-import { View, Text } from "react-native";
-import React from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import HomeScreen from "../screens/HomeScreen.js/HomeScreen";
+import HomeScreen from "../screens/HomeScreen/HomeScreen";
 import Icon from "react-native-vector-icons/FontAwesome";
+import SplashScreen from "../screens/SplashSreen/SplashSreen";
+import UserMenuScreen from "../screens/UserMenuScreen/UserMenuScreen";
+import LoginScreen from "../screens/LoginScreen/LoginScreen";
+import RegisterScreen from "../screens/RegisterScreen/RegisterScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
   const Stack = createNativeStackNavigator();
-
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userData = await AsyncStorage.getItem("user");
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    };
+    fetchUser();
+  }, []);
   const HomeStack = () => {
     return (
-      <Stack.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen
           name="Home"
           component={HomeScreen}
@@ -33,17 +46,58 @@ export default function Navigator() {
     return <></>;
   };
   const ProfileStack = () => {
-    return <></>;
+    return (
+      <Stack.Navigator>
+        <Stack.Screen
+          name="User Menu"
+          component={UserMenuScreen}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
+    );
   };
   const MainTab = () => {
     return (
-      <Tab.Navigator>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarStyle: {
+            backgroundColor: "#ED2A46",
+          },
+          tabBarActiveTintColor: "#FFFFFF", // Active tab text color
+          tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)", // Inactive tab text color
+          tabBarLabelStyle: {
+            fontSize: 10,
+            fontWeight: "bold",
+          },
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+
+            if (route.name === "Trang chủ") {
+              iconName = "home";
+            } else if (route.name === "Bản Đồ") {
+              iconName = "map-marker";
+            } else if (route.name === "Lịch Tập") {
+              iconName = "calendar";
+            } else if (route.name === "AI Chatbox") {
+              iconName = "wechat";
+            } else if (route.name === "Tôi") {
+              iconName = "user";
+            }
+
+            // Return the icon component
+            return (
+              <View>
+                <Icon name={iconName} size={25} color={color} />
+              </View>
+            );
+          },
+        })}
+      >
         <Tab.Screen
           name="Trang chủ"
           component={HomeStack}
           options={{
             headerShown: false,
-            tabBarIcon: () => <Icon name="home" size={30} />,
           }}
         />
         <Tab.Screen
@@ -51,7 +105,6 @@ export default function Navigator() {
           component={MapStack}
           options={{
             headerShown: false,
-            tabBarIcon: () => <Icon name="map-marker" size={30} />,
           }}
         />
         <Tab.Screen
@@ -59,7 +112,6 @@ export default function Navigator() {
           component={ScheduleStack}
           options={{
             headerShown: false,
-            tabBarIcon: () => <Icon name="calendar" size={30} />,
           }}
         />
         <Tab.Screen
@@ -67,7 +119,6 @@ export default function Navigator() {
           component={ChatStack}
           options={{
             headerShown: false,
-            tabBarIcon: () => <Icon name="wechat" size={30} />,
           }}
         />
         <Tab.Screen
@@ -75,7 +126,6 @@ export default function Navigator() {
           component={ProfileStack}
           options={{
             headerShown: false,
-            tabBarIcon: () => <Icon name="user" size={30} />,
           }}
         />
       </Tab.Navigator>
@@ -83,7 +133,42 @@ export default function Navigator() {
   };
   return (
     <NavigationContainer>
-      <MainTab />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Splash" component={SplashScreen} />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{
+            headerShown: true,
+            title: "Đăng Nhập",
+            headerTintColor: "#fff", // back button & title color
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+
+        <Stack.Screen
+          name="Register"
+          component={RegisterScreen}
+          options={{
+            headerShown: true,
+            title: "Đăng Ký",
+            headerTintColor: "#ED2A46", // back button & title color
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+
+        <Stack.Screen name="MainApp" component={MainTab} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
