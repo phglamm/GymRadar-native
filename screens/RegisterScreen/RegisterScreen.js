@@ -21,6 +21,7 @@ import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function RegisterScreen() {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -101,6 +102,15 @@ export default function RegisterScreen() {
                   value={name}
                   onChangeText={setName}
                   placeholder="Nguyễn Văn A"
+                  placeholderTextColor="#1A191A"
+                  style={styles.input}
+                />
+
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="nguyenvana@email.com"
                   placeholderTextColor="#1A191A"
                   style={styles.input}
                 />
