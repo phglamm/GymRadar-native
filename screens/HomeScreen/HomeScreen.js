@@ -161,9 +161,7 @@ export default function HomeScreen() {
               >
                 Phòng Gym Nổi Bật
               </Text>
-              <Text style={{ fontSize: 13, color: "#6B6B6B" }}>
-                Xem thêm {">"}
-              </Text>
+              <Text style={{ fontSize: 13, color: "#6B6B6B" }}>Xem thêm</Text>
             </View>
 
             <PairedSwiper
@@ -188,9 +186,7 @@ export default function HomeScreen() {
               >
                 Phòng Gym Gần Tôi
               </Text>
-              <Text style={{ fontSize: 13, color: "#6B6B6B" }}>
-                Xem thêm {">"}
-              </Text>
+              <Text style={{ fontSize: 13, color: "#6B6B6B" }}>Xem thêm</Text>
             </View>
 
             <PairedSwiper
@@ -214,9 +210,7 @@ export default function HomeScreen() {
               >
                 Blog
               </Text>
-              <Text style={{ fontSize: 13, color: "#6B6B6B" }}>
-                Xem thêm {">"}
-              </Text>
+              <Text style={{ fontSize: 13, color: "#6B6B6B" }}>Xem thêm</Text>
             </View>
 
             <PairedSwiper
@@ -260,6 +254,5 @@ const styles = StyleSheet.create({
   },
   swiperContainer: {
     height: 230,
-    // width: "100%",
   },
 });
