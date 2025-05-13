@@ -20,7 +20,7 @@ export default function HeaderHome({ user }) {
             placeholderTextColor="#A39F9F"
             style={styles.input}
           />
-          <Ionicons name="cart" size={30} color="white" />{" "}
+          <Ionicons name="cart" size={30} color="white" />
           <Ionicons name="notifications-sharp" size={30} color="white" />
         </View>
       </View>
