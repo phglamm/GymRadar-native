@@ -2,9 +2,11 @@ import { View, Text, StyleSheet, TextInput } from "react-native";
 import React, { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useNavigation } from "@react-navigation/native";
 
 export default function HeaderHome({ user }) {
   const [searchText, setSearchText] = useState("");
+  const navigation = useNavigation();
   return (
     <LinearGradient colors={["#FF914D", "#ED2A46"]} style={{ paddingTop: 30 }}>
       <View style={styles.header}>
@@ -20,7 +22,12 @@ export default function HeaderHome({ user }) {
             placeholderTextColor="#A39F9F"
             style={styles.input}
           />
-          <Ionicons name="cart" size={30} color="white" />
+          <Ionicons
+            name="cart"
+            size={30}
+            color="white"
+            onPress={() => navigation.navigate("CartScreen")}
+          />
           <Ionicons name="notifications-sharp" size={30} color="white" />
         </View>
       </View>

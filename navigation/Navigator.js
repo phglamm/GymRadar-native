@@ -15,6 +15,9 @@ import SettingScreen from "../screens/SettingScreen/SettingScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import GymDetailScreen from "../screens/GymDetailScreen/GymDetailScreen";
 import GymPTScreen from "../screens/GymPTScreen/GymPTScreen";
+import CartScreen from "../screens/CartScreen/CartScreen";
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
+
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
   const Stack = createNativeStackNavigator();
@@ -66,6 +69,15 @@ export default function Navigator() {
             title: "Danh sách PT",
           }}
         />
+        <Stack.Screen
+          name="CartScreen"
+          component={CartScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Giỏ hàng",
+          }}
+        />
       </Stack.Navigator>
     );
   };
@@ -97,39 +109,48 @@ export default function Navigator() {
   const MainTab = () => {
     return (
       <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarStyle: {
-            backgroundColor: "#ED2A46",
-          },
-          tabBarActiveTintColor: "#FFFFFF", // Active tab text color
-          tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)", // Inactive tab text color
-          tabBarLabelStyle: {
-            fontSize: 10,
-            fontWeight: "bold",
-          },
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
+        screenOptions={({ route }) => {
+          // Get the route name from the navigator
+          const routeName = getFocusedRouteNameFromRoute(route) ?? "";
 
-            if (route.name === "Trang chủ") {
-              iconName = "home";
-            } else if (route.name === "Bản Đồ") {
-              iconName = "map-marker";
-            } else if (route.name === "Lịch Tập") {
-              iconName = "calendar";
-            } else if (route.name === "AI Chatbox") {
-              iconName = "wechat";
-            } else if (route.name === "Tôi") {
-              iconName = "user";
-            }
+          // Check if CartScreen is active
+          const shouldHideTabBar = routeName === "CartScreen";
 
-            // Return the icon component
-            return (
-              <View>
-                <Icon name={iconName} size={25} color={color} />
-              </View>
-            );
-          },
-        })}
+          return {
+            tabBarStyle: shouldHideTabBar
+              ? { display: "none" }
+              : {
+                  backgroundColor: "#ED2A46",
+                },
+            tabBarActiveTintColor: "#FFFFFF",
+            tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)",
+            tabBarLabelStyle: {
+              fontSize: 10,
+              fontWeight: "bold",
+            },
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
+
+              if (route.name === "Trang chủ") {
+                iconName = "home";
+              } else if (route.name === "Bản Đồ") {
+                iconName = "map-marker";
+              } else if (route.name === "Lịch Tập") {
+                iconName = "calendar";
+              } else if (route.name === "AI Chatbox") {
+                iconName = "wechat";
+              } else if (route.name === "Tôi") {
+                iconName = "user";
+              }
+
+              return (
+                <View>
+                  <Icon name={iconName} size={25} color={color} />
+                </View>
+              );
+            },
+          };
+        }}
       >
         <Tab.Screen
           name="Trang chủ"
