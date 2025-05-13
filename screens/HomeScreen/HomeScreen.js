@@ -4,8 +4,8 @@ import HeaderHome from "../../components/HeaderHome/HeaderHome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CarouselNative from "../../components/Carousel/Carousel";
 import GymCard from "../../components/GymCard/GymCard";
-import PairedSwiper from "../../components/PairSwiper/PairSwiper";
 import BlogCard from "../../components/BlogCard/BlogCard";
+import PairedSwiper from "../../components/PairSwiper/PairSwiper";
 
 export default function HomeScreen() {
   const [user, setUser] = useState(null);
