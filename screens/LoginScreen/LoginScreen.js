@@ -36,24 +36,34 @@ export default function LoginScreen() {
       const response = await authService.login(requestData); // ✅ await it
       console.log("login user:", requestData);
       console.log("Login response:", response);
+
+      if (response.data.role === "USER") {
+        navigation.replace("MainApp", {
+          screen: "Home",
+        });
+        Toast.show({
+          type: "success",
+          text1: "Đăng nhập thành công",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Tài khoản không hợp lệ",
+          visibilityTime: 2000,
+        });
+        return;
+      }
+
       AsyncStorage.setItem("token", JSON.stringify(response.data.accessToken));
       const user = {
         id: response.data.id,
+        fullName: response.data.fullName,
         phone: response.data.phone,
         role: response.data.role,
       };
       AsyncStorage.setItem("user", JSON.stringify(user));
       console.log("User data saved:", user);
-      Toast.show({
-        type: "success",
-        text1: "Đăng nhập thành công",
-      });
-
-      if (response.data.role === "USER") {
-        navigation.replace("MainApp", {
-          screen: "Trang chủ",
-        });
-      }
     } catch (error) {
       Toast.show({
         type: "error",

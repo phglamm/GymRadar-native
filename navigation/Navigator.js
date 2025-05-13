@@ -13,6 +13,8 @@ import { Platform } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import SettingScreen from "../screens/SettingScreen/SettingScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import GymDetailScreen from "../screens/GymDetailScreen/GymDetailScreen";
+import GymPTScreen from "../screens/GymPTScreen/GymPTScreen";
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
   const Stack = createNativeStackNavigator();
@@ -28,12 +30,40 @@ export default function Navigator() {
   }, []);
   const HomeStack = () => {
     return (
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        screenOptions={({ navigation, route }) => ({
+          headerTitleAlign: "center",
+          headerShown: false,
+          headerTintColor: "#ED2A46", // back button arrow color
+          headerLeft: (props) =>
+            navigation.canGoBack() ? (
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="caret-back" size={30} color="#ED2A46" />
+              </TouchableOpacity>
+            ) : null,
+        })}
+      >
         <Stack.Screen
           name="Home"
           component={HomeScreen}
           options={{
             headerTitleAlign: "center",
+          }}
+        />
+        <Stack.Screen
+          name="GymDetailScreen"
+          component={GymDetailScreen}
+          options={{
+            headerTitleAlign: "center",
+          }}
+        />
+        <Stack.Screen
+          name="GymPTScreen"
+          component={GymPTScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Danh sách PT",
           }}
         />
       </Stack.Navigator>

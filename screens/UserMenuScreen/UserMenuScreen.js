@@ -74,8 +74,11 @@ export default function UserMenuScreen() {
   ];
   const navigation = useNavigation();
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
-      <LinearGradient colors={["#FF914D", "#ED2A46"]}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+      <LinearGradient
+        colors={["#FF914D", "#ED2A46"]}
+        style={{ paddingTop: 30 }}
+      >
         <View style={styles.userInfo}>
           <Image
             source={{
@@ -114,7 +117,7 @@ export default function UserMenuScreen() {
           </TouchableOpacity>
         ))}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
