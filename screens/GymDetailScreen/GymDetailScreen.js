@@ -5,18 +5,27 @@ import {
   StyleSheet,
   Image,
   ScrollView,
+  Button,
 } from "react-native";
-import React from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CarouselNative from "../../components/Carousel/Carousel";
 import { TouchableOpacity } from "react-native";
 import { StarRatingDisplay } from "react-native-star-rating-widget";
 import { useNavigation } from "@react-navigation/native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { LinearGradient } from "expo-linear-gradient";
 const { width } = Dimensions.get("window");
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;
   const { gym } = route.params;
+  const bottomSheetRef = useRef(null);
+  const snapPoints = useMemo(() => ["50%", "70%"], []);
+  const handleSheetChanges = useCallback((index) => {
+    console.log("handleSheetChanges", index);
+  }, []);
 
   const image = [
     {
@@ -60,6 +69,36 @@ export default function GymDetailScreen({ route }) {
     },
   ];
 
+  const gymDetail = {
+    id: 1,
+    gymId: 1,
+    gymName: "Gym A",
+    packageNormal: [
+      {
+        packageId: 1,
+        packageName: "Gói 1 tháng",
+        packagePrice: 1000000,
+      },
+      {
+        packageId: 2,
+        packageName: "Gói 3 tháng",
+        packagePrice: 2500000,
+      },
+    ],
+    packagePT: [
+      {
+        packageId: 1,
+        packageName: "Gói 1 tháng kèm 12 buổi PT",
+        packagePrice: 2000000,
+      },
+      {
+        packageId: 2,
+        packageName: "Gói 3 tháng kèm 15 buổi PT",
+        packagePrice: 5000000,
+      },
+    ],
+  };
+
   const navigation = useNavigation();
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
@@ -83,7 +122,7 @@ export default function GymDetailScreen({ route }) {
             >
               <Text style={styles.buttonText}>Tham Khảo Danh Sách PT</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => bottomSheetRef.current?.expand()}>
               <Text style={styles.buttonText}>Tham Khảo Gói Tập</Text>
             </TouchableOpacity>
           </View>
@@ -115,6 +154,95 @@ export default function GymDetailScreen({ route }) {
           </View>
         </View>
       </ScrollView>
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1} // -1 = hidden initially
+        snapPoints={snapPoints}
+        onChange={handleSheetChanges}
+        enablePanDownToClose={true}
+        style={styles.sheetContainer}
+      >
+        <BottomSheetView style={styles.contentContainer}>
+          <Text style={styles.bottomSheetTitle}>Lựa chọn gói tập</Text>
+          <View style={styles.packageContainer}>
+            <LinearGradient
+              colors={["#FF914D", "#ED2A46"]}
+              style={styles.packageTitleContainer}
+            >
+              <Text style={styles.packageTitle}>Gói Tập Tháng</Text>
+            </LinearGradient>
+            {gymDetail.packageNormal.map((item) => (
+              <View
+                key={item.packageId}
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#D9D9D9",
+                  paddingVertical: 10,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <View>
+                  <Text style={styles.packageName}>{item.packageName}</Text>
+                  <Text style={styles.packagePrice}>
+                    {item.packagePrice.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    })}
+                  </Text>
+                </View>
+                <TouchableOpacity>
+                  <AntDesign
+                    name="pluscircleo"
+                    size={24}
+                    color="#ED2A46"
+                    style={{ marginRight: 20 }}
+                  />
+                </TouchableOpacity>
+              </View>
+            ))}
+
+            <LinearGradient
+              colors={["#FF914D", "#ED2A46"]}
+              style={styles.packageTitleContainer}
+            >
+              <Text style={styles.packageTitle}>Gói Tập Tháng Kèm PT</Text>
+            </LinearGradient>
+            {gymDetail.packagePT.map((item) => (
+              <View
+                key={item.packageId}
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#D9D9D9",
+                  paddingVertical: 10,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <View>
+                  <Text style={styles.packageName}>{item.packageName}</Text>
+                  <Text style={styles.packagePrice}>
+                    {item.packagePrice.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    })}
+                  </Text>
+                </View>
+                <TouchableOpacity>
+                  <AntDesign
+                    name="pluscircleo"
+                    size={24}
+                    color="#ED2A46"
+                    style={{ marginRight: 20 }}
+                  />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        </BottomSheetView>
+      </BottomSheet>
     </View>
   );
 }
@@ -227,5 +355,55 @@ const styles = StyleSheet.create({
     color: "#444",
     marginTop: 10,
     marginLeft: 50,
+  },
+
+  sheetContainer: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 1,
+      height: 1,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 100,
+    elevation: 6,
+  },
+  contentContainer: {
+    flex: 1,
+    // alignItems: "center",
+    // justifyContent: "center",
+    // padding: 20,
+  },
+
+  bottomSheetTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FF914D",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  packageContainer: {
+    marginTop: 10,
+  },
+  packageTitleContainer: {},
+  packageTitle: {
+    fontSize: 15,
+    color: "#FFFFFF",
+    paddingVertical: 10,
+    marginLeft: 20,
+  },
+  packageName: {
+    fontSize: 15,
+    color: "#000000",
+    // paddingVertical: 10,
+    marginLeft: 20,
+  },
+  packagePrice: {
+    fontSize: 13,
+    color: "#ED2A46",
+    marginLeft: 20,
+    marginTop: 5,
   },
 });
