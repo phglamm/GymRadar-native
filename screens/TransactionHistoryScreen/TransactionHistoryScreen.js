@@ -72,6 +72,8 @@ export default function TransactionHistoryScreen() {
               </TouchableOpacity>
             </View>
 
+            <View style={styles.separator} />
+
             <View style={styles.cardFooter}>
               <Text>
                 Tổng thanh toán: <Text style={styles.price}>{item.price}</Text>
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#D6EFF2',
     margin: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     paddingHorizontal: 8,
     height: 36,
   },
@@ -157,7 +159,7 @@ const styles = StyleSheet.create({
   },
   gymName: {
     fontWeight: 'bold',
-    color: '#ED2A46',
+    color: '#FF914D',
   },
   package: {
     fontSize: 14,
@@ -183,4 +185,10 @@ const styles = StyleSheet.create({
     color: 'green',
     fontWeight: '600',
   },
+  separator: {
+  height: 1,
+  backgroundColor: '#E0E0E0',
+  marginVertical: 8,
+},
+
 });
