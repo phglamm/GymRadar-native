@@ -161,7 +161,6 @@ export default function HomeScreen() {
               >
                 Phòng Gym Nổi Bật
               </Text>
-              <Text style={{ fontSize: 13, color: "#6B6B6B" }}>Xem thêm</Text>
             </View>
 
             <PairedSwiper

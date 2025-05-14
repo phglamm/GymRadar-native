@@ -1,18 +1,57 @@
-import React, { useEffect } from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
-const SplashScreen = ({ navigation }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      //   navigation.replace("MainApp");
-      navigation.replace("Login");
-    }, 3000); // 3 seconds
+import React, { useEffect, useState } from "react";
+import { View, Text, Image, StyleSheet, Alert } from "react-native";
+import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-    return () => clearTimeout(timer);
+const SplashScreen = ({ navigation }) => {
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  useEffect(() => {
+    // Request location permission and navigate after splash timeout
+    const setupLocationAndNavigation = async () => {
+      // Request location permission
+      await requestLocationPermission();
+
+      // Set timer for splash screen
+      const timer = setTimeout(() => {
+        navigation.replace("Login");
+      }, 3000); // 3 seconds
+
+      return () => clearTimeout(timer);
+    };
+
+    setupLocationAndNavigation();
   }, []);
+
+  const requestLocationPermission = async () => {
+    try {
+      // Request permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        Alert.alert(
+          "Location Permission Required",
+          "GymRadar needs your location to find gyms near you. Please enable location access in your device settings.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      AsyncStorage.setItem("userLocation", JSON.stringify(location));
+      console.log(location);
+    } catch (error) {
+      console.error("Error getting location:", error);
+      setErrorMsg(`Error getting location: ${error.message}`);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Your splash screen content */}
       <Image
         source={require("../../assets/LogoColor.png")}
         style={styles.logo}
@@ -37,7 +76,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 35,
     fontWeight: "bold",
-    // marginTop: 5,
     color: "#ED2A46",
   },
 });
