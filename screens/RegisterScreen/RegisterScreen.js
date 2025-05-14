@@ -20,7 +20,7 @@ import authService from "../../services/authService";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function RegisterScreen() {
-  const [name, setName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +29,7 @@ export default function RegisterScreen() {
   const [secureConfirmText, setSecureConfirmText] = useState(true);
   const navigation = useNavigation();
   const handleRegister = async () => {
-    if (!name || !phone || !password || !confirmPassword) {
+    if (!fullName || !phone || !password || !confirmPassword) {
       Toast.show({
         type: "error",
         text1: "Error",
@@ -50,10 +50,10 @@ export default function RegisterScreen() {
     }
 
     const requestData = {
-      name,
       phone,
       password,
       email,
+      fullName,
     };
 
     try {
@@ -98,8 +98,8 @@ export default function RegisterScreen() {
               <View style={styles.userInput}>
                 <Text style={styles.label}>Họ và Tên</Text>
                 <TextInput
-                  value={name}
-                  onChangeText={setName}
+                  value={fullName}
+                  onChangeText={setFullName}
                   placeholder="Nguyễn Văn A"
                   placeholderTextColor="#A39F9F"
                   style={styles.input}
