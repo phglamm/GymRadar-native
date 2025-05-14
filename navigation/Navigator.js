@@ -17,6 +17,7 @@ import GymDetailScreen from "../screens/GymDetailScreen/GymDetailScreen";
 import GymPTScreen from "../screens/GymPTScreen/GymPTScreen";
 import CartScreen from "../screens/CartScreen/CartScreen";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
+import MapScreen from "../screens/MapScreen/MapScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -82,7 +83,19 @@ export default function Navigator() {
     );
   };
   const MapStack = () => {
-    return <></>;
+    return (
+      <Stack.Navigator>
+        <Stack.Screen
+          name="MapScreen"
+          component={MapScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Bản đồ",
+          }}
+        />
+      </Stack.Navigator>
+    );
   };
   const ScheduleStack = () => {
     return <></>;
