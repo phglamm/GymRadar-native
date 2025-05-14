@@ -1,41 +1,34 @@
 import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import Foundation from "@expo/vector-icons/Foundation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TextInput } from "react-native";
+import gymService from "../../services/gymService";
 
 export default function GymPTScreen({ route }) {
   const { gymId } = route.params;
 
   const { gym } = route.params;
   const [searchText, setSearchText] = useState("");
-
-  const pt = [
-    {
-      id: 1,
-      name: "Nguyễn Văn A",
-      avatar:
-        "https://static.vecteezy.com/system/resources/thumbnails/027/951/137/small_2x/stylish-spectacles-guy-3d-avatar-character-illustrations-png.png",
-      gender: "Male",
-      age: 25,
-      GoalTraining: "Giảm cân",
-      experience: "5 năm",
-    },
-    {
-      id: 2,
-      name: "Nguyễn Văn B",
-      avatar:
-        "https://static.vecteezy.com/system/resources/thumbnails/027/951/137/small_2x/stylish-spectacles-guy-3d-avatar-character-illustrations-png.png",
-      gender: "Female",
-      age: 30,
-      GoalTraining: "Tang cân",
-      experience: "10 năm",
-    },
-  ];
+  const [pt, setPT] = useState([]);
+  useEffect(() => {
+    const fetchPT = async () => {
+      try {
+        const response = await gymService.getPTByGymId(gymId);
+        const { items, total, page: currentPage } = response.data;
+        setPT(items);
+        console.log("PT:", items);
+        console.log(response);
+      } catch (error) {
+        console.error("Error fetching PT:", error);
+      }
+    };
+    fetchPT();
+  }, []);
 
   const filteredPT = pt.filter((item) =>
-    item.name.toLowerCase().includes(searchText.toLowerCase())
+    item.fullName.toLowerCase().includes(searchText.toLowerCase())
   );
   return (
     <View style={styles.container}>
@@ -55,8 +48,15 @@ export default function GymPTScreen({ route }) {
               colors={["#FF914D", "#ED2A46"]}
               style={styles.ptSection}
             >
-              <Image source={{ uri: item.avatar }} style={styles.avatar} />
-              <View style={{ alignItems: "start" }}>
+              <Image
+                source={{
+                  uri:
+                    item.avatar ||
+                    "https://static.vecteezy.com/system/resources/thumbnails/027/951/137/small_2x/stylish-spectacles-guy-3d-avatar-character-illustrations-png.png",
+                }}
+                style={styles.avatar}
+              />
+              <View style={{ alignItems: "start", width: 200 }}>
                 <Text
                   style={{
                     fontSize: 20,
@@ -65,7 +65,7 @@ export default function GymPTScreen({ route }) {
                     marginBottom: 20,
                   }}
                 >
-                  {item.name}
+                  {item.fullName}
                 </Text>
                 {item.gender === "Male" ? (
                   <View
@@ -129,7 +129,7 @@ export default function GymPTScreen({ route }) {
                     style={{ width: 30 }}
                   />
                   <Text style={{ color: "white", fontSize: 16 }}>
-                    {item.GoalTraining}
+                    {item.goalTraining}
                   </Text>
                 </View>
               </View>

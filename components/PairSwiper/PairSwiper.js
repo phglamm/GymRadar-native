@@ -30,7 +30,7 @@ const PairedSwiper = ({
   autoplay = false,
   autoplayTimeout = 3,
   loop = true,
-  height = 240,
+  height,
   dotStyle = {},
   activeDotStyle = {},
   showsButtons = false,

@@ -19,6 +19,7 @@
     "axios": "^1.9.0",
     "expo": "~53.0.8",
     "expo-linear-gradient": "~14.1.4",
+    "expo-location": "~18.1.5",
     "expo-status-bar": "~2.2.3",
     "gymradar-native": "file:",
     "react": "19.0.0",
@@ -36,8 +37,7 @@
     "react-native-swiper": "^1.6.0",
     "react-native-toast-message": "^2.3.0",
     "react-native-vector-icons": "^10.2.0",
-    "reanimated-bottom-sheet": "^1.0.0-alpha.22",
-    "expo-location": "~18.1.5"
+    "reanimated-bottom-sheet": "^1.0.0-alpha.22"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

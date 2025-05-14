@@ -6,9 +6,12 @@ import CarouselNative from "../../components/Carousel/Carousel";
 import GymCard from "../../components/GymCard/GymCard";
 import BlogCard from "../../components/BlogCard/BlogCard";
 import PairedSwiper from "../../components/PairSwiper/PairSwiper";
+import gymService from "../../services/gymService";
 
 export default function HomeScreen() {
   const [user, setUser] = useState(null);
+  const [hotResearchGym, setHotResearchGym] = useState([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchUser = async () => {
       const userData = await AsyncStorage.getItem("user");
@@ -16,64 +19,31 @@ export default function HomeScreen() {
         setUser(JSON.parse(userData));
       }
     };
+
+    const fetchHotResearchGym = async (page = 1, pageSize = 10) => {
+      setLoading(true);
+      try {
+        const response = await gymService.getHotResearchGym({
+          page,
+          size: pageSize,
+        });
+        const { items, total, page: currentPage } = response.data;
+        const hotResearchGyms = items.filter((item) => item.hotResearch);
+
+        setHotResearchGym(items);
+        console.log("Hot Gym:", items);
+        console.log(response);
+      } catch (error) {
+        console.error("Error fetching hot research gym:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUser();
+    fetchHotResearchGym();
   }, []);
   const { width } = Dimensions.get("window");
   const widthCarousel = width - 30;
-  const handleGymPress = (gym) => {
-    console.log("Gym selected:", gym.name);
-  };
-
-  const gym = [
-    {
-      id: 1,
-      name: "Gym 1",
-      imageUrl:
-        "https://img.freepik.com/free-psd/gym-fitness-facebook-cover-banner-template_106176-3896.jpg?semt=ais_hybrid&w=740",
-      rating: 4.5,
-      totalVote: 100,
-      address:
-        "123 Main St, City 123 Main St, City123 Main St, City123 Main St, City123 Main St, City123 Main St, City123 Main St, City",
-    },
-    {
-      id: 2,
-      name: "Gym 2",
-      imageUrl:
-        "https://img.freepik.com/premium-psd/fitness-gym-red-banner-template_1073294-95.jpg",
-      rating: 3.5,
-      totalVote: 120,
-      address:
-        "123, City 123 Main St, City123 Main St, City123 Main St, City123 Main St, City123 Main St, City123 Main St, City",
-    },
-    {
-      id: 3,
-      name: "Gym 3",
-      imageUrl:
-        "https://img.freepik.com/premium-psd/red-horizontal-workout-gym-poster-banner_179813-347.jpg",
-      rating: 1.5,
-      totalVote: 10,
-      address:
-        "City 123 Main St, City123 Main St, City123 Main St, City123 Main St, City",
-    },
-    {
-      id: 4,
-      name: "Gym 4",
-      imageUrl:
-        "https://img.freepik.com/free-psd/gym-fitness-facebook-cover-banner-template_106176-3896.jpg?semt=ais_hybrid&w=740",
-      rating: 4.0,
-      totalVote: 95,
-      address: "456 Second St, City",
-    },
-    {
-      id: 5,
-      name: "Gym 5",
-      imageUrl:
-        "https://img.freepik.com/premium-psd/fitness-gym-red-banner-template_1073294-95.jpg",
-      rating: 3.8,
-      totalVote: 75,
-      address: "789 Third Ave, City",
-    },
-  ];
 
   const blog = [
     {
@@ -163,16 +133,23 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            <PairedSwiper
-              data={gym}
-              renderItem={renderGymCard}
-              itemsPerSlide={2}
-              height={240}
-              loop={true}
-              dotStyle={{ backgroundColor: "#D9D9D9" }}
-              activeDotStyle={{ backgroundColor: "#ED2A46" }}
-              containerStyle={styles.swiperContainer}
-            />
+            {loading ? (
+              <></>
+            ) : hotResearchGym && hotResearchGym.length > 0 ? (
+              <PairedSwiper
+                data={hotResearchGym}
+                renderItem={renderGymCard}
+                showsPagination={true}
+                itemsPerSlide={2}
+                height={220}
+                loop={hotResearchGym.length > 2}
+                dotStyle={{ backgroundColor: "#D9D9D9" }}
+                activeDotStyle={{ backgroundColor: "#ED2A46" }}
+                containerStyle={styles.swiperContainer}
+              />
+            ) : (
+              <></>
+            )}
           </View>
 
           <View style={styles.gymSection}>
@@ -188,16 +165,23 @@ export default function HomeScreen() {
               <Text style={{ fontSize: 13, color: "#6B6B6B" }}>Xem thêm</Text>
             </View>
 
-            <PairedSwiper
-              data={gym}
-              renderItem={renderGymCard}
-              itemsPerSlide={2}
-              height={240}
-              loop={true}
-              dotStyle={{ backgroundColor: "#D9D9D9" }}
-              activeDotStyle={{ backgroundColor: "#ED2A46" }}
-              containerStyle={styles.swiperContainer}
-            />
+            {loading ? (
+              <></>
+            ) : hotResearchGym && hotResearchGym.length > 0 ? (
+              <PairedSwiper
+                data={hotResearchGym}
+                showsPagination={true}
+                renderItem={renderGymCard}
+                itemsPerSlide={2}
+                height={220}
+                loop={true}
+                dotStyle={{ backgroundColor: "#D9D9D9" }}
+                activeDotStyle={{ backgroundColor: "#ED2A46" }}
+                containerStyle={styles.swiperContainer}
+              />
+            ) : (
+              <></>
+            )}
           </View>
           <View style={styles.gymSection}>
             <View style={styles.titleContainer}>
@@ -215,8 +199,9 @@ export default function HomeScreen() {
             <PairedSwiper
               data={blog}
               renderItem={renderBlogCard}
+              showsPagination={true}
               itemsPerSlide={2}
-              height={240}
+              height={200}
               loop={true}
               dotStyle={{ backgroundColor: "#D9D9D9" }}
               activeDotStyle={{ backgroundColor: "#ED2A46" }}
@@ -252,6 +237,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   swiperContainer: {
-    height: 230,
+    paddingBottom: 20,
   },
 });

@@ -7,7 +7,13 @@ import {
   ScrollView,
   Button,
 } from "react-native";
-import React, { useCallback, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CarouselNative from "../../components/Carousel/Carousel";
 import { TouchableOpacity } from "react-native";
@@ -18,15 +24,51 @@ import { LinearGradient } from "expo-linear-gradient";
 const { width } = Dimensions.get("window");
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Toast from "react-native-toast-message";
+import gymService from "../../services/gymService";
 
 export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;
-  const { gym } = route.params;
   const bottomSheetRef = useRef(null);
   const snapPoints = useMemo(() => ["50%", "70%"], []);
   const handleSheetChanges = useCallback((index) => {
     console.log("handleSheetChanges", index);
   }, []);
+
+  const [gymDetail, setGymDetail] = useState({});
+  const [gymCourse, setGymCourse] = useState([]);
+  useEffect(() => {
+    const fetchGymDetail = async () => {
+      try {
+        const response = await gymService.getGymById(gymId);
+        console.log("gymDetail response:", response);
+        console.log(("gymDetail:", response.data));
+        setGymDetail(response.data);
+      } catch (error) {
+        console.error("Error fetching gym detail:", error);
+      }
+    };
+
+    const fetchCourseGym = async () => {
+      try {
+        const response = await gymService.getCourseByGymId(gymId);
+        console.log("Course Gym Response:", response);
+        console.log("Course Gym:", response.data);
+        const { items, total, page: currentPage } = response.data;
+
+        const courseFiltered = {
+          packageNormal: items.filter((item) => item.type === "Normal"),
+          packagePT: items.filter((item) => item.type === "WithPT"),
+        };
+        console.log("Course Gym Filtered:", courseFiltered);
+        setGymCourse(courseFiltered);
+      } catch (error) {
+        console.error("Error fetching course gym:", error);
+      }
+    };
+
+    fetchGymDetail();
+    fetchCourseGym();
+  }, [gymId]);
 
   const image = [
     {
@@ -70,41 +112,41 @@ export default function GymDetailScreen({ route }) {
     },
   ];
 
-  const gymDetail = {
-    id: 1,
-    gymId: 1,
-    gymName: "Gym A",
-    packageNormal: [
-      {
-        packageId: 1,
-        packageName: "Gói 1 tháng",
-        packagePrice: 1000000,
-      },
-      {
-        packageId: 2,
-        packageName: "Gói 3 tháng",
-        packagePrice: 2500000,
-      },
-    ],
-    packagePT: [
-      {
-        packageId: 1,
-        packageName: "Gói 1 tháng kèm 12 buổi PT",
-        packagePrice: 2000000,
-      },
-      {
-        packageId: 2,
-        packageName: "Gói 3 tháng kèm 15 buổi PT",
-        packagePrice: 5000000,
-      },
-    ],
-  };
+  // const gymDetail = {
+  //   id: 1,
+  //   gymId: 1,
+  //   gymName: "Gym A",
+  //   packageNormal: [
+  //     {
+  //       packageId: 1,
+  //       packageName: "Gói 1 tháng",
+  //       packagePrice: 1000000,
+  //     },
+  //     {
+  //       packageId: 2,
+  //       packageName: "Gói 3 tháng",
+  //       packagePrice: 2500000,
+  //     },
+  //   ],
+  //   packagePT: [
+  //     {
+  //       packageId: 1,
+  //       packageName: "Gói 1 tháng kèm 12 buổi PT",
+  //       packagePrice: 2000000,
+  //     },
+  //     {
+  //       packageId: 2,
+  //       packageName: "Gói 3 tháng kèm 15 buổi PT",
+  //       packagePrice: 5000000,
+  //     },
+  //   ],
+  // };
 
   const handleAddToCart = (packageGym) => {
     Toast.show({
       type: "success",
       text1: "Thêm vào giỏ hàng thành công",
-      text2: `Gói tập ${packageGym.packageName} đã được thêm vào giỏ hàng`,
+      text2: `Gói tập ${packageGym.name} đã được thêm vào giỏ hàng`,
       visibilityTime: 2000,
     });
   };
@@ -123,9 +165,9 @@ export default function GymDetailScreen({ route }) {
         />
 
         <View style={styles.cardDetail}>
-          <Text style={styles.gymName}>{gym?.name}</Text>
-          <Text style={styles.gymAddress}>📍{gym?.address}</Text>
-          <Text style={styles.gymStartPrice}>7,000,000đ / tháng</Text>
+          <Text style={styles.gymName}>{gymDetail?.gymName}</Text>
+          <Text style={styles.gymAddress}>📍{gymDetail?.address}</Text>
+          <Text style={styles.gymStartPrice}> từ 7,000,000đ / tháng</Text>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               onPress={() => navigation.navigate("GymPTScreen", { gymId })}
@@ -152,7 +194,7 @@ export default function GymDetailScreen({ route }) {
                 </View>
                 <StarRatingDisplay
                   starSize={25}
-                  rating={gym.rating}
+                  rating={comment?.rating || 0}
                   maxStars={5}
                   enableHalfStar={true}
                   style={{ marginLeft: 40 }}
@@ -181,9 +223,9 @@ export default function GymDetailScreen({ route }) {
             >
               <Text style={styles.packageTitle}>Gói Tập Tháng</Text>
             </LinearGradient>
-            {gymDetail.packageNormal.map((item) => (
+            {gymCourse?.packageNormal?.map((item) => (
               <View
-                key={item.packageId}
+                key={item.id}
                 style={{
                   borderBottomWidth: 1,
                   borderBottomColor: "#D9D9D9",
@@ -194,9 +236,9 @@ export default function GymDetailScreen({ route }) {
                 }}
               >
                 <View>
-                  <Text style={styles.packageName}>{item.packageName}</Text>
+                  <Text style={styles.packageName}>{item.name}</Text>
                   <Text style={styles.packagePrice}>
-                    {item.packagePrice.toLocaleString("vi-VN", {
+                    {item.price.toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
                     })}
@@ -220,9 +262,9 @@ export default function GymDetailScreen({ route }) {
             >
               <Text style={styles.packageTitle}>Gói Tập Tháng Kèm PT</Text>
             </LinearGradient>
-            {gymDetail.packagePT.map((item) => (
+            {gymCourse?.packagePT?.map((item) => (
               <View
-                key={item.packageId}
+                key={item.id}
                 style={{
                   borderBottomWidth: 1,
                   borderBottomColor: "#D9D9D9",
@@ -233,9 +275,9 @@ export default function GymDetailScreen({ route }) {
                 }}
               >
                 <View>
-                  <Text style={styles.packageName}>{item.packageName}</Text>
+                  <Text style={styles.packageName}>{item.name}</Text>
                   <Text style={styles.packagePrice}>
-                    {item.packagePrice.toLocaleString("vi-VN", {
+                    {item.price.toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
                     })}

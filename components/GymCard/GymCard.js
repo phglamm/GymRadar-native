@@ -22,15 +22,15 @@ export default function GymCard({ gym }) {
       />
       <View style={styles.infoContainer}>
         <Text style={styles.name} numberOfLines={1}>
-          {gym?.name}
+          {gym?.gymName}
         </Text>
         <View style={styles.ratingContainer}>
           <Text style={styles.rating}>
-            ★ {gym?.rating}/5
+            ★ {gym?.rating || 0}/5
             <Text
               style={{ color: "#6B6B6B", fontWeight: "normal", fontSize: 12 }}
             >
-              ({gym?.totalVote} đánh giá)
+              ({gym?.totalVote || 0} đánh giá)
             </Text>
           </Text>
         </View>
