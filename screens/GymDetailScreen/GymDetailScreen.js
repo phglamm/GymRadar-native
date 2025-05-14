@@ -17,6 +17,7 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";
 const { width } = Dimensions.get("window");
 import AntDesign from "@expo/vector-icons/AntDesign";
+import Toast from "react-native-toast-message";
 
 export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;
@@ -97,6 +98,15 @@ export default function GymDetailScreen({ route }) {
         packagePrice: 5000000,
       },
     ],
+  };
+
+  const handleAddToCart = (packageGym) => {
+    Toast.show({
+      type: "success",
+      text1: "Thêm vào giỏ hàng thành công",
+      text2: `Gói tập ${packageGym.packageName} đã được thêm vào giỏ hàng`,
+      visibilityTime: 2000,
+    });
   };
 
   const navigation = useNavigation();
@@ -198,6 +208,7 @@ export default function GymDetailScreen({ route }) {
                     size={24}
                     color="#ED2A46"
                     style={{ marginRight: 20 }}
+                    onPress={() => handleAddToCart(item)}
                   />
                 </TouchableOpacity>
               </View>
@@ -236,6 +247,7 @@ export default function GymDetailScreen({ route }) {
                     size={24}
                     color="#ED2A46"
                     style={{ marginRight: 20 }}
+                    onPress={() => handleAddToCart(item)}
                   />
                 </TouchableOpacity>
               </View>
