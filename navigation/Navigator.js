@@ -18,6 +18,7 @@ import GymPTScreen from "../screens/GymPTScreen/GymPTScreen";
 import CartScreen from "../screens/CartScreen/CartScreen";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import MapScreen from "../screens/MapScreen/MapScreen";
+import VoucherScreen from "../screens/VoucherScreen/VoucherScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -114,6 +115,11 @@ export default function Navigator() {
         <Stack.Screen
           name="SettingScreen"
           component={SettingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="VoucherScreen"
+          component={VoucherScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

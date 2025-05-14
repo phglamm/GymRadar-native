@@ -44,7 +44,7 @@ export default function UserMenuScreen() {
     {
       icon: <Entypo name="ticket" size={30} color="#ED2A46" />,
       label: "Ưu Đãi",
-      navigation: "UserMenu",
+      navigation: "VoucherScreen",
     },
     {
       icon: <FontAwesome name="history" size={30} color="#ED2A46" />,
