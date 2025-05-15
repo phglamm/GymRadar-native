@@ -173,16 +173,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         marginBottom: 8,
     },
-   supportBox: {
-        flexDirection: "column",
-        backgroundColor: "#fff",
-        borderRadius: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        marginBottom: 30,
-        // justifyContent: "space-between",
-        // alignItems: "center",
-    },
+supportBox: {
+    flexDirection: "column",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,  // giảm padding bên trong
+    marginHorizontal: 16,   // tạo khoảng cách viền ngoài
+    marginBottom: 30,
+},
+
     supportItem: {
         flexDirection: "row",
         alignItems: "center",
