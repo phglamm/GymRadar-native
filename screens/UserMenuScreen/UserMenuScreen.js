@@ -49,7 +49,7 @@ export default function UserMenuScreen() {
     {
       icon: <FontAwesome name="history" size={30} color="#ED2A46" />,
       label: "Lịch Sử Giao Dịch",
-      navigation: "UserMenu",
+      navigation: "TransactionHistoryScreen",
     },
     {
       icon: <Entypo name="help" size={30} color="#ED2A46" />,
