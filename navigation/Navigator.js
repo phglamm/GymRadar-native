@@ -21,6 +21,7 @@ import MapScreen from "../screens/MapScreen/MapScreen";
 import TransactionHistoryScreen from "../screens/TransactionHistoryScreen/TransactionHistoryScreen";
 import VoucherScreen from "../screens/VoucherScreen/VoucherScreen";
 import FAQScreen from "../screens/FAQScreen/FAQScreen";
+import ScheduleScreen from "../screens/ScheduleScreen/ScheduleScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -113,7 +114,24 @@ export default function Navigator() {
     );
   };
   const ScheduleStack = () => {
-    return <></>;
+    return (
+      <Stack.Navigator>
+        <Stack.Screen
+          name="ScheduleScreen"
+          component={ScheduleScreen}
+          options={{
+            headerShown: true,
+            title: "Lịch Tập",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+      </Stack.Navigator>
+    );
   };
   const ChatStack = () => {
     return <></>;

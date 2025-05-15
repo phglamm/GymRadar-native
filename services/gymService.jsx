@@ -27,6 +27,8 @@ const gymService = {
   getGymById: (id) => request("GET", `v1/gym/${id}`),
   getCourseByGymId: (id) => request("GET", `v1/gym/${id}/courses`),
   getPTByGymId: (id) => request("GET", `v1/gym/${id}/pts`),
+
+  getSlotOfGym: (params) => request("GET", "v1/slot", null, {}, params),
 };
 
 export default gymService;
