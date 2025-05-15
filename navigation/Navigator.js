@@ -87,7 +87,19 @@ export default function Navigator() {
   };
   const MapStack = () => {
     return (
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={({ navigation, route }) => ({
+          headerTitleAlign: "center",
+          headerShown: false,
+          headerTintColor: "#ED2A46", // back button arrow color
+          headerLeft: (props) =>
+            navigation.canGoBack() ? (
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="caret-back" size={30} color="#ED2A46" />
+              </TouchableOpacity>
+            ) : null,
+        })}
+      >
         <Stack.Screen
           name="MapScreen"
           component={MapScreen}
