@@ -108,7 +108,19 @@ export default function Navigator() {
   };
   const ProfileStack = () => {
     return (
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={({ navigation, route }) => ({
+          headerTitleAlign: "center",
+          headerShown: false,
+          headerTintColor: "#ED2A46", // back button arrow color
+          headerLeft: (props) =>
+            navigation.canGoBack() ? (
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="caret-back" size={30} color="#ED2A46" />
+              </TouchableOpacity>
+            ) : null,
+        })}
+      >
         <Stack.Screen
           name="User Menu"
           component={UserMenuScreen}
@@ -117,17 +129,58 @@ export default function Navigator() {
         <Stack.Screen
           name="SettingScreen"
           component={SettingScreen}
-          options={{ headerShown: false }}
+          options={{
+            headerShown: true,
+            title: "Cài Đặt",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+        <Stack.Screen
+          name="TransactionHistoryScreen"
+          component={TransactionHistoryScreen}
+          options={{
+            headerShown: true,
+            title: "Lịch Sử Giao Dịch",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
         />
         <Stack.Screen
           name="VoucherScreen"
           component={VoucherScreen}
-          options={{ headerShown: false }}
+          options={{
+            headerShown: true,
+            title: "Ưu đãi",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
         />
         <Stack.Screen
           name="FAQScreen"
           component={FAQScreen}
-          options={{ headerShown: false }}
+          options={{
+            headerShown: true,
+            title: "Câu hỏi thường gặp",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
         />
       </Stack.Navigator>
     );

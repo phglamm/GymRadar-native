@@ -1,7 +1,14 @@
-import React from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SettingScreen() {
   const navigation = useNavigation();
@@ -15,20 +22,16 @@ export default function SettingScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header - màu trắng */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <View style={styles.triangle} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cài đặt</Text>
-        <View style={{ width: 24 }} />
-      </View>
-
       {/* Phần còn lại - nền xám */}
       <View style={styles.content}>
         {/* Search Box */}
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={16} color="#999" style={{ marginHorizontal: 8 }} />
+          <Ionicons
+            name="search"
+            size={16}
+            color="#999"
+            style={{ marginHorizontal: 8 }}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Tìm kiếm cài đặt"
@@ -62,18 +65,18 @@ export default function SettingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // Header màu trắng
+    backgroundColor: "#fff", // Header màu trắng
   },
   header: {
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingTop: 40,
     paddingBottom: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#ccc',
+    borderBottomColor: "#ccc",
   },
   backButton: {
     padding: 10,
@@ -84,24 +87,24 @@ const styles = StyleSheet.create({
     borderTopWidth: 10,
     borderBottomWidth: 10,
     borderRightWidth: 14,
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderRightColor: '#ED2A46',
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
+    borderRightColor: "#ED2A46",
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ED2A46',
+    fontWeight: "bold",
+    color: "#ED2A46",
   },
   content: {
     flex: 1,
-    backgroundColor: '#F5F5F5', // phần sau header là xám
+    backgroundColor: "#F5F5F5", // phần sau header là xám
   },
   searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#D5E9EC',
-    textAlignVertical: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#D5E9EC",
+    textAlignVertical: "center",
     margin: 16,
     borderRadius: 25,
     paddingHorizontal: 8,
@@ -110,26 +113,26 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#000',
+    color: "#000",
   },
   section: {
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 4,
-    fontWeight: 'bold',
-    color: '#888',
+    fontWeight: "bold",
+    color: "#888",
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#ccc',
-    backgroundColor: '#fff', // mục chọn có nền trắng
+    borderBottomColor: "#ccc",
+    backgroundColor: "#fff", // mục chọn có nền trắng
   },
   rowText: {
     fontSize: 16,
-    color: '#000',
+    color: "#000",
   },
 });
