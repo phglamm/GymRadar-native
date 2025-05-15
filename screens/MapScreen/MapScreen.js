@@ -35,8 +35,6 @@ export default function MapScreen() {
         }
       } catch (error) {
         console.log("Error reading user location:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
