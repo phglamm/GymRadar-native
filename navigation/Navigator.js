@@ -19,6 +19,8 @@ import CartScreen from "../screens/CartScreen/CartScreen";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import MapScreen from "../screens/MapScreen/MapScreen";
 import TransactionHistoryScreen from "../screens/TransactionHistoryScreen/TransactionHistoryScreen";
+import VoucherScreen from "../screens/VoucherScreen/VoucherScreen";
+import FAQScreen from "../screens/FAQScreen/FAQScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -118,8 +120,13 @@ export default function Navigator() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="TransactionHistoryScreen"
-          component={TransactionHistoryScreen}
+          name="VoucherScreen"
+          component={VoucherScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="FAQScreen"
+          component={FAQScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

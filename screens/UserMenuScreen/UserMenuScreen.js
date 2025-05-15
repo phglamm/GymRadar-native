@@ -44,7 +44,7 @@ export default function UserMenuScreen() {
     {
       icon: <Entypo name="ticket" size={30} color="#ED2A46" />,
       label: "Ưu Đãi",
-      navigation: "UserMenu",
+      navigation: "VoucherScreen",
     },
     {
       icon: <FontAwesome name="history" size={30} color="#ED2A46" />,
@@ -54,7 +54,7 @@ export default function UserMenuScreen() {
     {
       icon: <Entypo name="help" size={30} color="#ED2A46" />,
       label: "Câu Hỏi Thường Gặp",
-      navigation: "UserMenu",
+      navigation: "FAQScreen",
     },
     {
       icon: <FontAwesome name="th-large" size={30} color="#ED2A46" />,
