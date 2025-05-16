@@ -21,7 +21,7 @@ const request = async (method, url, data = null, headers = {}, params = {}) => {
   }
 };
 
-const initService = {
+const gymService = {
   getHotResearchGym: (params) => request("GET", "v1/gym", null, {}, params),
 
   getGymById: (id) => request("GET", `v1/gym/${id}`),
@@ -31,4 +31,4 @@ const initService = {
   getSlotOfGym: (params) => request("GET", "v1/slot", null, {}, params),
 };
 
-export default initService;
+export default gymService;

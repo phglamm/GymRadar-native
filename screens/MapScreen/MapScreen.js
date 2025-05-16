@@ -146,6 +146,22 @@ export default function MapScreen() {
     }
   }, [coords, searchRadius, allGyms]);
 
+  // Function to get a valid radius value for the Circle component
+  const getValidRadius = () => {
+    const radius = parseFloat(searchRadius);
+    if (isNaN(radius) || radius <= 0) {
+      return 5000; // Default to 5km in meters
+    }
+    return radius * 1000; // Convert km to meters
+  };
+
+  // Function to safely set the search radius
+  const handleSetSearchRadius = (value) => {
+    // Only allow digits and limit to 2 characters
+    const sanitizedValue = value.replace(/[^0-9]/g, "").slice(0, 2);
+    setSearchRadius(sanitizedValue); // Default to 5 if empty
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -172,7 +188,7 @@ export default function MapScreen() {
       elementType: "labels",
       stylers: [
         {
-          visibility: "off",
+          visibility: "on",
         },
       ],
     },
@@ -212,11 +228,6 @@ export default function MapScreen() {
         <View style={styles.gymItemLeft}>
           <Text style={styles.gymItemName}>{item.gymName}</Text>
           <Text style={styles.gymItemAddress}>{item.address}</Text>
-          {item.hotResearch && (
-            <View style={styles.hotBadge}>
-              <Text style={styles.hotBadgeText}>Hot</Text>
-            </View>
-          )}
         </View>
         <View style={styles.gymItemRight}>
           <Text style={styles.gymItemDistance}>
@@ -248,7 +259,7 @@ export default function MapScreen() {
             latitude: coords.latitude,
             longitude: coords.longitude,
           }}
-          radius={parseFloat(searchRadius) * 1000} // Convert km to meters
+          radius={getValidRadius()} // Convert km to meters
           strokeWidth={1}
           strokeColor="rgba(66, 133, 244, 0.5)"
           fillColor="rgba(66, 133, 244, 0.1)"
@@ -263,6 +274,20 @@ export default function MapScreen() {
             }}
             onPress={() => {
               console.log("Marker pressed:", gym.gymName);
+              if (
+                mapRef.current &&
+                isValidCoordinate(gym.latitude, gym.longitude)
+              ) {
+                mapRef.current.animateToRegion(
+                  {
+                    latitude: gym.latitude,
+                    longitude: gym.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  },
+                  1000
+                );
+              }
             }}
             tracksViewChanges={true}
           >
@@ -320,7 +345,7 @@ export default function MapScreen() {
             <TextInput
               style={styles.radiusInput}
               value={searchRadius}
-              onChangeText={setSearchRadius}
+              onChangeText={handleSetSearchRadius}
               keyboardType="numeric"
               maxLength={2}
               placeholder="Nhập bán kính"
@@ -406,6 +431,9 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
   },
   map: {
     width: "100%",
