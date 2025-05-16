@@ -15,13 +15,21 @@ export default function HeaderHome({ user }) {
           <Text style={styles.subtitle}>{user?.fullName || "Người dùng"}</Text>
         </View>
         <View style={styles.featureContainer}>
-          <TextInput
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholder="Tìm kiếm phòng gym"
-            placeholderTextColor="#A39F9F"
-            style={styles.input}
-          />
+          <View style={styles.searchBox}>
+            <Ionicons
+              name="search"
+              size={16}
+              color="#999"
+              style={{ marginHorizontal: 8 }}
+            />
+            <TextInput
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholder="Tìm kiếm phòng gym"
+              placeholderTextColor="#A39F9F"
+              style={styles.input}
+            />
+          </View>
           <Ionicons
             name="cart"
             size={30}
@@ -54,19 +62,24 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 
-  input: {
-    height: 40,
-    width: "70%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    alignSelf: "center",
-  },
   featureContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginTop: 20,
     gap: 15,
+  },
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    height: 40,
+    width: "70%",
+  },
+  input: {
+    flex: 1,
+    color: "#000",
   },
 });

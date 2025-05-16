@@ -5,6 +5,7 @@ import Foundation from "@expo/vector-icons/Foundation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TextInput } from "react-native";
 import gymService from "../../services/gymService";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function GymPTScreen({ route }) {
   const { gymId } = route.params;
@@ -32,11 +33,17 @@ export default function GymPTScreen({ route }) {
   );
   return (
     <View style={styles.container}>
-      <View style={styles.searchContainer}>
+      <View style={styles.searchBox}>
+        <Ionicons
+          name="search"
+          size={16}
+          color="#999"
+          style={{ marginHorizontal: 8 }}
+        />
         <TextInput
           value={searchText}
           onChangeText={setSearchText}
-          placeholder="Tìm kiếm PT"
+          placeholder="Tìm kiếm phòng gym"
           placeholderTextColor="#A39F9F"
           style={styles.input}
         />
@@ -161,15 +168,19 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginBottom: 10,
   },
-  input: {
-    height: 40,
-    width: "80%",
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#D5E9EC",
     borderRadius: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
+    height: 40,
+    width: "80%",
     alignSelf: "center",
+    marginVertical: 20,
   },
-  searchContainer: {
-    paddingVertical: 10,
+  input: {
+    flex: 1,
+    color: "#000",
   },
 });
