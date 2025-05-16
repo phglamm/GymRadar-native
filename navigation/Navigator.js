@@ -25,6 +25,7 @@ import ScheduleScreen from "../screens/ScheduleScreen/ScheduleScreen";
 import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
 import AccountScreen from "../screens/AccountScreen/AccountScreen";
 import UpdatePasswordScreen from "../screens/UpdatePasswordScreen/UpdatePasswordScreen";
+import PTProfileScreen from "../screens/PTProfileScreen/PTProfileScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -219,6 +220,20 @@ export default function Navigator() {
           options={{
             headerShown: true,
             title: "Đổi Mật Khẩu",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+           <Stack.Screen
+          name="PTProfileScreen"
+          component={PTProfileScreen}
+          options={{
+            headerShown: true,
+            title: "Thông tin PT",
             headerTitleAlign: "center",
             headerTitleStyle: {
               fontWeight: "bold",

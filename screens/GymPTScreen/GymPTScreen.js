@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import Foundation from "@expo/vector-icons/Foundation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TextInput } from "react-native";
 import gymService from "../../services/gymService";
+import { useNavigation } from '@react-navigation/native';
 
 export default function GymPTScreen({ route }) {
   const { gymId } = route.params;
@@ -12,6 +13,9 @@ export default function GymPTScreen({ route }) {
   const { gym } = route.params;
   const [searchText, setSearchText] = useState("");
   const [pt, setPT] = useState([]);
+  const navigation = useNavigation();
+
+
   useEffect(() => {
     const fetchPT = async () => {
       try {
@@ -41,102 +45,64 @@ export default function GymPTScreen({ route }) {
           style={styles.input}
         />
       </View>
-      <ScrollView>
-        {filteredPT.map((item) => (
-          <View key={item.id}>
-            <LinearGradient
-              colors={["#FF914D", "#ED2A46"]}
-              style={styles.ptSection}
+<ScrollView>
+  {filteredPT.map((item) => (
+   <TouchableOpacity
+  key={item.id}
+  onPress={() =>
+    navigation.navigate('Tôi', {
+      screen: 'PTProfileScreen',
+      params: { pt: item },
+    })
+  }
+>
+      <LinearGradient colors={['#FF914D', '#ED2A46']} style={styles.ptSection}>
+        <Image
+          source={{
+            uri:
+              item.avatar ||
+              'https://static.vecteezy.com/system/resources/thumbnails/027/951/137/small_2x/stylish-spectacles-guy-3d-avatar-character-illustrations-png.png',
+          }}
+          style={styles.avatar}
+        />
+        <View style={{ alignItems: 'flex-start', width: 200 }}>
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: 'bold',
+              color: '#FFFFFF',
+              marginBottom: 20,
+            }}
+          >
+            {item.fullName}
+          </Text>
+          {item.gender === 'Male' ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+                marginBottom: 5,
+              }}
             >
-              <Image
-                source={{
-                  uri:
-                    item.avatar ||
-                    "https://static.vecteezy.com/system/resources/thumbnails/027/951/137/small_2x/stylish-spectacles-guy-3d-avatar-character-illustrations-png.png",
-                }}
-                style={styles.avatar}
-              />
-              <View style={{ alignItems: "start", width: 200 }}>
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontWeight: "bold",
-                    color: "#FFFFFF",
-                    marginBottom: 20,
-                  }}
-                >
-                  {item.fullName}
-                </Text>
-                {item.gender === "Male" ? (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 5,
-                      marginBottom: 5,
-                    }}
-                  >
-                    <Foundation
-                      name="male-symbol"
-                      size={25}
-                      color="white"
-                      style={{ width: 30 }}
-                    />
-                    <Text
-                      style={{
-                        color: "white",
-                        fontSize: 16,
-                      }}
-                    >
-                      Nam
-                    </Text>
-                  </View>
-                ) : (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 5,
-                    }}
-                  >
-                    <Foundation
-                      name="female-symbol"
-                      size={30}
-                      color="white"
-                      style={{ width: 30 }}
-                    />
-                    <Text
-                      style={{
-                        color: "white",
-                        fontSize: 16,
-                      }}
-                    >
-                      Nữ
-                    </Text>
-                  </View>
-                )}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
-                >
-                  <Foundation
-                    name="target-two"
-                    size={25}
-                    color="white"
-                    style={{ width: 30 }}
-                  />
-                  <Text style={{ color: "white", fontSize: 16 }}>
-                    {item.goalTraining}
-                  </Text>
-                </View>
-              </View>
-            </LinearGradient>
+              <Foundation name="male-symbol" size={25} color="white" style={{ width: 30 }} />
+              <Text style={{ color: 'white', fontSize: 16 }}>Nam</Text>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Foundation name="female-symbol" size={30} color="white" style={{ width: 30 }} />
+              <Text style={{ color: 'white', fontSize: 16 }}>Nữ</Text>
+            </View>
+          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Foundation name="target-two" size={25} color="white" style={{ width: 30 }} />
+            <Text style={{ color: 'white', fontSize: 16 }}>{item.goalTraining}</Text>
           </View>
-        ))}
-      </ScrollView>
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
+  ))}
+</ScrollView>
     </View>
   );
 }
