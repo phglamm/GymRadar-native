@@ -36,7 +36,7 @@ const PTProfileScreen = () => {
   ];
 
   return (
-    <ScrollView contentContainerStyle={{ paddingBottom: 40, paddingTop: 20, paddingHorizontal: 0, backgroundColor: '#fff' }}>
+    <ScrollView contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 0, backgroundColor: '#fff' }}>
       <LinearGradient colors={['#FF914D', '#ED2A46']} style={styles.gradientContainer}>
         {/* Avatar */}
         <View style={styles.avatarContainer}>
