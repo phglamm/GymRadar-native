@@ -22,6 +22,7 @@ import TransactionHistoryScreen from "../screens/TransactionHistoryScreen/Transa
 import VoucherScreen from "../screens/VoucherScreen/VoucherScreen";
 import FAQScreen from "../screens/FAQScreen/FAQScreen";
 import ScheduleScreen from "../screens/ScheduleScreen/ScheduleScreen";
+import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -115,7 +116,19 @@ export default function Navigator() {
   };
   const ScheduleStack = () => {
     return (
-      <Stack.Navigator>
+      <Stack.Navigator
+       screenOptions={({ navigation, route }) => ({
+          headerTitleAlign: "center",
+          headerShown: false,
+          headerTintColor: "#ED2A46", // back button arrow color
+          headerLeft: (props) =>
+            navigation.canGoBack() ? (
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="caret-back" size={30} color="#ED2A46" />
+              </TouchableOpacity>
+            ) : null,
+        })}
+      >
         <Stack.Screen
           name="ScheduleScreen"
           component={ScheduleScreen}
@@ -162,6 +175,20 @@ export default function Navigator() {
           options={{
             headerShown: true,
             title: "Cài Đặt",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+        <Stack.Screen
+          name="ProfileScreen"
+          component={ProfileScreen}
+          options={{
+            headerShown: true,
+            title: "Hồ Sơ",
             headerTitleAlign: "center",
             headerTitleStyle: {
               fontWeight: "bold",
