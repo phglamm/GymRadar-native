@@ -79,6 +79,16 @@ export default function Navigator() {
           }}
         />
         <Stack.Screen
+          name="PTProfileScreen"
+          component={PTProfileScreen}
+          // component={GymPTScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Danh sách PT",
+          }}
+        />
+        <Stack.Screen
           name="CartScreen"
           component={CartScreen}
           options={{
