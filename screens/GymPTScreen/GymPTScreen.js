@@ -33,27 +33,21 @@ const handlePTPress = async (ptId) => {
   try {
     const response = await gymService.getPTById(ptId);
     console.log('Full API response:', response);
-    // Thử log nhiều cấp:
-    // console.log('response.data:', response.data);
-    // console.log('response.data.data:', response.data?.data);
-    
-    const ptDetails = response.data?.data || response.data || response;
-    console.log('ptDetails', ptDetails);
+    // Nếu response có trường data chứa PT
+    const ptDetails = response?.data || response; 
+
+    console.log('ptDetails:', ptDetails);
 
     if (!ptDetails) {
       console.warn('Không lấy được dữ liệu PT chi tiết');
       return;
     }
+navigation.navigate('PTProfileScreen', { pt: ptDetails });
 
-    navigation.navigate('Tôi', {
-      screen: 'PTProfileScreen',
-      params: { pt: ptDetails },
-    });
   } catch (error) {
     console.error("Error fetching PT details:", error);
   }
 };
-
 
 
   return (
