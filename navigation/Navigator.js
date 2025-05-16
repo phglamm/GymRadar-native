@@ -238,20 +238,7 @@ export default function Navigator() {
             },
           }}
         />
-           <Stack.Screen
-          name="PTProfileScreen"
-          component={PTProfileScreen}
-          options={{
-            headerShown: true,
-            title: "Thông tin PT",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 20,
-              color: "#ED2A46",
-            },
-          }}
-        />
+
         <Stack.Screen
           name="TransactionHistoryScreen"
           component={TransactionHistoryScreen}
@@ -311,8 +298,8 @@ export default function Navigator() {
             tabBarStyle: shouldHideTabBar
               ? { display: "none" }
               : {
-                backgroundColor: "#ED2A46",
-              },
+                  backgroundColor: "#ED2A46",
+                },
             tabBarActiveTintColor: "#FFFFFF",
             tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)",
             tabBarLabelStyle: {

@@ -54,10 +54,7 @@ export default function GymPTScreen({ route }) {
         return;
       }
 
-      navigation.navigate("Tôi", {
-        screen: "PTProfileScreen",
-        params: { pt: ptDetails },
-      });
+      navigation.navigate("PTProfileScreen", { pt: ptDetails });
     } catch (error) {
       console.error("Error fetching PT details:", error);
     }
