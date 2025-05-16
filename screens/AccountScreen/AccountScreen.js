@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
@@ -9,6 +10,7 @@ const AccountScreen = () => {
     const [nickname, setNickname] = useState('Madison');
     const [email, setEmail] = useState('madisons@example.com');
     const [mobileNumber, setMobileNumber] = useState('+123 567 89000');
+  const navigation = useNavigation();
 
     return (
         <View style={styles.container}>
@@ -74,10 +76,13 @@ const AccountScreen = () => {
                         <Text style={styles.updateButtonText}>Cập nhật</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.changePasswordButton}>
-                        <Icon name="key" size={18} color="#999" style={{ marginRight: 6 }} />
-                        <Text style={styles.changePasswordText}>Đổi mật khẩu</Text>
-                    </TouchableOpacity>
+ <TouchableOpacity
+      style={styles.changePasswordButton}
+      onPress={() => navigation.navigate('UpdatePasswordScreen')}
+    >
+      <Icon name="key" size={18} color="#999" style={{ marginRight: 6 }} />
+      <Text style={styles.changePasswordText}>Đổi mật khẩu</Text>
+    </TouchableOpacity>
 
                 </View>
             </ScrollView>

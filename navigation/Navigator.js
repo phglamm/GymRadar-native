@@ -24,6 +24,7 @@ import FAQScreen from "../screens/FAQScreen/FAQScreen";
 import ScheduleScreen from "../screens/ScheduleScreen/ScheduleScreen";
 import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
 import AccountScreen from "../screens/AccountScreen/AccountScreen";
+import UpdatePasswordScreen from "../screens/UpdatePasswordScreen/UpdatePasswordScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -118,7 +119,7 @@ export default function Navigator() {
   const ScheduleStack = () => {
     return (
       <Stack.Navigator
-       screenOptions={({ navigation, route }) => ({
+        screenOptions={({ navigation, route }) => ({
           headerTitleAlign: "center",
           headerShown: false,
           headerTintColor: "#ED2A46", // back button arrow color
@@ -203,7 +204,21 @@ export default function Navigator() {
           component={AccountScreen}
           options={{
             headerShown: true,
-            title: "Hồ Sơ",
+            title: "Tài Khoản",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+        <Stack.Screen
+          name="UpdatePasswordScreen"
+          component={UpdatePasswordScreen}
+          options={{
+            headerShown: true,
+            title: "Đổi Mật Khẩu",
             headerTitleAlign: "center",
             headerTitleStyle: {
               fontWeight: "bold",
@@ -271,8 +286,8 @@ export default function Navigator() {
             tabBarStyle: shouldHideTabBar
               ? { display: "none" }
               : {
-                  backgroundColor: "#ED2A46",
-                },
+                backgroundColor: "#ED2A46",
+              },
             tabBarActiveTintColor: "#FFFFFF",
             tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)",
             tabBarLabelStyle: {
