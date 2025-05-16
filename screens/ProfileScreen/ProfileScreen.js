@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     input: {
         borderWidth: 1,
         borderColor: '#C8C8C8',
-        borderRadius: 6,
+        borderRadius: 10,
         paddingHorizontal: 12,
         paddingVertical: 8,
         fontSize: 14,
@@ -241,6 +241,8 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         alignItems: 'center',
         elevation: 2,
+            width: 200,        // Giảm chiều rộng nút lại
+    alignSelf: 'center' // Căn giữa nút theo chiều ngang
     },
     buttonText: {
         color: '#fff',

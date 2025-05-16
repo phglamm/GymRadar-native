@@ -23,6 +23,7 @@ import VoucherScreen from "../screens/VoucherScreen/VoucherScreen";
 import FAQScreen from "../screens/FAQScreen/FAQScreen";
 import ScheduleScreen from "../screens/ScheduleScreen/ScheduleScreen";
 import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
+import AccountScreen from "../screens/AccountScreen/AccountScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -186,6 +187,20 @@ export default function Navigator() {
         <Stack.Screen
           name="ProfileScreen"
           component={ProfileScreen}
+          options={{
+            headerShown: true,
+            title: "Hồ Sơ",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+        <Stack.Screen
+          name="AccountScreen"
+          component={AccountScreen}
           options={{
             headerShown: true,
             title: "Hồ Sơ",

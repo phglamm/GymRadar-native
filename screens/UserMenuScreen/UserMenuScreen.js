@@ -29,7 +29,7 @@ export default function UserMenuScreen() {
     {
       icon: <FontAwesome name="user" size={30} color="#ED2A46" />,
       label: "Tài Khoản",
-      navigation: "ProfileScreen",
+      navigation: "AccountScreen",
     },
     {
       icon: <FontAwesome name="address-card" size={30} color="#ED2A46" />,
