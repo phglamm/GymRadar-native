@@ -95,9 +95,9 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     avatar: {
-        width: 110,
-        height: 110,
-        borderRadius: 55,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
         borderWidth: 3,
         borderColor: '#fff',
     },
