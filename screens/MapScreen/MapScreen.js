@@ -18,7 +18,7 @@ import { useNavigation } from "@react-navigation/native";
 import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
-export default function MapScreen() {
+export default function MapScreen({ route }) {
   const [coords, setCoords] = useState(null);
   const [loading, setLoading] = useState(true);
   const [allGyms, setAllGyms] = useState([]);
@@ -33,6 +33,29 @@ export default function MapScreen() {
   // Snap points for the bottom sheet (percentage of screen height)
   const snapPoints = useMemo(() => ["55%"], []);
 
+  const { latitude: targetLatitude, longitude: targetLongitude } =
+    route.params || {};
+
+  useEffect(() => {
+    if (
+      targetLatitude &&
+      targetLongitude &&
+      isValidCoordinate(targetLatitude, targetLongitude) &&
+      mapRef.current
+    ) {
+      setTimeout(() => {
+        mapRef.current.animateToRegion(
+          {
+            latitude: targetLatitude,
+            longitude: targetLongitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          1000 // Animation duration in ms
+        );
+      }, 500);
+    }
+  }, [targetLatitude, targetLongitude]);
   // Callback for bottom sheet changes
   const handleSheetChanges = useCallback((index) => {
     console.log("handleSheetChanges", index);

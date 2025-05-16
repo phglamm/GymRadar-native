@@ -25,6 +25,9 @@ const { width } = Dimensions.get("window");
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Toast from "react-native-toast-message";
 import gymService from "../../services/gymService";
+import MapView, { Marker } from "react-native-maps";
+import { ActivityIndicator } from "react-native";
+import { FontAwesome6 } from "@expo/vector-icons";
 
 export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;
@@ -33,11 +36,13 @@ export default function GymDetailScreen({ route }) {
   const handleSheetChanges = useCallback((index) => {
     console.log("handleSheetChanges", index);
   }, []);
-
+  const [loading, setLoading] = useState(false);
+  const mapRef = useRef(null);
   const [gymDetail, setGymDetail] = useState({});
   const [gymCourse, setGymCourse] = useState([]);
   useEffect(() => {
     const fetchGymDetail = async () => {
+      setLoading(true);
       try {
         const response = await gymService.getGymById(gymId);
         console.log("gymDetail response:", response);
@@ -45,6 +50,8 @@ export default function GymDetailScreen({ route }) {
         setGymDetail(response.data);
       } catch (error) {
         console.error("Error fetching gym detail:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -142,6 +149,14 @@ export default function GymDetailScreen({ route }) {
   //   ],
   // };
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#ED2A46" />
+      </View>
+    );
+  }
+
   const handleAddToCart = (packageGym) => {
     Toast.show({
       type: "success",
@@ -177,6 +192,61 @@ export default function GymDetailScreen({ route }) {
             <TouchableOpacity onPress={() => bottomSheetRef.current?.expand()}>
               <Text style={styles.buttonText}>Tham Khảo Gói Tập</Text>
             </TouchableOpacity>
+          </View>
+
+          <View style={styles.gymDescription}>
+            <Text style={{ fontSize: 15, fontWeight: "bold" }}>Mô tả</Text>
+            <Text style={{ fontSize: 13, marginTop: 10 }}>
+              {gymDetail?.description ||
+                "Loren ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum"}
+            </Text>
+          </View>
+
+          <Text style={{ fontSize: 15, fontWeight: "bold", marginTop: 20 }}>
+            Vị trí
+          </Text>
+
+          <View style={styles.gymMap}>
+            <MapView
+              ref={mapRef}
+              style={styles.map}
+              initialRegion={{
+                longitude: gymDetail?.longitude,
+                latitude: gymDetail?.latitude,
+                longitudeDelta: 0.01,
+                latitudeDelta: 0.01,
+              }}
+              showsPointsOfInterest={false}
+              zoomEnabled={false}
+              scrollEnabled={false}
+            >
+              <Marker
+                coordinate={{
+                  longitude: gymDetail?.longitude,
+                  latitude: gymDetail?.latitude,
+                }}
+                onPress={() => {
+                  navigation.navigate("Bản Đồ", {
+                    screen: "MapScreen",
+                    params: {
+                      longitude: gymDetail?.longitude,
+                      latitude: gymDetail?.latitude,
+                    },
+                  });
+                }}
+                tracksViewChanges={true}
+              >
+                <View style={styles.markerContainer}>
+                  <Image
+                    source={require("../../assets/LogoColor.png")}
+                    style={styles.markerImage}
+                  />
+                  {gymDetail.hotResearch && (
+                    <FontAwesome6 name="fire" size={20} color="#ED2A46" />
+                  )}
+                </View>
+              </Marker>
+            </MapView>
           </View>
         </View>
 
@@ -309,7 +379,7 @@ const styles = StyleSheet.create({
   cardDetail: {
     alignSelf: "center",
     width: "93%",
-    height: 220,
+    // height: 220,
     backgroundColor: "#fff",
     borderRadius: 20,
     marginTop: 20,
@@ -459,5 +529,32 @@ const styles = StyleSheet.create({
     color: "#ED2A46",
     marginLeft: 20,
     marginTop: 5,
+  },
+
+  gymDescription: {
+    marginTop: 20,
+  },
+
+  gymMap: {
+    marginTop: 20,
+    height: 300,
+    backgroundColor: "#E42D46",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 30,
+  },
+  map: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 30,
+  },
+
+  markerContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  markerImage: {
+    width: 60,
+    height: 60,
   },
 });
