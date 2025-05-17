@@ -45,6 +45,14 @@ export default function LoginScreen() {
           type: "success",
           text1: "Đăng nhập thành công",
         });
+      } else if (response.data.role === "PT") {
+        navigation.replace("MainApp", {
+          screen: "Home",
+        });
+        Toast.show({
+          type: "success",
+          text1: "Đăng nhập thành công với tư cách PT",
+        });
       } else {
         Toast.show({
           type: "error",
@@ -55,7 +63,7 @@ export default function LoginScreen() {
         return;
       }
 
-      AsyncStorage.setItem("token", JSON.stringify(response.data.accessToken));
+      AsyncStorage.setItem("token", response.data.accessToken);
       const user = {
         id: response.data.id,
         fullName: response.data.fullName,
