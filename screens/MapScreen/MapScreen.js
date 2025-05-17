@@ -120,6 +120,7 @@ export default function MapScreen({ route }) {
     // Sort by distance (closest first)
     nearbyGyms.sort((a, b) => a.distance - b.distance);
     setFilteredGyms(nearbyGyms);
+
     // Expand the bottom sheet to show results
   };
 
@@ -206,6 +207,12 @@ export default function MapScreen({ route }) {
     isValidCoordinate(gym.latitude, gym.longitude)
   );
 
+  const validAllGyms = allGyms.filter((gym) =>
+    isValidCoordinate(gym.latitude, gym.longitude)
+  );
+
+  console.log("Valid all Gyms:", validAllGyms);
+
   const MapStyle = [
     {
       elementType: "labels",
@@ -254,7 +261,7 @@ export default function MapScreen({ route }) {
         </View>
         <View style={styles.gymItemRight}>
           <Text style={styles.gymItemDistance}>
-            {item.distance.toFixed(1)} km
+            {item.distance?.toFixed(1)} km
           </Text>
         </View>
       </View>
@@ -288,7 +295,7 @@ export default function MapScreen({ route }) {
           fillColor="rgba(66, 133, 244, 0.1)"
         />
 
-        {validGyms.map((gym) => (
+        {validAllGyms.map((gym) => (
           <Marker
             key={gym.id}
             coordinate={{
@@ -334,17 +341,18 @@ export default function MapScreen({ route }) {
               <View style={styles.calloutContainer}>
                 <Text style={styles.calloutTitle}>{gym.gymName}</Text>
                 <Text style={styles.calloutAddress}>{gym.address}</Text>
+
+                <Text style={styles.calloutSince}>
+                  Hoạt động từ: {gym.since}
+                </Text>
+                <Text style={styles.calloutDistance}>
+                  Cách đây: {gym.distance?.toFixed(1)} km
+                </Text>
                 {gym.hotResearch && (
                   <View style={styles.hotBadge}>
                     <Text style={styles.hotBadgeText}>Hot</Text>
                   </View>
                 )}
-                <Text style={styles.calloutSince}>
-                  Hoạt động từ: {gym.since}
-                </Text>
-                <Text style={styles.calloutDistance}>
-                  Cách đây: {gym.distance.toFixed(1)} km
-                </Text>
               </View>
             </Callout>
           </Marker>
