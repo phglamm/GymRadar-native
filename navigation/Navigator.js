@@ -31,15 +31,52 @@ export default function Navigator() {
   const Tab = createBottomTabNavigator();
   const Stack = createNativeStackNavigator();
   const [user, setUser] = useState(null);
+
+  // Fetch user data on initial load only
   useEffect(() => {
     const fetchUser = async () => {
-      const userData = await AsyncStorage.getItem("user");
-      if (userData) {
-        setUser(JSON.parse(userData));
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (userData) {
+          setUser(JSON.parse(userData));
+        } else {
+          setUser(null); // Make sure to set null if no user
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setUser(null);
       }
     };
+
     fetchUser();
   }, []);
+
+  // Create a function that can be called from login/logout functions
+  // Add this to the component's exposed methods
+  React.useEffect(() => {
+    // Expose a method to update navigation when auth state changes
+    if (global.updateNavigationUser === undefined) {
+      global.updateNavigationUser = async () => {
+        try {
+          const userData = await AsyncStorage.getItem("user");
+          if (userData) {
+            setUser(JSON.parse(userData));
+          } else {
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Error updating navigation user:", error);
+          setUser(null);
+        }
+      };
+    }
+
+    return () => {
+      // Clean up global reference when component unmounts
+      delete global.updateNavigationUser;
+    };
+  }, []);
+
   const HomeStack = () => {
     return (
       <Stack.Navigator
@@ -99,13 +136,14 @@ export default function Navigator() {
       </Stack.Navigator>
     );
   };
+
   const MapStack = () => {
     return (
       <Stack.Navigator
         screenOptions={({ navigation, route }) => ({
           headerTitleAlign: "center",
           headerShown: false,
-          headerTintColor: "#ED2A46", // back button arrow color
+          headerTintColor: "#ED2A46",
           headerLeft: (props) =>
             navigation.canGoBack() ? (
               <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -126,13 +164,14 @@ export default function Navigator() {
       </Stack.Navigator>
     );
   };
+
   const ScheduleStack = () => {
     return (
       <Stack.Navigator
         screenOptions={({ navigation, route }) => ({
           headerTitleAlign: "center",
           headerShown: false,
-          headerTintColor: "#ED2A46", // back button arrow color
+          headerTintColor: "#ED2A46",
           headerLeft: (props) =>
             navigation.canGoBack() ? (
               <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -165,7 +204,7 @@ export default function Navigator() {
         screenOptions={({ navigation, route }) => ({
           headerTitleAlign: "center",
           headerShown: false,
-          headerTintColor: "#ED2A46", // back button arrow color
+          headerTintColor: "#ED2A46",
           headerLeft: (props) =>
             navigation.canGoBack() ? (
               <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -191,16 +230,18 @@ export default function Navigator() {
       </Stack.Navigator>
     );
   };
+
   const ChatStack = () => {
     return <></>;
   };
+
   const ProfileStack = () => {
     return (
       <Stack.Navigator
         screenOptions={({ navigation, route }) => ({
           headerTitleAlign: "center",
           headerShown: false,
-          headerTintColor: "#ED2A46", // back button arrow color
+          headerTintColor: "#ED2A46",
           headerLeft: (props) =>
             navigation.canGoBack() ? (
               <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -270,7 +311,6 @@ export default function Navigator() {
             },
           }}
         />
-
         <Stack.Screen
           name="TransactionHistoryScreen"
           component={TransactionHistoryScreen}
@@ -316,9 +356,13 @@ export default function Navigator() {
       </Stack.Navigator>
     );
   };
+
   const MainTab = () => {
+    // KEY FIX: This component now depends on the user state value
+    // and will re-render when user changes
     return (
       <Tab.Navigator
+        key={user?.role || "guest"} // This key forces re-render when user role changes
         screenOptions={({ route }) => {
           // Get the route name from the navigator
           const routeName = getFocusedRouteNameFromRoute(route) ?? "";
@@ -394,9 +438,7 @@ export default function Navigator() {
               headerShown: false,
             }}
           />
-        ) : (
-          <></>
-        )}
+        ) : null}
 
         {user?.role === "USER" ? (
           <Tab.Screen
@@ -406,9 +448,7 @@ export default function Navigator() {
               headerShown: false,
             }}
           />
-        ) : (
-          <></>
-        )}
+        ) : null}
 
         <Tab.Screen
           name="Tôi"
@@ -420,13 +460,14 @@ export default function Navigator() {
       </Tab.Navigator>
     );
   };
+
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={({ navigation, route }) => ({
           headerTitleAlign: "center",
           headerShown: false,
-          headerTintColor: "#ED2A46", // back button arrow color
+          headerTintColor: "#ED2A46",
           headerLeft: (props) =>
             navigation.canGoBack() ? (
               <TouchableOpacity onPress={() => navigation.goBack()}>

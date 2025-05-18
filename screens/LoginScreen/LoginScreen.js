@@ -71,6 +71,9 @@ export default function LoginScreen() {
         role: response.data.role,
       };
       AsyncStorage.setItem("user", JSON.stringify(user));
+      if (global.updateNavigationUser) {
+        global.updateNavigationUser();
+      }
       console.log("User data saved:", user);
     } catch (error) {
       Toast.show({

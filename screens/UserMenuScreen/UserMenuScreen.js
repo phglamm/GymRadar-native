@@ -83,6 +83,9 @@ export default function UserMenuScreen() {
       onPress: async () => {
         await AsyncStorage.removeItem("user");
         await AsyncStorage.removeItem("token");
+        if (global.updateNavigationUser) {
+          global.updateNavigationUser();
+        }
         navigation.replace("Login");
       },
     },
