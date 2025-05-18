@@ -25,7 +25,10 @@ export default function UserMenuScreen() {
     fetchUser();
   }, []);
 
-  const menuItems = [
+  const navigation = useNavigation();
+
+  // Define menu items
+  let menuItems = [
     {
       icon: <FontAwesome name="user" size={30} color="#ED2A46" />,
       label: "Tài Khoản",
@@ -41,16 +44,28 @@ export default function UserMenuScreen() {
       label: "Cài Đặt",
       navigation: "SettingScreen",
     },
-    {
-      icon: <Entypo name="ticket" size={30} color="#ED2A46" />,
-      label: "Ưu Đãi",
-      navigation: "VoucherScreen",
-    },
-    {
-      icon: <FontAwesome name="history" size={30} color="#ED2A46" />,
-      label: "Lịch Sử Giao Dịch",
-      navigation: "TransactionHistoryScreen",
-    },
+  ];
+
+  // Only add Ưu Đãi and Lịch Sử Giao Dịch if user role is "User"
+  if (user && user.role === "USER") {
+    menuItems = [
+      ...menuItems,
+      {
+        icon: <Entypo name="ticket" size={30} color="#ED2A46" />,
+        label: "Ưu Đãi",
+        navigation: "VoucherScreen",
+      },
+      {
+        icon: <FontAwesome name="history" size={30} color="#ED2A46" />,
+        label: "Lịch Sử Giao Dịch",
+        navigation: "TransactionHistoryScreen",
+      },
+    ];
+  }
+
+  // Add remaining menu items
+  menuItems = [
+    ...menuItems,
     {
       icon: <Entypo name="help" size={30} color="#ED2A46" />,
       label: "Câu Hỏi Thường Gặp",
@@ -72,7 +87,7 @@ export default function UserMenuScreen() {
       },
     },
   ];
-  const navigation = useNavigation();
+
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <LinearGradient

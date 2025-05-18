@@ -120,8 +120,6 @@ export default function MapScreen({ route }) {
     // Sort by distance (closest first)
     nearbyGyms.sort((a, b) => a.distance - b.distance);
     setFilteredGyms(nearbyGyms);
-
-    // Expand the bottom sheet to show results
   };
 
   useEffect(() => {
@@ -140,7 +138,7 @@ export default function MapScreen({ route }) {
     const fetchGym = async (page = 1, pageSize = 50) => {
       setLoading(true);
       try {
-        const response = await gymService.getHotResearchGym({
+        const response = await gymService.getAllGyms({
           page,
           size: pageSize,
         });

@@ -22,7 +22,7 @@ const request = async (method, url, data = null, headers = {}, params = {}) => {
 };
 
 const gymService = {
-  getHotResearchGym: (params) => request("GET", "v1/gym", null, {}, params),
+  getAllGyms: (params) => request("GET", "v1/gym", null, {}, params),
 
   getGymById: (id) => request("GET", `v1/gym/${id}`),
   getCourseByGymId: (id) => request("GET", `v1/gym/${id}/courses`),

@@ -81,7 +81,6 @@ export default function Navigator() {
         <Stack.Screen
           name="PTProfileScreen"
           component={PTProfileScreen}
-          // component={GymPTScreen}
           options={{
             headerTitleAlign: "center",
             headerShown: true,
@@ -148,6 +147,39 @@ export default function Navigator() {
           options={{
             headerShown: true,
             title: "Lịch Tập",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+      </Stack.Navigator>
+    );
+  };
+
+  const SchedulePTStack = () => {
+    return (
+      <Stack.Navigator
+        screenOptions={({ navigation, route }) => ({
+          headerTitleAlign: "center",
+          headerShown: false,
+          headerTintColor: "#ED2A46", // back button arrow color
+          headerLeft: (props) =>
+            navigation.canGoBack() ? (
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="caret-back" size={30} color="#ED2A46" />
+              </TouchableOpacity>
+            ) : null,
+        })}
+      >
+        <Stack.Screen
+          name="ScheduleScreen"
+          component={ScheduleScreen}
+          options={{
+            headerShown: true,
+            title: "Đăng Ký Lịch PT",
             headerTitleAlign: "center",
             headerTitleStyle: {
               fontWeight: "bold",
@@ -319,6 +351,8 @@ export default function Navigator() {
                 iconName = "wechat";
               } else if (route.name === "Tôi") {
                 iconName = "user";
+              } else if (route.name === "Đăng Ký Lịch PT") {
+                iconName = "calendar";
               }
 
               return (
@@ -344,20 +378,38 @@ export default function Navigator() {
             headerShown: false,
           }}
         />
-        <Tab.Screen
-          name="Lịch Tập"
-          component={ScheduleStack}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Tab.Screen
-          name="AI Chatbox"
-          component={ChatStack}
-          options={{
-            headerShown: false,
-          }}
-        />
+        {user?.role === "USER" ? (
+          <Tab.Screen
+            name="Lịch Tập"
+            component={ScheduleStack}
+            options={{
+              headerShown: false,
+            }}
+          />
+        ) : user?.role === "PT" ? (
+          <Tab.Screen
+            name="Đăng Ký Lịch PT"
+            component={SchedulePTStack}
+            options={{
+              headerShown: false,
+            }}
+          />
+        ) : (
+          <></>
+        )}
+
+        {user?.role === "USER" ? (
+          <Tab.Screen
+            name="AI Chatbox"
+            component={ChatStack}
+            options={{
+              headerShown: false,
+            }}
+          />
+        ) : (
+          <></>
+        )}
+
         <Tab.Screen
           name="Tôi"
           component={ProfileStack}

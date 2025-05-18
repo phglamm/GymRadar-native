@@ -11,12 +11,12 @@ import { useNavigation } from "@react-navigation/native";
 import authService from "../../services/authService";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [secureText, setSecureText] = useState(true);
   const navigation = useNavigation();
-
   const handleLogin = async () => {
     if (!phone || !password) {
       Toast.show({
@@ -38,17 +38,11 @@ export default function LoginScreen() {
       console.log("Login response:", response);
 
       if (response.data.role === "USER") {
-        navigation.replace("MainApp", {
-          screen: "Home",
-        });
         Toast.show({
           type: "success",
           text1: "Đăng nhập thành công",
         });
       } else if (response.data.role === "PT") {
-        navigation.replace("MainApp", {
-          screen: "Home",
-        });
         Toast.show({
           type: "success",
           text1: "Đăng nhập thành công với tư cách PT",
@@ -62,6 +56,12 @@ export default function LoginScreen() {
         });
         return;
       }
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainApp", params: { screen: "Home" } }],
+        });
+      }, 1000);
 
       AsyncStorage.setItem("token", response.data.accessToken);
       const user = {
