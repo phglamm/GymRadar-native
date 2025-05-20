@@ -123,18 +123,6 @@ export default function MapScreen({ route }) {
   };
 
   useEffect(() => {
-    const fetchLocation = async () => {
-      try {
-        const userLocation = await AsyncStorage.getItem("userLocation");
-        if (userLocation !== null) {
-          const parsed = JSON.parse(userLocation);
-          setCoords(parsed.coords);
-        }
-      } catch (error) {
-        console.log("Error reading user location:", error);
-      }
-    };
-
     const fetchGym = async (page = 1, pageSize = 50) => {
       setLoading(true);
       try {
@@ -157,8 +145,29 @@ export default function MapScreen({ route }) {
       }
     };
 
-    fetchLocation();
     fetchGym();
+  }, []);
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        const userLocation = await AsyncStorage.getItem("userLocation");
+        if (userLocation !== null) {
+          const parsed = JSON.parse(userLocation);
+          setCoords(parsed.coords);
+          console.log("User location:", parsed.coords);
+        }
+      } catch (error) {
+        console.log("Error reading user location:", error);
+      }
+    };
+    fetchLocation();
+    // const intervalId = setInterval(() => {
+    //   fetchLocation();
+    // }, 1000); // every 2 seconds
+
+    // // Cleanup
+    // return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
