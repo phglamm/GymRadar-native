@@ -23,11 +23,13 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";
 const { width } = Dimensions.get("window");
 import AntDesign from "@expo/vector-icons/AntDesign";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import Toast from "react-native-toast-message";
 import gymService from "../../services/gymService";
 import MapView, { Marker } from "react-native-maps";
 import { ActivityIndicator } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
+import { useCart } from "../../context/CartContext"; // Import the modified CartContext
 
 export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;
@@ -40,13 +42,17 @@ export default function GymDetailScreen({ route }) {
   const mapRef = useRef(null);
   const [gymDetail, setGymDetail] = useState({});
   const [gymCourse, setGymCourse] = useState([]);
+  const [lowestPackage, setLowestPackage] = useState(null);
+  const { cart, addToCart, getCartCount } = useCart(); // Use the cart context
+  const navigation = useNavigation();
+
   useEffect(() => {
     const fetchGymDetail = async () => {
       setLoading(true);
       try {
         const response = await gymService.getGymById(gymId);
         console.log("gymDetail response:", response);
-        console.log(("gymDetail:", response.data));
+        console.log("gymDetail:", response.data);
         setGymDetail(response.data);
       } catch (error) {
         console.error("Error fetching gym detail:", error);
@@ -62,6 +68,9 @@ export default function GymDetailScreen({ route }) {
         console.log("Course Gym:", response.data);
         const { items, total, page: currentPage } = response.data;
 
+        const lowestPackage = Math.min(...items.map((item) => item.price));
+        setLowestPackage(lowestPackage);
+        console.log("Lowest Package:", lowestPackage);
         const courseFiltered = {
           packageNormal: items.filter((item) => item.type === "Normal"),
           packagePT: items.filter((item) => item.type === "WithPT"),
@@ -119,36 +128,6 @@ export default function GymDetailScreen({ route }) {
     },
   ];
 
-  // const gymDetail = {
-  //   id: 1,
-  //   gymId: 1,
-  //   gymName: "Gym A",
-  //   packageNormal: [
-  //     {
-  //       packageId: 1,
-  //       packageName: "Gói 1 tháng",
-  //       packagePrice: 1000000,
-  //     },
-  //     {
-  //       packageId: 2,
-  //       packageName: "Gói 3 tháng",
-  //       packagePrice: 2500000,
-  //     },
-  //   ],
-  //   packagePT: [
-  //     {
-  //       packageId: 1,
-  //       packageName: "Gói 1 tháng kèm 12 buổi PT",
-  //       packagePrice: 2000000,
-  //     },
-  //     {
-  //       packageId: 2,
-  //       packageName: "Gói 3 tháng kèm 15 buổi PT",
-  //       packagePrice: 5000000,
-  //     },
-  //   ],
-  // };
-
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -157,7 +136,31 @@ export default function GymDetailScreen({ route }) {
     );
   }
 
+  // Check if package is already in the cart
+  const isPackageInCart = (packageId) => {
+    return cart.some(
+      (item) => item.packageId === packageId && item.gymId === gymDetail.id
+    );
+  };
+
+  // Handle adding package to cart
   const handleAddToCart = (packageGym) => {
+    // Create structured gym package object for the cart
+    const gymPackage = {
+      gymId: gymDetail.id,
+      gymName: gymDetail.gymName,
+      gymAddress: gymDetail.address,
+      gymImage: image[0].url, // Using the first image as thumbnail
+      id: packageGym.id,
+      name: packageGym.name,
+      type: packageGym.type,
+      price: packageGym.price,
+    };
+
+    // Add to cart using context
+    addToCart(gymPackage);
+
+    // Show success toast
     Toast.show({
       type: "success",
       text1: "Thêm vào giỏ hàng thành công",
@@ -166,7 +169,6 @@ export default function GymDetailScreen({ route }) {
     });
   };
 
-  const navigation = useNavigation();
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <ScrollView>
@@ -182,7 +184,14 @@ export default function GymDetailScreen({ route }) {
         <View style={styles.cardDetail}>
           <Text style={styles.gymName}>{gymDetail?.gymName}</Text>
           <Text style={styles.gymAddress}>📍{gymDetail?.address}</Text>
-          <Text style={styles.gymStartPrice}> từ 7,000,000đ / tháng</Text>
+          <Text style={styles.gymStartPrice}>
+            từ{" "}
+            {lowestPackage?.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            })}
+            / tháng
+          </Text>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               onPress={() => navigation.navigate("GymPTScreen", { gymId })}
@@ -315,13 +324,22 @@ export default function GymDetailScreen({ route }) {
                   </Text>
                 </View>
                 <TouchableOpacity>
-                  <AntDesign
-                    name="pluscircleo"
-                    size={24}
-                    color="#ED2A46"
-                    style={{ marginRight: 20 }}
-                    onPress={() => handleAddToCart(item)}
-                  />
+                  {isPackageInCart(item.id) ? (
+                    <AntDesign
+                      name="checkcircleo"
+                      size={24}
+                      color="#4CAF50"
+                      style={{ marginRight: 20 }}
+                    />
+                  ) : (
+                    <AntDesign
+                      name="pluscircleo"
+                      size={24}
+                      color="#ED2A46"
+                      style={{ marginRight: 20 }}
+                      onPress={() => handleAddToCart(item)}
+                    />
+                  )}
                 </TouchableOpacity>
               </View>
             ))}
@@ -354,13 +372,22 @@ export default function GymDetailScreen({ route }) {
                   </Text>
                 </View>
                 <TouchableOpacity>
-                  <AntDesign
-                    name="pluscircleo"
-                    size={24}
-                    color="#ED2A46"
-                    style={{ marginRight: 20 }}
-                    onPress={() => handleAddToCart(item)}
-                  />
+                  {isPackageInCart(item.id) ? (
+                    <AntDesign
+                      name="checkcircleo"
+                      size={24}
+                      color="#4CAF50"
+                      style={{ marginRight: 20 }}
+                    />
+                  ) : (
+                    <AntDesign
+                      name="pluscircleo"
+                      size={24}
+                      color="#ED2A46"
+                      style={{ marginRight: 20 }}
+                      onPress={() => handleAddToCart(item)}
+                    />
+                  )}
                 </TouchableOpacity>
               </View>
             ))}
@@ -379,7 +406,6 @@ const styles = StyleSheet.create({
   cardDetail: {
     alignSelf: "center",
     width: "93%",
-    // height: 220,
     backgroundColor: "#fff",
     borderRadius: 20,
     marginTop: 20,
@@ -496,9 +522,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    // alignItems: "center",
-    // justifyContent: "center",
-    // padding: 20,
   },
 
   bottomSheetTitle: {
@@ -521,7 +544,6 @@ const styles = StyleSheet.create({
   packageName: {
     fontSize: 15,
     color: "#000000",
-    // paddingVertical: 10,
     marginLeft: 20,
   },
   packagePrice: {
@@ -556,5 +578,39 @@ const styles = StyleSheet.create({
   markerImage: {
     width: 60,
     height: 60,
+  },
+
+  // Cart icon and badge styles
+  cartIconContainer: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    zIndex: 999,
+  },
+  cartButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cartBadge: {
+    position: "absolute",
+    right: -5,
+    top: -5,
+    backgroundColor: "#ED2A46",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cartBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "bold",
   },
 });

@@ -1,31 +1,39 @@
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 import React from "react";
 import { StyleSheet } from "react-native";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
-export default function CartCard({ product }) {
+export default function CartCard({ product, onRemove }) {
   return (
     <View style={styles.cartCart}>
       <View style={styles.cartUpper}>
         <Image source={{ uri: product.image }} style={styles.gymImage} />
-        <View>
-          <View style={{ height: 60 }}>
+        <View style={styles.infoContainer}>
+          <View style={styles.titleContainer}>
             <Text
-              style={{ fontWeight: "bold", color: "#FF914D", fontSize: 20 }}
+              style={{ fontWeight: "bold", color: "#FF914D", fontSize: 18 }}
+              numberOfLines={1}
             >
               {product.gymName}
             </Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ marginRight: 5, color: "#1A191A" }}>
+              <Text style={{ marginRight: 5, color: "#1A191A", fontSize: 12 }}>
                 ★ {product.rating}/5
               </Text>
-              <Text style={{ color: "#1A191A" }}> {product.address}</Text>
+              <Text
+                style={{ color: "#1A191A", fontSize: 12 }}
+                numberOfLines={1}
+              >
+                {product.address}
+              </Text>
             </View>
           </View>
           <Text
             style={{
               color: "#1A191A",
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: "bold",
+              marginTop: 5,
             }}
           >
             {product.selectedPackage.packageName}
@@ -57,11 +65,10 @@ const styles = StyleSheet.create({
   gymImage: {
     width: 80,
     height: 80,
-    borderRadius: 20,
+    borderRadius: 15,
   },
   cartCart: {
     alignSelf: "center",
-
     width: "90%",
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -71,7 +78,7 @@ const styles = StyleSheet.create({
       width: 1,
       height: 1,
     },
-    padding: 20,
+    padding: 15,
     shadowOpacity: 0.25,
     shadowRadius: 3,
     elevation: 6,
@@ -83,5 +90,17 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#DDD9D9",
+  },
+  infoContainer: {
+    flex: 1,
+    justifyContent: "space-between",
+    marginLeft: 5,
+  },
+  titleContainer: {
+    height: 50,
+    justifyContent: "center",
+  },
+  cartUnder: {
+    marginTop: 5,
   },
 });

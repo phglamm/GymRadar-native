@@ -3,96 +3,75 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
+  ScrollView,
+  Alert,
 } from "react-native";
 import React from "react";
-import { ScrollView } from "react-native";
 import CartCard from "../../components/CartCard/CartCard";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useNavigation } from "@react-navigation/native";
+import { useCart } from "../../context/CartContext"; // Import the cart context
 
 export default function CartScreen() {
   const navigation = useNavigation();
-  const cart = [
-    {
-      gymId: 1,
-      gymName: "Gym A",
-      rating: 4.5,
-      address: "123 Street, City",
-      image:
-        "https://waysstation.vn/wp-content/uploads/2024/05/z5435387693784_7fc090c9a4e94b6ceeed6f01f9247d64.jpg",
-      selectedPackage: {
-        packageId: 1,
-        packageName: "Gói 6 tháng",
-        packagePrice: 1000000,
-      },
-    },
-    {
-      gymId: 1,
-      gymName: "Gym A",
-      rating: 4.5,
-      address: "123 Street, City",
-      image:
-        "https://waysstation.vn/wp-content/uploads/2024/05/z5435387693784_7fc090c9a4e94b6ceeed6f01f9247d64.jpg",
-      selectedPackage: {
-        packageId: 1,
-        packageName: "Gói 6 tháng",
-        packagePrice: 1000000,
-      },
-    },
-    {
-      gymId: 1,
-      gymName: "Gym A",
-      rating: 4.5,
-      address: "123 Street, City",
-      image:
-        "https://waysstation.vn/wp-content/uploads/2024/05/z5435387693784_7fc090c9a4e94b6ceeed6f01f9247d64.jpg",
-      selectedPackage: {
-        packageId: 1,
-        packageName: "Gói 6 tháng",
-        packagePrice: 1000000,
-      },
-    },
-    {
-      gymId: 1,
-      gymName: "Gym A",
-      rating: 4.5,
-      address: "123 Street, City",
-      image:
-        "https://waysstation.vn/wp-content/uploads/2024/05/z5435387693784_7fc090c9a4e94b6ceeed6f01f9247d64.jpg",
-      selectedPackage: {
-        packageId: 1,
-        packageName: "Gói 6 tháng",
-        packagePrice: 1000000,
-      },
-    },
-    {
-      gymId: 1,
-      gymName: "Gym A",
-      rating: 4.5,
-      address: "123 Street, City",
-      image:
-        "https://waysstation.vn/wp-content/uploads/2024/05/z5435387693784_7fc090c9a4e94b6ceeed6f01f9247d64.jpg",
-      selectedPackage: {
-        packageId: 1,
-        packageName: "Gói 6 tháng",
-        packagePrice: 1000000,
-      },
-    },
-  ];
+  const { cart, removeFromCart, getCartTotal, clearCart } = useCart(); // Use the cart context
 
-  const totalPrice = cart.reduce(
-    (total, product) => total + product.selectedPackage.packagePrice,
-    0
-  );
-  console.log(totalPrice);
+  // Function to handle removing an item from cart
+  const handleRemoveItem = (gymId, packageId) => {
+    Alert.alert(
+      "Xóa gói tập",
+      "Bạn có chắc chắn muốn xóa gói tập này khỏi giỏ hàng?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel",
+        },
+        {
+          text: "Xóa",
+          onPress: () => removeFromCart(gymId, packageId),
+          style: "destructive",
+        },
+      ]
+    );
+  };
+
+  // Calculate the total price
+  const totalPrice = getCartTotal();
+
+  // Function to handle checkout
+  const handleCheckout = () => {
+    if (cart.length === 0) {
+      Alert.alert(
+        "Giỏ hàng trống",
+        "Vui lòng thêm gói tập vào giỏ hàng trước khi thanh toán."
+      );
+      return;
+    }
+    navigation.navigate("Check out");
+  };
+
   return (
     <View style={styles.cartScreen}>
       {cart.length > 0 ? (
         <>
-          <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-            {cart.map((product, index) => (
-              <CartCard key={index} product={product} />
+          <ScrollView contentContainerStyle={{ paddingBottom: 150 }}>
+            {cart.map((item, index) => (
+              <CartCard
+                key={index}
+                product={{
+                  gymId: item.gymId,
+                  gymName: item.gymName,
+                  rating: 5, // Default since we don't have ratings in cart items
+                  address: item.gymAddress,
+                  image: item.gymImage,
+                  selectedPackage: {
+                    packageId: item.packageId,
+                    packageName: item.packageName,
+                    packagePrice: item.price,
+                  },
+                }}
+                onRemove={() => handleRemoveItem(item.gymId, item.packageId)}
+              />
             ))}
           </ScrollView>
 
@@ -103,7 +82,7 @@ export default function CartScreen() {
                 <Text
                   style={{ fontSize: 20, fontWeight: "bold", color: "#ED2A46" }}
                 >
-                  {(totalPrice || 0).toLocaleString("vi", {
+                  {totalPrice.toLocaleString("vi-VN", {
                     style: "currency",
                     currency: "VND",
                   })}
@@ -111,7 +90,7 @@ export default function CartScreen() {
               </View>
               <TouchableOpacity
                 style={styles.checkoutButton}
-                onPress={() => navigation.navigate("Check out")}
+                onPress={handleCheckout}
               >
                 <Text style={styles.checkoutText}>Thanh Toán</Text>
               </TouchableOpacity>
@@ -135,7 +114,10 @@ export default function CartScreen() {
             Giỏ hàng của bạn đang trống
           </Text>
 
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("Trang chủ")}
+          >
             <Text style={styles.buttonText}>Về Trang Chủ</Text>
           </TouchableOpacity>
         </View>
@@ -174,7 +156,11 @@ const styles = StyleSheet.create({
   },
 
   orderSummary: {
-    paddingVertical: 30,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: 40,
     borderColor: "#ccc",
     shadowColor: "#000",
     shadowOffset: {
@@ -184,7 +170,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 3.84,
     elevation: 9,
-    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     backgroundColor: "#fff",
   },
   proceedContainer: {
@@ -192,9 +179,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 30,
-    paddingVertical: 30,
-    borderTopWidth: 1,
-    borderTopColor: "#DDD9D9",
+    // paddingVertical: 30,
   },
   checkoutButton: {
     backgroundColor: "#FF914D",
