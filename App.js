@@ -3,7 +3,6 @@ import Navigator from "./navigation/Navigator";
 import { View } from "react-native";
 import Toast from "react-native-toast-message";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Provider } from "react-redux";
 import { CartProvider } from "./context/CartContext";
 
 export default function App() {
