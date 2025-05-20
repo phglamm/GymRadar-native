@@ -10,12 +10,29 @@ export default function CartCard({ product, onRemove }) {
         <Image source={{ uri: product.image }} style={styles.gymImage} />
         <View style={styles.infoContainer}>
           <View style={styles.titleContainer}>
-            <Text
-              style={{ fontWeight: "bold", color: "#FF914D", fontSize: 18 }}
-              numberOfLines={1}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 10,
+              }}
             >
-              {product.gymName}
-            </Text>
+              <Text
+                style={{ fontWeight: "bold", color: "#FF914D", fontSize: 18 }}
+                numberOfLines={1}
+              >
+                {product.gymName}
+              </Text>
+              <TouchableOpacity
+                style={{
+                  alignSelf: "flex-end",
+                }}
+                onPress={onRemove}
+              >
+                <AntDesign name="closecircle" size={22} color="#ED2A46" />
+              </TouchableOpacity>
+            </View>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Text style={{ marginRight: 5, color: "#1A191A", fontSize: 12 }}>
                 ★ {product.rating}/5
