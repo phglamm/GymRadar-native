@@ -29,7 +29,9 @@ const ProfileScreen = () => {
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Dùng để giữ ngày tạm trong picker iOS modal trước khi xác nhận
-  const [tempDate, setTempDate] = useState(userProfile.dob ? new Date(userProfile.dob) : new Date());
+  const [tempDate, setTempDate] = useState(
+    userProfile.dob ? new Date(userProfile.dob) : new Date()
+  );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [displayDate, setDisplayDate] = useState("");
 
@@ -94,7 +96,7 @@ const ProfileScreen = () => {
       };
 
       console.log("Sending update with data:", updateData);
-      const response = await accountService.updateProfile(updateData);
+      const response = await accountService.updateProfileUser(updateData);
       console.log("Update response:", response);
 
       if (response.status === "200") {
@@ -116,12 +118,20 @@ const ProfileScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 80 }}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 80 }}
+    >
       <View style={styles.gradientWrapper}>
-        <LinearGradient colors={["#FF914D", "#ED2A46"]} style={styles.linearGradient}>
+        <LinearGradient
+          colors={["#FF914D", "#ED2A46"]}
+          style={styles.linearGradient}
+        >
           <View style={styles.profileCard}>
             <Image
-              source={{ uri: "https://randomuser.me/api/portraits/women/44.jpg" }}
+              source={{
+                uri: "https://randomuser.me/api/portraits/women/44.jpg",
+              }}
               style={styles.avatar}
             />
             <Text style={styles.name}>{userProfile.fullName}</Text>
@@ -155,7 +165,9 @@ const ProfileScreen = () => {
         <TextInput
           style={[styles.input, !isEditMode && styles.disabledInput]}
           value={userProfile.fullName}
-          onChangeText={(text) => setUserProfile({ ...userProfile, fullName: text })}
+          onChangeText={(text) =>
+            setUserProfile({ ...userProfile, fullName: text })
+          }
           placeholder="Họ và tên"
           editable={isEditMode}
         />
@@ -169,8 +181,16 @@ const ProfileScreen = () => {
         />
 
         <Text style={styles.label}>Ngày sinh</Text>
-        <TouchableOpacity onPress={() => isEditMode && openDatePicker()} disabled={!isEditMode}>
-          <View style={[styles.datePickerButton, !isEditMode && styles.disabledInput]}>
+        <TouchableOpacity
+          onPress={() => isEditMode && openDatePicker()}
+          disabled={!isEditMode}
+        >
+          <View
+            style={[
+              styles.datePickerButton,
+              !isEditMode && styles.disabledInput,
+            ]}
+          >
             <Text>{displayDate || "Chọn ngày sinh"}</Text>
           </View>
         </TouchableOpacity>
@@ -179,7 +199,9 @@ const ProfileScreen = () => {
         <TextInput
           style={[styles.input, !isEditMode && styles.disabledInput]}
           value={userProfile.weight?.toString()}
-          onChangeText={(text) => setUserProfile({ ...userProfile, weight: text })}
+          onChangeText={(text) =>
+            setUserProfile({ ...userProfile, weight: text })
+          }
           placeholder="Cân nặng"
           keyboardType="numeric"
           editable={isEditMode}
@@ -189,7 +211,9 @@ const ProfileScreen = () => {
         <TextInput
           style={[styles.input, !isEditMode && styles.disabledInput]}
           value={userProfile.height?.toString()}
-          onChangeText={(text) => setUserProfile({ ...userProfile, height: text })}
+          onChangeText={(text) =>
+            setUserProfile({ ...userProfile, height: text })
+          }
           placeholder="Chiều cao"
           keyboardType="numeric"
           editable={isEditMode}
@@ -197,14 +221,22 @@ const ProfileScreen = () => {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.button, isEditMode ? styles.updateButton : styles.editButton]}
+            style={[
+              styles.button,
+              isEditMode ? styles.updateButton : styles.editButton,
+            ]}
             onPress={handleUpdateProfile}
           >
-            <Text style={styles.buttonText}>{isEditMode ? "Lưu thay đổi" : "Cập nhật"}</Text>
+            <Text style={styles.buttonText}>
+              {isEditMode ? "Lưu thay đổi" : "Cập nhật"}
+            </Text>
           </TouchableOpacity>
 
           {isEditMode && (
-            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={cancelEditMode}>
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton]}
+              onPress={cancelEditMode}
+            >
               <Text style={styles.buttonText}>Hủy</Text>
             </TouchableOpacity>
           )}
@@ -213,7 +245,11 @@ const ProfileScreen = () => {
 
       {/* Date Picker cho iOS */}
       {Platform.OS === "ios" && (
-        <Modal visible={showDatePicker} transparent={true} animationType="slide">
+        <Modal
+          visible={showDatePicker}
+          transparent={true}
+          animationType="slide"
+        >
           <View style={styles.modalOverlay}>
             <View style={styles.bottomSheetContainer}>
               <View style={styles.bottomSheetHeader}>
@@ -223,7 +259,10 @@ const ProfileScreen = () => {
                 <Text style={styles.sheetTitle}>Chọn ngày sinh</Text>
                 <TouchableOpacity
                   onPress={() => {
-                    setUserProfile({ ...userProfile, dob: formatAPIDate(tempDate) });
+                    setUserProfile({
+                      ...userProfile,
+                      dob: formatAPIDate(tempDate),
+                    });
                     setShowDatePicker(false);
                   }}
                 >
@@ -251,16 +290,18 @@ const ProfileScreen = () => {
         <DateTimePicker
           value={userProfile.dob ? new Date(userProfile.dob) : new Date()}
           mode="date"
-          display="spinner"   
+          display="spinner"
           onChange={(event, selectedDate) => {
             setShowDatePicker(false);
             if (event.type === "set" && selectedDate) {
-              setUserProfile({ ...userProfile, dob: formatAPIDate(selectedDate) });
+              setUserProfile({
+                ...userProfile,
+                dob: formatAPIDate(selectedDate),
+              });
             }
           }}
         />
       )}
-
     </ScrollView>
   );
 };

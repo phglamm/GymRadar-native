@@ -13,7 +13,7 @@ export default function ForgotPasswordScreen2() {
   const [counter, setCounter] = useState(60);
   const [activeIndex, setActiveIndex] = useState(null); // ô đang focus
   const timerRef = useRef(null);
-    const navigation = useNavigation();
+  const navigation = useNavigation();
 
   const handleConfirmPress = () => {
     navigation.navigate("ForgotPasswordScreen3");
@@ -74,9 +74,12 @@ export default function ForgotPasswordScreen2() {
         ))}
       </View>
 
-   <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmPress}>
-      <Text style={styles.confirmButtonText}>Xác nhận</Text>
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.confirmButton}
+        onPress={handleConfirmPress}
+      >
+        <Text style={styles.confirmButtonText}>Xác nhận</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -119,8 +122,8 @@ const styles = StyleSheet.create({
   otpInput: {
     borderWidth: 1,
     borderColor: "#ccc",
-    width: 50,         // tăng kích thước chiều rộng
-    height: 60,        // tăng kích thước chiều cao
+    width: 50, // tăng kích thước chiều rộng
+    height: 60, // tăng kích thước chiều cao
     borderRadius: 8,
     textAlign: "center",
     fontSize: 22,
@@ -128,7 +131,7 @@ const styles = StyleSheet.create({
   },
 
   otpInputActive: {
-    borderColor: "#FF914D",  // màu viền khi focus
+    borderColor: "#FF914D", // màu viền khi focus
     shadowColor: "#fff",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
