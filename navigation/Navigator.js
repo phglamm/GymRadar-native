@@ -29,6 +29,9 @@ import PTProfileScreen from "../screens/PTProfileScreen/PTProfileScreen";
 import SchedulePTScreen from "../screens/SchedulePTScreen/SchedulePTScreen";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import SlotsPTScreen from "../screens/SlotsPTScreen/SlotsPTScreen";
+import ForgotPasswordScreen1 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen1";
+import ForgotPasswordScreen2 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen2";
+import ForgotPasswordScreen3 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen3";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -528,7 +531,48 @@ export default function Navigator() {
             },
           }}
         />
-
+        <Stack.Screen
+          name="ForgotPasswordScreen1"
+          component={ForgotPasswordScreen1}
+          options={{
+            headerShown: true,
+            title: "Quên Mật Khẩu",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+        <Stack.Screen
+          name="ForgotPasswordScreen2"
+          component={ForgotPasswordScreen2}
+          options={{
+            headerShown: true,
+            title: "Quên Mật Khẩu",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+        <Stack.Screen
+          name="ForgotPasswordScreen3"
+          component={ForgotPasswordScreen3}
+          options={{
+            headerShown: true,
+            title: "Quên Mật Khẩu",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
         <Stack.Screen
           name="Register"
           component={RegisterScreen}
