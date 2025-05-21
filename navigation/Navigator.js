@@ -26,6 +26,9 @@ import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
 import AccountScreen from "../screens/AccountScreen/AccountScreen";
 import UpdatePasswordScreen from "../screens/UpdatePasswordScreen/UpdatePasswordScreen";
 import PTProfileScreen from "../screens/PTProfileScreen/PTProfileScreen";
+import ForgotPasswordScreen1 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen1";
+import ForgotPasswordScreen2 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen2";
+import ForgotPasswordScreen3 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen3";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -374,8 +377,8 @@ export default function Navigator() {
             tabBarStyle: shouldHideTabBar
               ? { display: "none" }
               : {
-                  backgroundColor: "#ED2A46",
-                },
+                backgroundColor: "#ED2A46",
+              },
             tabBarActiveTintColor: "#FFFFFF",
             tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)",
             tabBarLabelStyle: {
@@ -491,7 +494,48 @@ export default function Navigator() {
             },
           }}
         />
-
+        <Stack.Screen
+          name="ForgotPasswordScreen1"
+          component={ForgotPasswordScreen1}
+          options={{
+            headerShown: true,
+            title: "Quên Mật Khẩu",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+                <Stack.Screen
+          name="ForgotPasswordScreen2"
+          component={ForgotPasswordScreen2}
+          options={{
+            headerShown: true,
+            title: "Quên Mật Khẩu",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+                        <Stack.Screen
+          name="ForgotPasswordScreen3"
+          component={ForgotPasswordScreen3}
+          options={{
+            headerShown: true,
+            title: "Quên Mật Khẩu",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
         <Stack.Screen
           name="Register"
           component={RegisterScreen}
