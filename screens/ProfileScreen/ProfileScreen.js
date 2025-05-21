@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Picker } from "@react-native-picker/picker";
 import accountService from "./../../services/accountService";
 
 const ProfileScreen = () => {
@@ -25,14 +24,10 @@ const ProfileScreen = () => {
     age: 0,
     weight: 0,
     height: 0,
-    gender: "Male",
-    address: "",
   });
 
-  // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // Format date for display
   const formatDisplayDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -43,19 +38,14 @@ const ProfileScreen = () => {
       .padStart(2, "0")}/${date.getFullYear()}`;
   };
 
-  // Format date for API
   const formatAPIDate = (date) => {
     return `${date.getFullYear()}-${(date.getMonth() + 1)
       .toString()
       .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
   };
 
-  // Date picker state
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [displayDate, setDisplayDate] = useState("");
-
-  // Gender picker state
-  const [showGenderPicker, setShowGenderPicker] = useState(false);
 
   useEffect(() => {
     fetchProfileData();
@@ -83,20 +73,16 @@ const ProfileScreen = () => {
 
   const handleUpdateProfile = async () => {
     if (!isEditMode) {
-      // Switch to edit mode
       setIsEditMode(true);
       return;
     }
 
-    // Handle save in edit mode
     try {
       const updateData = {
         fullName: userProfile.fullName,
         dob: userProfile.dob,
         weight: parseFloat(userProfile.weight) || 0,
         height: parseFloat(userProfile.height) || 0,
-        gender: userProfile.gender,
-        address: userProfile.address || "",
       };
 
       console.log("Sending update with data:", updateData);
@@ -105,8 +91,8 @@ const ProfileScreen = () => {
 
       if (response.status === "200") {
         Alert.alert("Thành công", "Cập nhật hồ sơ thành công");
-        fetchProfileData(); // Refresh profile data
-        setIsEditMode(false); // Exit edit mode after successful update
+        fetchProfileData();
+        setIsEditMode(false);
       } else {
         Alert.alert("Lỗi", response.message || "Cập nhật không thành công");
       }
@@ -116,36 +102,18 @@ const ProfileScreen = () => {
     }
   };
 
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setUserProfile({
-        ...userProfile,
-        dob: formatAPIDate(selectedDate),
-      });
-    }
-  };
-
   const cancelEditMode = () => {
     setIsEditMode(false);
-    fetchProfileData(); // Reset to original data
+    fetchProfileData();
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 80 }}
-    >
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 80 }}>
       <View style={styles.gradientWrapper}>
-        <LinearGradient
-          colors={["#FF914D", "#ED2A46"]}
-          style={styles.linearGradient}
-        >
+        <LinearGradient colors={["#FF914D", "#ED2A46"]} style={styles.linearGradient}>
           <View style={styles.profileCard}>
             <Image
-              source={{
-                uri: "https://randomuser.me/api/portraits/women/44.jpg",
-              }}
+              source={{ uri: "https://randomuser.me/api/portraits/women/44.jpg" }}
               style={styles.avatar}
             />
             <Text style={styles.name}>{userProfile.fullName}</Text>
@@ -174,15 +142,12 @@ const ProfileScreen = () => {
         </View>
       </View>
 
-      {/* Form */}
       <View style={styles.form}>
         <Text style={styles.label}>Họ và tên</Text>
         <TextInput
           style={[styles.input, !isEditMode && styles.disabledInput]}
           value={userProfile.fullName}
-          onChangeText={(text) =>
-            setUserProfile({ ...userProfile, fullName: text })
-          }
+          onChangeText={(text) => setUserProfile({ ...userProfile, fullName: text })}
           placeholder="Họ và tên"
           editable={isEditMode}
         />
@@ -196,53 +161,17 @@ const ProfileScreen = () => {
         />
 
         <Text style={styles.label}>Ngày sinh</Text>
-        <TouchableOpacity
-          onPress={() => isEditMode && setShowDatePicker(true)}
-          disabled={!isEditMode}
-        >
-          <View
-            style={[
-              styles.datePickerButton,
-              !isEditMode && styles.disabledInput,
-            ]}
-          >
+        <TouchableOpacity onPress={() => isEditMode && setShowDatePicker(true)} disabled={!isEditMode}>
+          <View style={[styles.datePickerButton, !isEditMode && styles.disabledInput]}>
             <Text>{displayDate || "Chọn ngày sinh"}</Text>
           </View>
         </TouchableOpacity>
-
-        <Text style={styles.label}>Giới tính</Text>
-        <TouchableOpacity
-          onPress={() => isEditMode && setShowGenderPicker(true)}
-          disabled={!isEditMode}
-        >
-          <View
-            style={[
-              styles.datePickerButton,
-              !isEditMode && styles.disabledInput,
-            ]}
-          >
-            <Text>{userProfile.gender === "Male" ? "Nam" : "Nữ"}</Text>
-          </View>
-        </TouchableOpacity>
-
-        <Text style={styles.label}>Địa chỉ</Text>
-        <TextInput
-          style={[styles.input, !isEditMode && styles.disabledInput]}
-          value={userProfile.address}
-          onChangeText={(text) =>
-            setUserProfile({ ...userProfile, address: text })
-          }
-          placeholder="Địa chỉ"
-          editable={isEditMode}
-        />
 
         <Text style={styles.label}>Cân nặng (kg)</Text>
         <TextInput
           style={[styles.input, !isEditMode && styles.disabledInput]}
           value={userProfile.weight?.toString()}
-          onChangeText={(text) =>
-            setUserProfile({ ...userProfile, weight: text })
-          }
+          onChangeText={(text) => setUserProfile({ ...userProfile, weight: text })}
           placeholder="Cân nặng"
           keyboardType="numeric"
           editable={isEditMode}
@@ -252,9 +181,7 @@ const ProfileScreen = () => {
         <TextInput
           style={[styles.input, !isEditMode && styles.disabledInput]}
           value={userProfile.height?.toString()}
-          onChangeText={(text) =>
-            setUserProfile({ ...userProfile, height: text })
-          }
+          onChangeText={(text) => setUserProfile({ ...userProfile, height: text })}
           placeholder="Chiều cao"
           keyboardType="numeric"
           editable={isEditMode}
@@ -262,22 +189,14 @@ const ProfileScreen = () => {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[
-              styles.button,
-              isEditMode ? styles.updateButton : styles.editButton,
-            ]}
+            style={[styles.button, isEditMode ? styles.updateButton : styles.editButton]}
             onPress={handleUpdateProfile}
           >
-            <Text style={styles.buttonText}>
-              {isEditMode ? "Lưu thay đổi" : "Cập nhật"}
-            </Text>
+            <Text style={styles.buttonText}>{isEditMode ? "Lưu thay đổi" : "Cập nhật"}</Text>
           </TouchableOpacity>
 
           {isEditMode && (
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={cancelEditMode}
-            >
+            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={cancelEditMode}>
               <Text style={styles.buttonText}>Hủy</Text>
             </TouchableOpacity>
           )}
@@ -300,8 +219,6 @@ const ProfileScreen = () => {
               <TouchableOpacity
                 onPress={() => {
                   if (Platform.OS === "ios") {
-                    // For iOS, we need this confirm button
-                    // Android automatically confirms on change
                     onDateChange(null, new Date(userProfile.dob || new Date()));
                   }
                   setShowDatePicker(false);
@@ -324,7 +241,6 @@ const ProfileScreen = () => {
                     });
                   }
                 } else {
-                  // For iOS, we update but don't close until "Done" is pressed
                   if (date) {
                     setUserProfile({
                       ...userProfile,
@@ -335,44 +251,6 @@ const ProfileScreen = () => {
               }}
               style={styles.datePicker}
             />
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Gender Picker Bottom Sheet */}
-      <Modal
-        visible={showGenderPicker}
-        transparent={true}
-        animationType="slide"
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowGenderPicker(false)}
-        >
-          <View style={styles.bottomSheetContainer}>
-            <View style={styles.bottomSheetHeader}>
-              <TouchableOpacity onPress={() => setShowGenderPicker(false)}>
-                <Text style={styles.cancelText}>Hủy</Text>
-              </TouchableOpacity>
-              <Text style={styles.sheetTitle}>Chọn giới tính</Text>
-              <TouchableOpacity onPress={() => setShowGenderPicker(false)}>
-                <Text style={styles.doneText}>Xong</Text>
-              </TouchableOpacity>
-            </View>
-            <Picker
-              selectedValue={userProfile.gender}
-              onValueChange={(itemValue) => {
-                setUserProfile({ ...userProfile, gender: itemValue });
-                if (Platform.OS === "android") {
-                  setShowGenderPicker(false);
-                }
-              }}
-              style={styles.genderPicker}
-            >
-              <Picker.Item label="Nam" value="Male" />
-              <Picker.Item label="Nữ" value="Female" />
-            </Picker>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -528,7 +406,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 16,
   },
-  // Bottom sheet styles
   modalOverlay: {
     flex: 1,
     justifyContent: "flex-end",
@@ -563,11 +440,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   datePicker: {
-    backgroundColor: "#fff",
-    width: "100%",
-    height: 200,
-  },
-  genderPicker: {
     backgroundColor: "#fff",
     width: "100%",
     height: 200,
