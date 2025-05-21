@@ -21,6 +21,7 @@ import {
 import { vi } from "date-fns/locale";
 import gymService from "../../services/gymService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ptService from "../../services/ptService";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const DAY_ITEM_WIDTH = SCREEN_WIDTH / 7 - 8; // Adjust for padding
@@ -52,11 +53,11 @@ const vietnameseMonthNames = {
   Dec: "Th12",
 };
 
-export default function ScheduleScreen() {
+export default function SchedulePTScreen() {
   const today = new Date();
   const [slots, setSlots] = useState([]);
+  const [ptSlots, setPtSlots] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [bookingLoading, setBookingLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
   const [weekStart, setWeekStart] = useState(currentWeekStart); // Week starts on Monday
@@ -115,113 +116,58 @@ export default function ScheduleScreen() {
     }
   };
 
-  // Function to book a slot
-  const bookSlot = async (slotId) => {
-    setBookingLoading(true);
+  const fetchPTSlots = async () => {
     try {
-      const requestData = {
+      const response = await ptService.getPtSlot();
+      const { items } = response.data;
+      console.log("ptSlots", items);
+      setPtSlots(items);
+    } catch (error) {
+      console.error("Error fetching Slots:", error);
+      Alert.alert("Lỗi", "Không thể tải lịch tập. Vui lòng thử lại sau.");
+    }
+  };
+
+  const registerSlot = async (slotId) => {
+    try {
+      await ptService.registerSlot({
         slotId,
-        date: format(selectedDate, "yyyy-MM-dd"),
-      };
-      console.log(requestData);
-      // await gymService.bookSlot({
-      //   slotId,
-      //   date: format(selectedDate, "yyyy-MM-dd"),
-      // });
-      // Alert.alert("Thành công", "Đã đặt lịch thành công!");
-      // Refresh the slots to show updated availability
+      });
+      Alert.alert("Thành công", "Đã đăng ký thành công!");
       fetchSlotsGym(pagination.current, pagination.pageSize);
     } catch (error) {
       console.error("Error booking slot:", error);
       Alert.alert("Lỗi", "Không thể đặt lịch. Vui lòng thử lại sau.");
-    } finally {
-      setBookingLoading(false);
     }
   };
 
   useEffect(() => {
     fetchSlotsGym();
+    fetchPTSlots();
   }, []);
 
-  // Generate dates for the entire week
-  const generateWeekDates = () => {
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-      dates.push(addDays(weekStart, i));
-    }
-    return dates;
-  };
+  const filteredGymSlots = slots.filter((slot) => {
+    // Log the current slot ID we're checking
+    console.log("Checking slot ID:", slot.id);
 
-  const weekDates = generateWeekDates();
+    // Check if this ID exists in any ptSlot
+    const exists = ptSlots.some((ptSlot) => {
+      console.log("Comparing with ptSlot.slot.id:", ptSlot.slot?.id);
+      console.log("ptSlot ID:", ptSlot.slot?.id);
+      return ptSlot.slot?.id === slot.id;
+    });
 
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
-  };
+    console.log("Is this slot ID in ptSlots?", exists);
+    return !exists;
+  });
 
-  const handleNextWeek = () => {
-    // Only allow going one week forward from current week
-    if (!isNextWeekDisabled) {
-      setWeekStart(addDays(weekStart, 7));
-    }
-  };
-
-  const handlePrevWeek = () => {
-    // Go back to current week if we're in a future week
-    if (!isPrevWeekDisabled) {
-      setWeekStart(currentWeekStart);
-    }
-  };
-
-  // Get Vietnamese day name
-  const getVietnameseDayName = (date) => {
-    const englishDay = format(date, "EEE");
-    return vietnameseDayNames[englishDay] || englishDay;
-  };
-
-  // Get Vietnamese month name
-  const getVietnameseMonthName = (date) => {
-    const englishMonth = format(date, "MMM");
-    return vietnameseMonthNames[englishMonth] || englishMonth;
-  };
-
-  const renderDateItem = (date, index) => {
-    const isSelected = isSameDay(selectedDate, date);
-    const isToday = isSameDay(date, new Date());
-    const isPastDate = isBefore(date, today) && !isToday;
-    const isDisabled = isPastDate;
-
-    return (
-      <TouchableOpacity
-        key={index}
-        style={[
-          styles.dateItem,
-          isSelected && styles.selectedDateItem,
-          isToday && styles.todayDateItem,
-          isDisabled && styles.disabledDateItem,
-
-          { width: DAY_ITEM_WIDTH },
-        ]}
-        onPress={() => handleDateSelect(date)}
-        disabled={isDisabled}
-      >
-        <Text style={[styles.dayName, isSelected && styles.selectedDateText]}>
-          {getVietnameseDayName(date)}
-        </Text>
-        <Text style={[styles.dayNumber, isSelected && styles.selectedDateText]}>
-          {format(date, "d")}
-        </Text>
-        <Text style={[styles.monthName, isSelected && styles.selectedDateText]}>
-          {getVietnameseMonthName(date)}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-
-  // Get sorted slots for better organization
+  console.log("Filtered Gym Slots:", filteredGymSlots);
   const getFilteredAndSortedSlots = () => {
     // Filter slots for the selected date (in a real app, slots would have dates)
     // For this example, we'll just show all slots for the selected date
-    return slots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    return filteredGymSlots.sort((a, b) =>
+      a.startTime.localeCompare(b.startTime)
+    );
   };
 
   const renderSlot = (slot) => {
@@ -237,26 +183,14 @@ export default function ScheduleScreen() {
 
           <TouchableOpacity
             style={styles.bookButton}
-            onPress={() => bookSlot(slot.id)}
-            disabled={bookingLoading}
+            onPress={() => registerSlot(slot.id)}
           >
-            <Text style={styles.bookButtonText}>
-              {bookingLoading ? "Đang đặt..." : "Đặt lịch"}
-            </Text>
+            <Text style={styles.bookButtonText}>Đăng ký</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   };
-
-  // Format week range in Vietnamese
-  const formatVietnameseDate = (date) => {
-    return format(date, "dd/MM", { locale: vi });
-  };
-
-  const weekRangeText = `${formatVietnameseDate(
-    weekStart
-  )} - ${formatVietnameseDate(addDays(weekStart, 6))}`;
 
   if (loading && slots.length === 0) {
     return (
@@ -268,69 +202,13 @@ export default function ScheduleScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.weekNavigation}>
-        <TouchableOpacity
-          onPress={handlePrevWeek}
-          style={[
-            styles.navButton,
-            styles.prevButton,
-            isPrevWeekDisabled && styles.disabledButton,
-          ]}
-          disabled={isPrevWeekDisabled}
-        >
-          <Text
-            style={[
-              styles.navButtonText,
-              isPrevWeekDisabled && styles.disabledButtonText,
-            ]}
-          >
-            ◀ Tuần Trước
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.weekBadge}>
-          <Text style={styles.weekRangeText}>{weekRangeText}</Text>
-        </View>
-
-        <TouchableOpacity
-          onPress={handleNextWeek}
-          style={[
-            styles.navButton,
-            styles.nextButton,
-            isNextWeekDisabled && styles.disabledButton,
-          ]}
-          disabled={isNextWeekDisabled}
-        >
-          <Text
-            style={[
-              styles.navButtonText,
-              isNextWeekDisabled && styles.disabledButtonText,
-            ]}
-          >
-            Tuần Sau ▶
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Date Picker - Full Week */}
-      <View style={styles.datePickerContainer}>
-        <View style={styles.weekDaysContainer}>
-          {weekDates.map((date, index) => renderDateItem(date, index))}
-        </View>
-      </View>
-
-      {/* Selected Date */}
-      <Text style={styles.selectedDateHeader}>
-        Ngày {format(selectedDate, "dd/MM/yyyy", { locale: vi })}
-      </Text>
-
       {/* Time Slots */}
       <ScrollView style={styles.slotsContainer}>
         {getFilteredAndSortedSlots().map(renderSlot)}
         {getFilteredAndSortedSlots().length === 0 && (
           <View style={styles.noSlotsContainer}>
             <Text style={styles.noSlotsText}>
-              Không có lịch tập vào ngày này
+              Bạn đã đăng ký lịch hết Slot Tập
             </Text>
           </View>
         )}
@@ -356,22 +234,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
   },
-  weekNavigation: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    marginTop: 20,
-    marginBottom: 12,
-  },
-  weekBadge: {
-    backgroundColor: "#f8f9fa",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E42D46",
-  },
+
   navButton: {
     backgroundColor: "#FF914D",
     paddingVertical: 8,
@@ -529,7 +392,6 @@ const styles = StyleSheet.create({
     padding: 30,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8f9fa",
     borderRadius: 16,
     marginTop: 10,
   },

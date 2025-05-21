@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet } from "react-native";
@@ -17,6 +17,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [secureText, setSecureText] = useState(true);
   const navigation = useNavigation();
+
   const handleLogin = async () => {
     if (!phone || !password) {
       Toast.show({
@@ -37,15 +38,10 @@ export default function LoginScreen() {
       console.log("login user:", requestData);
       console.log("Login response:", response);
 
-      if (response.data.role === "USER") {
-        Toast.show({
-          type: "success",
-          text1: "Đăng nhập thành công",
-        });
-      } else if (response.data.role === "PT") {
-        Toast.show({
-          type: "success",
-          text1: "Đăng nhập thành công với tư cách PT",
+      if (response.data.role === "USER" || response.data.role === "PT") {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainApp", params: { screen: "Home" } }],
         });
       } else {
         Toast.show({
@@ -56,12 +52,6 @@ export default function LoginScreen() {
         });
         return;
       }
-      setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "MainApp", params: { screen: "Home" } }],
-        });
-      }, 1000);
 
       AsyncStorage.setItem("token", response.data.accessToken);
       const user = {

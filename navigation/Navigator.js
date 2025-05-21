@@ -26,10 +26,14 @@ import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
 import AccountScreen from "../screens/AccountScreen/AccountScreen";
 import UpdatePasswordScreen from "../screens/UpdatePasswordScreen/UpdatePasswordScreen";
 import PTProfileScreen from "../screens/PTProfileScreen/PTProfileScreen";
+import SchedulePTScreen from "../screens/SchedulePTScreen/SchedulePTScreen";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import SlotsPTScreen from "../screens/SlotsPTScreen/SlotsPTScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
   const Stack = createNativeStackNavigator();
+  const TopTab = createMaterialTopTabNavigator();
   const [user, setUser] = useState(null);
 
   // Fetch user data on initial load only
@@ -214,19 +218,50 @@ export default function Navigator() {
         })}
       >
         <Stack.Screen
-          name="ScheduleScreen"
-          component={ScheduleScreen}
+          name="SchedulePTTabs"
           options={{
             headerShown: true,
             title: "Đăng Ký Lịch PT",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 20,
-              color: "#ED2A46",
-            },
           }}
-        />
+        >
+          {() => (
+            <TopTab.Navigator
+              screenOptions={{
+                // Customize the indicator that appears under the selected tab
+                tabBarIndicatorStyle: {
+                  backgroundColor: "#ED2A46", // Match your brand color
+                  height: 3, // Make it thicker
+                },
+                // Customize the tab bar itself
+                tabBarStyle: {
+                  backgroundColor: "#FFFFFF", // Background color of the tab bar
+                  elevation: 0, // Remove shadow on Android
+                  shadowOpacity: 0, // Remove shadow on iOS
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#E0E0E0",
+                },
+
+                // Customize colors
+                tabBarActiveTintColor: "#ED2A46", // Color of active tab text
+              }}
+            >
+              <TopTab.Screen
+                name="SchedulePTScreen"
+                component={SchedulePTScreen}
+                options={{
+                  title: "Đăng Ký Lịch PT",
+                }}
+              />
+              <TopTab.Screen
+                name="SlotsPTScreen"
+                component={SlotsPTScreen}
+                options={{
+                  title: "Slots Tập đã đăng ký",
+                }}
+              />
+            </TopTab.Navigator>
+          )}
+        </Stack.Screen>
       </Stack.Navigator>
     );
   };

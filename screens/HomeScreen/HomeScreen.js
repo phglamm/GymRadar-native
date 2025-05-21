@@ -268,7 +268,9 @@ export default function HomeScreen() {
                 containerStyle={styles.swiperContainer}
               />
             ) : (
-              <></>
+              <View>
+                <Text>Hiện không có phòng gym nào gần bạn</Text>
+              </View>
             )}
           </View>
           <View style={styles.gymSection}>
