@@ -9,9 +9,22 @@ import {
 import React, { useEffect, useState } from "react";
 import ptService from "../../services/ptService";
 import Toast from "react-native-toast-message";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function SlotsPTScreen() {
   const [ptSlots, setPtSlots] = useState([]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Your API fetch for the SchedulePT screen
+      console.log("Fetching data for SchedulePT screen");
+      fetchPTSlots();
+    }, [])
+  );
+
+  // useEffect(() => {
+  //   fetchPTSlots();
+  // }, []);
   const fetchPTSlots = async () => {
     try {
       const response = await ptService.getPtSlot();
@@ -23,10 +36,6 @@ export default function SlotsPTScreen() {
       Alert.alert("Lỗi", "Không thể tải lịch tập. Vui lòng thử lại sau.");
     }
   };
-
-  useEffect(() => {
-    fetchPTSlots();
-  }, []);
 
   const getFilteredAndSortedSlots = () => {
     // Filter slots for the selected date (in a real app, slots would have dates)

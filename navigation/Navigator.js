@@ -226,6 +226,8 @@ export default function Navigator() {
         >
           {() => (
             <TopTab.Navigator
+              lazy={true}
+              lazyPreloadDistance={0}
               screenOptions={{
                 // Customize the indicator that appears under the selected tab
                 tabBarIndicatorStyle: {

@@ -22,6 +22,7 @@ import { vi } from "date-fns/locale";
 import gymService from "../../services/gymService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ptService from "../../services/ptService";
+import { useFocusEffect } from "@react-navigation/native";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const DAY_ITEM_WIDTH = SCREEN_WIDTH / 7 - 8; // Adjust for padding
@@ -75,6 +76,16 @@ export default function SchedulePTScreen() {
     addDays(currentWeekStart, 7)
   );
 
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchSlotsGym();
+      fetchPTSlots();
+    }, [])
+  );
+  // useEffect(() => {
+  //   fetchSlotsGym();
+  //   fetchPTSlots();
+  // }, []);
   // Check if previous week button should be disabled
   const isPrevWeekDisabled = isSameDay(weekStart, currentWeekStart);
   useEffect(() => {
@@ -130,21 +141,18 @@ export default function SchedulePTScreen() {
 
   const registerSlot = async (slotId) => {
     try {
-      await ptService.registerSlot({
+      const response = await ptService.registerSlot({
         slotId,
       });
-      Alert.alert("Thành công", "Đã đăng ký thành công!");
-      fetchSlotsGym(pagination.current, pagination.pageSize);
+      console.log(response);
+      // Alert.alert("Thành công", "Đã đăng ký thành công!");
+      fetchSlotsGym();
+      fetchPTSlots();
     } catch (error) {
       console.error("Error booking slot:", error);
-      Alert.alert("Lỗi", "Không thể đặt lịch. Vui lòng thử lại sau.");
+      // Alert.alert("Lỗi", "Không thể đặt lịch. Vui lòng thử lại sau.");
     }
   };
-
-  useEffect(() => {
-    fetchSlotsGym();
-    fetchPTSlots();
-  }, []);
 
   const filteredGymSlots = slots.filter((slot) => {
     // Log the current slot ID we're checking
