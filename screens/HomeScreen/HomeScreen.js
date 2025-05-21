@@ -269,7 +269,9 @@ export default function HomeScreen() {
               />
             ) : (
               <View>
-                <Text>Hiện không có phòng gym nào gần bạn</Text>
+                <Text style={{ alignSelf: "center", paddingVertical: 30 }}>
+                  Hiện không có phòng gym nào gần bạn
+                </Text>
               </View>
             )}
           </View>
