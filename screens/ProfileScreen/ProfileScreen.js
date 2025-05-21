@@ -28,6 +28,11 @@ const ProfileScreen = () => {
 
   const [isEditMode, setIsEditMode] = useState(false);
 
+  // Dùng để giữ ngày tạm trong picker iOS modal trước khi xác nhận
+  const [tempDate, setTempDate] = useState(userProfile.dob ? new Date(userProfile.dob) : new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [displayDate, setDisplayDate] = useState("");
+
   const formatDisplayDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -44,9 +49,6 @@ const ProfileScreen = () => {
       .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
   };
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [displayDate, setDisplayDate] = useState("");
-
   useEffect(() => {
     fetchProfileData();
   }, []);
@@ -56,6 +58,12 @@ const ProfileScreen = () => {
       setDisplayDate(formatDisplayDate(userProfile.dob));
     }
   }, [userProfile.dob]);
+
+  // Khi mở picker iOS, set lại tempDate để tránh lỗi
+  const openDatePicker = () => {
+    setTempDate(userProfile.dob ? new Date(userProfile.dob) : new Date());
+    setShowDatePicker(true);
+  };
 
   const fetchProfileData = async () => {
     try {
@@ -161,7 +169,7 @@ const ProfileScreen = () => {
         />
 
         <Text style={styles.label}>Ngày sinh</Text>
-        <TouchableOpacity onPress={() => isEditMode && setShowDatePicker(true)} disabled={!isEditMode}>
+        <TouchableOpacity onPress={() => isEditMode && openDatePicker()} disabled={!isEditMode}>
           <View style={[styles.datePickerButton, !isEditMode && styles.disabledInput]}>
             <Text>{displayDate || "Chọn ngày sinh"}</Text>
           </View>
@@ -203,57 +211,56 @@ const ProfileScreen = () => {
         </View>
       </View>
 
-      {/* Date Picker Bottom Sheet */}
-      <Modal visible={showDatePicker} transparent={true} animationType="slide">
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowDatePicker(false)}
-        >
-          <View style={styles.bottomSheetContainer}>
-            <View style={styles.bottomSheetHeader}>
-              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                <Text style={styles.cancelText}>Hủy</Text>
-              </TouchableOpacity>
-              <Text style={styles.sheetTitle}>Chọn ngày sinh</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  if (Platform.OS === "ios") {
-                    onDateChange(null, new Date(userProfile.dob || new Date()));
+      {/* Date Picker cho iOS */}
+      {Platform.OS === "ios" && (
+        <Modal visible={showDatePicker} transparent={true} animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.bottomSheetContainer}>
+              <View style={styles.bottomSheetHeader}>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={styles.cancelText}>Hủy</Text>
+                </TouchableOpacity>
+                <Text style={styles.sheetTitle}>Chọn ngày sinh</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setUserProfile({ ...userProfile, dob: formatAPIDate(tempDate) });
+                    setShowDatePicker(false);
+                  }}
+                >
+                  <Text style={styles.doneText}>Xong</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display="spinner"
+                onChange={(event, selectedDate) => {
+                  if (selectedDate) {
+                    setTempDate(selectedDate);
                   }
-                  setShowDatePicker(false);
                 }}
-              >
-                <Text style={styles.doneText}>Xong</Text>
-              </TouchableOpacity>
+                style={styles.datePicker}
+              />
             </View>
-            <DateTimePicker
-              value={userProfile.dob ? new Date(userProfile.dob) : new Date()}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={(event, date) => {
-                if (Platform.OS === "android") {
-                  setShowDatePicker(false);
-                  if (date) {
-                    setUserProfile({
-                      ...userProfile,
-                      dob: formatAPIDate(date),
-                    });
-                  }
-                } else {
-                  if (date) {
-                    setUserProfile({
-                      ...userProfile,
-                      dob: formatAPIDate(date),
-                    });
-                  }
-                }
-              }}
-              style={styles.datePicker}
-            />
           </View>
-        </TouchableOpacity>
-      </Modal>
+        </Modal>
+      )}
+
+      {/* Date Picker cho Android */}
+      {Platform.OS === "android" && showDatePicker && (
+        <DateTimePicker
+          value={userProfile.dob ? new Date(userProfile.dob) : new Date()}
+          mode="date"
+          display="spinner"   
+          onChange={(event, selectedDate) => {
+            setShowDatePicker(false);
+            if (event.type === "set" && selectedDate) {
+              setUserProfile({ ...userProfile, dob: formatAPIDate(selectedDate) });
+            }
+          }}
+        />
+      )}
+
     </ScrollView>
   );
 };
