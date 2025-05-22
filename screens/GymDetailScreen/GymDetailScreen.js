@@ -5,16 +5,8 @@ import {
   StyleSheet,
   Image,
   ScrollView,
-  Button,
 } from "react-native";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CarouselNative from "../../components/Carousel/Carousel";
 import { TouchableOpacity } from "react-native";
 import { StarRatingDisplay } from "react-native-star-rating-widget";
@@ -23,7 +15,6 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";
 const { width } = Dimensions.get("window");
 import AntDesign from "@expo/vector-icons/AntDesign";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import Toast from "react-native-toast-message";
 import gymService from "../../services/gymService";
 import MapView, { Marker } from "react-native-maps";
@@ -43,7 +34,7 @@ export default function GymDetailScreen({ route }) {
   const [gymDetail, setGymDetail] = useState({});
   const [gymCourse, setGymCourse] = useState([]);
   const [lowestPackage, setLowestPackage] = useState(null);
-  const { cart, addToCart, getCartCount } = useCart(); // Use the cart context
+  const { cart, addToCart } = useCart(); // Use the cart context
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -139,7 +130,7 @@ export default function GymDetailScreen({ route }) {
   // Check if package is already in the cart
   const isPackageInCart = (packageId) => {
     return cart.some(
-      (item) => item.packageId === packageId && item.gymId === gymDetail.id
+      (item) => item.id === packageId && item.gymId === gymDetail.id
     );
   };
 
@@ -157,16 +148,30 @@ export default function GymDetailScreen({ route }) {
       price: packageGym.price,
     };
 
-    // Add to cart using context
     addToCart(gymPackage);
 
-    // Show success toast
     Toast.show({
       type: "success",
       text1: "Thêm vào giỏ hàng thành công",
       text2: `Gói tập ${packageGym.name} đã được thêm vào giỏ hàng`,
       visibilityTime: 2000,
     });
+  };
+
+  const handleAddToCartWithPT = (packageGym) => {
+    // Create structured gym package object for the cart
+    const gymPackage = {
+      gymId: gymDetail.id,
+      gymName: gymDetail.gymName,
+      gymAddress: gymDetail.address,
+      gymImage: image[0].url, // Using the first image as thumbnail
+      id: packageGym.id,
+      name: packageGym.name,
+      type: packageGym.type,
+      price: packageGym.price,
+    };
+
+    navigation.navigate("PTinCourseScreen", { gymPackage: gymPackage });
   };
 
   return (
@@ -385,7 +390,7 @@ export default function GymDetailScreen({ route }) {
                       size={24}
                       color="#ED2A46"
                       style={{ marginRight: 20 }}
-                      onPress={() => handleAddToCart(item)}
+                      onPress={() => handleAddToCartWithPT(item)}
                     />
                   )}
                 </TouchableOpacity>

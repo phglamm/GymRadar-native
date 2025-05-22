@@ -32,6 +32,8 @@ const gymService = {
 
   // Thêm hàm mới này:
   getPTById: (id) => request("GET", `v1/pt/${id}`),
+
+  getPTinGymCourse: (id) => request("GET", `v1/course/${id}/pts`),
 };
 
 export default gymService;

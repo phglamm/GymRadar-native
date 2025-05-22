@@ -55,6 +55,14 @@ export default function CartCard({ product, onRemove }) {
           >
             {product.selectedPackage.packageName}
           </Text>
+
+          {/* Show PT information if package is WithPT */}
+          {product.selectedPackage.type === "WithPT" && product.pt && (
+            <View style={styles.ptContainer}>
+              <Text style={styles.ptLabel}>PT: </Text>
+              <Text style={styles.ptName}>{product.pt.fullName}</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -119,5 +127,21 @@ const styles = StyleSheet.create({
   },
   cartUnder: {
     marginTop: 5,
+  },
+  ptContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  ptLabel: {
+    fontSize: 13,
+    color: "#6B6B6B",
+    fontWeight: "500",
+  },
+  ptName: {
+    fontSize: 13,
+    color: "#FF914D",
+    fontWeight: "bold",
+    flex: 1,
   },
 });

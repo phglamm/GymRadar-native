@@ -2,105 +2,98 @@ import React, { createContext, useContext, useState } from "react";
 
 const CartContext = createContext();
 
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
+};
+
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
-  // Add gym package to cart
   const addToCart = (gymPackage) => {
     setCart((prevCart) => {
-      // Check if this exact package already exists in cart
-      const existingItemIndex = prevCart.findIndex(
-        (item) =>
-          item.packageId === gymPackage.id && item.gymId === gymPackage.gymId
-      );
+      // Create unique identifier for cart item
+      const cartItemId =
+        gymPackage.type === "WithPT" && gymPackage.pt
+          ? `${gymPackage.gymId}-${gymPackage.id}-${gymPackage.pt.id}`
+          : `${gymPackage.gymId}-${gymPackage.id}`;
+
+      // Check if item already exists in cart
+      const existingItemIndex = prevCart.findIndex((item) => {
+        if (gymPackage.type === "WithPT" && gymPackage.pt) {
+          return (
+            item.gymId === gymPackage.gymId &&
+            item.id === gymPackage.id &&
+            item.pt?.id === gymPackage.pt.id
+          );
+        } else {
+          return item.gymId === gymPackage.gymId && item.id === gymPackage.id;
+        }
+      });
 
       if (existingItemIndex !== -1) {
-        // If found, increase quantity
-        const updatedCart = [...prevCart];
-        updatedCart[existingItemIndex].quantity += 1;
-        return updatedCart;
-      } else {
-        // If not found, add new item with quantity 1
-        return [
-          ...prevCart,
-          {
-            gymId: gymPackage.gymId,
-            gymName: gymPackage.gymName,
-            gymAddress: gymPackage.gymAddress,
-            gymImage: gymPackage.gymImage,
-            packageId: gymPackage.id,
-            packageName: gymPackage.name,
-            packageType: gymPackage.type,
-            price: gymPackage.price,
-            quantity: 1,
-          },
-        ];
+        // Item already exists, you might want to show a message or update quantity
+        console.log("Item already in cart");
+        return prevCart;
       }
+
+      // Add new item to cart
+      const newCartItem = {
+        ...gymPackage,
+        cartItemId,
+        quantity: 1, // You can add quantity management if needed
+        dateAdded: new Date().toISOString(),
+      };
+
+      return [...prevCart, newCartItem];
     });
   };
 
-  // Remove package from cart
-  const removeFromCart = (gymId, packageId) => {
+  const removeFromCart = (cartItemId) => {
     setCart((prevCart) =>
-      prevCart.filter(
-        (item) => !(item.gymId === gymId && item.packageId === packageId)
-      )
+      prevCart.filter((item) => item.cartItemId !== cartItemId)
     );
   };
 
-  // Increase package quantity
-  const increaseQuantity = (gymId, packageId) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.gymId === gymId && item.packageId === packageId
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    );
+  const clearCart = () => {
+    setCart([]);
   };
 
-  // Decrease package quantity
-  const decreaseQuantity = (gymId, packageId) => {
-    setCart((prevCart) =>
-      prevCart
-        .map((item) =>
-          item.gymId === gymId && item.packageId === packageId
-            ? { ...item, quantity: Math.max(1, item.quantity - 1) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  // Get total cart value
-  const getCartTotal = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
-  };
-
-  // Count items in cart
   const getCartCount = () => {
-    return cart.reduce((count, item) => count + item.quantity, 0);
+    return cart.length;
   };
 
-  // Clear cart
-  const clearCart = () => setCart([]);
+  const getTotalPrice = () => {
+    return cart.reduce(
+      (total, item) => total + item.price * (item.quantity || 1),
+      0
+    );
+  };
 
-  return (
-    <CartContext.Provider
-      value={{
-        cart,
-        addToCart,
-        removeFromCart,
-        increaseQuantity,
-        decreaseQuantity,
-        clearCart,
-        getCartTotal,
-        getCartCount,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+  // Check if a specific package is in cart
+  const isPackageInCart = (gymId, packageId, ptId = null) => {
+    return cart.some((item) => {
+      if (ptId) {
+        return (
+          item.gymId === gymId && item.id === packageId && item.pt?.id === ptId
+        );
+      }
+      return item.gymId === gymId && item.id === packageId;
+    });
+  };
+
+  const value = {
+    cart,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    getCartCount,
+    getTotalPrice,
+    isPackageInCart,
+  };
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
-
-export const useCart = () => useContext(CartContext);

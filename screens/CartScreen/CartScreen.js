@@ -11,13 +11,14 @@ import CartCard from "../../components/CartCard/CartCard";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useNavigation } from "@react-navigation/native";
 import { useCart } from "../../context/CartContext"; // Import the cart context
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CartScreen() {
   const navigation = useNavigation();
-  const { cart, removeFromCart, getCartTotal, clearCart } = useCart(); // Use the cart context
+  const { cart, removeFromCart, getTotalPrice, clearCart } = useCart(); // Use the cart context
 
   // Function to handle removing an item from cart
-  const handleRemoveItem = (gymId, packageId) => {
+  const handleRemoveItem = (cartItemId) => {
     Alert.alert(
       "Xóa gói tập",
       "Bạn có chắc chắn muốn xóa gói tập này khỏi giỏ hàng?",
@@ -28,7 +29,7 @@ export default function CartScreen() {
         },
         {
           text: "Xóa",
-          onPress: () => removeFromCart(gymId, packageId),
+          onPress: () => removeFromCart(cartItemId),
           style: "destructive",
         },
       ]
@@ -36,7 +37,7 @@ export default function CartScreen() {
   };
 
   // Calculate the total price
-  const totalPrice = getCartTotal();
+  const totalPrice = getTotalPrice();
 
   // Function to handle checkout
   const handleCheckout = () => {
@@ -54,10 +55,10 @@ export default function CartScreen() {
     <View style={styles.cartScreen}>
       {cart.length > 0 ? (
         <>
-          <ScrollView contentContainerStyle={{ paddingBottom: 150 }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
             {cart.map((item, index) => (
               <CartCard
-                key={index}
+                key={item.cartItemId || index}
                 product={{
                   gymId: item.gymId,
                   gymName: item.gymName,
@@ -65,12 +66,23 @@ export default function CartScreen() {
                   address: item.gymAddress,
                   image: item.gymImage,
                   selectedPackage: {
-                    packageId: item.packageId,
-                    packageName: item.packageName,
+                    packageId: item.id,
+                    packageName: item.name,
                     packagePrice: item.price,
+                    type: item.type,
                   },
+                  // Include PT information if it exists
+                  pt: item.pt
+                    ? {
+                        id: item.pt.id,
+                        fullName: item.pt.fullName,
+                        avatar: item.pt.avatar,
+                        gender: item.pt.gender,
+                        goalTraining: item.pt.goalTraining,
+                      }
+                    : null,
                 }}
-                onRemove={() => handleRemoveItem(item.gymId, item.packageId)}
+                onRemove={() => handleRemoveItem(item.cartItemId)}
               />
             ))}
           </ScrollView>
@@ -156,10 +168,6 @@ const styles = StyleSheet.create({
   },
 
   orderSummary: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingVertical: 40,
     borderColor: "#ccc",
     shadowColor: "#000",

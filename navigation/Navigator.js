@@ -32,6 +32,7 @@ import SlotsPTScreen from "../screens/SlotsPTScreen/SlotsPTScreen";
 import ForgotPasswordScreen1 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen1";
 import ForgotPasswordScreen2 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen2";
 import ForgotPasswordScreen3 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen3";
+import PTinCourseScreen from "../screens/PTinCourseScreen/PTinCourseScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -138,6 +139,15 @@ export default function Navigator() {
             headerTitleAlign: "center",
             headerShown: true,
             title: "Giỏ hàng",
+          }}
+        />
+        <Stack.Screen
+          name="PTinCourseScreen"
+          component={PTinCourseScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Chọn PT cho gói tập",
           }}
         />
       </Stack.Navigator>
