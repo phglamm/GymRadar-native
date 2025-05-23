@@ -33,6 +33,8 @@ import ForgotPasswordScreen1 from "../screens/ForgotPasswordScreen/ForgotPasswor
 import ForgotPasswordScreen2 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen2";
 import ForgotPasswordScreen3 from "../screens/ForgotPasswordScreen/ForgotPasswordScreen3";
 import PTinCourseScreen from "../screens/PTinCourseScreen/PTinCourseScreen";
+import BlogScreen from "../screens/BlogScreen/BlogScreen";
+import BlogDetailScreen from "../screens/BlogDetailScreen/BlogDetailScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -121,6 +123,24 @@ export default function Navigator() {
             headerTitleAlign: "center",
             headerShown: true,
             title: "Danh sách PT",
+          }}
+        />
+         <Stack.Screen
+          name="BlogScreen"
+          component={BlogScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Blog",
+          }}
+        />
+        <Stack.Screen
+          name="BlogDetailScreen"
+          component={BlogDetailScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Blog",
           }}
         />
         <Stack.Screen

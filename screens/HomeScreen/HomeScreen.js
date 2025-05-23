@@ -1,4 +1,4 @@
-import { View, Text, Dimensions, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Dimensions, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import HeaderHome from "../../components/HeaderHome/HeaderHome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -36,9 +36,9 @@ export default function HomeScreen() {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(deg2rad(lat1)) *
-        Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // Distance in km
     return distance;
@@ -285,7 +285,10 @@ export default function HomeScreen() {
               >
                 Blog
               </Text>
-              <Text style={{ fontSize: 13, color: "#6B6B6B" }}>Xem thêm</Text>
+
+              <TouchableOpacity onPress={() => navigation.navigate("BlogScreen")}>
+                <Text style={{ fontSize: 13, color: "#6B6B6B" }}>Xem thêm</Text>
+              </TouchableOpacity>
             </View>
 
             <PairedSwiper
