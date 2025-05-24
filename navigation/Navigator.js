@@ -35,6 +35,7 @@ import ForgotPasswordScreen3 from "../screens/ForgotPasswordScreen/ForgotPasswor
 import PTinCourseScreen from "../screens/PTinCourseScreen/PTinCourseScreen";
 import BlogScreen from "../screens/BlogScreen/BlogScreen";
 import BlogDetailScreen from "../screens/BlogDetailScreen/BlogDetailScreen";
+import PaymentScreen from "../screens/PaymentScreen/PaymentScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -125,7 +126,7 @@ export default function Navigator() {
             title: "Danh sách PT",
           }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="BlogScreen"
           component={BlogScreen}
           options={{
@@ -168,6 +169,15 @@ export default function Navigator() {
             headerTitleAlign: "center",
             headerShown: true,
             title: "Chọn PT cho gói tập",
+          }}
+        />
+        <Stack.Screen
+          name="PaymentScreen"
+          component={PaymentScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Tiến hành thanh toán",
           }}
         />
       </Stack.Navigator>
@@ -438,7 +448,8 @@ export default function Navigator() {
           const routeName = getFocusedRouteNameFromRoute(route) ?? "";
 
           // Check if CartScreen is active
-          const shouldHideTabBar = routeName === "CartScreen";
+          const shouldHideTabBar =
+            routeName === "CartScreen" || routeName === "PaymentScreen";
 
           return {
             tabBarStyle: shouldHideTabBar

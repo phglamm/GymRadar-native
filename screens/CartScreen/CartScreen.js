@@ -48,7 +48,7 @@ export default function CartScreen() {
       );
       return;
     }
-    navigation.navigate("Check out");
+    navigation.navigate("PaymentScreen", { total: totalPrice });
   };
 
   return (
