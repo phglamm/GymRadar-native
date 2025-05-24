@@ -3,7 +3,7 @@ import React from "react";
 import { StyleSheet } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 
-export default function CartCard({ product, onRemove }) {
+export default function CartCard({ product, onRemove, showRemove = true }) {
   return (
     <View style={styles.cartCart}>
       <View style={styles.cartUpper}>
@@ -24,14 +24,16 @@ export default function CartCard({ product, onRemove }) {
               >
                 {product.gymName}
               </Text>
-              <TouchableOpacity
-                style={{
-                  alignSelf: "flex-end",
-                }}
-                onPress={onRemove}
-              >
-                <AntDesign name="closecircle" size={22} color="#ED2A46" />
-              </TouchableOpacity>
+              {showRemove && (
+                <TouchableOpacity
+                  style={{
+                    alignSelf: "flex-end",
+                  }}
+                  onPress={onRemove}
+                >
+                  <AntDesign name="closecircle" size={22} color="#ED2A46" />
+                </TouchableOpacity>
+              )}
             </View>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Text style={{ marginRight: 5, color: "#1A191A", fontSize: 12 }}>

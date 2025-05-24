@@ -150,7 +150,7 @@ export default function Navigator() {
           options={{
             headerTitleAlign: "center",
             headerShown: true,
-            title: "Danh sách PT",
+            title: "Thông tin PT",
           }}
         />
         <Stack.Screen

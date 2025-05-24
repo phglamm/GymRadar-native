@@ -49,6 +49,7 @@ export default function PaymentScreen() {
           >
             {cart.map((item, index) => (
               <CartCard
+                showRemove={false}
                 key={item.cartItemId || index}
                 product={{
                   gymId: item.gymId,

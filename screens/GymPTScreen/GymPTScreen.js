@@ -37,29 +37,6 @@ export default function GymPTScreen({ route }) {
     item.fullName.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // Hàm gọi API lấy chi tiết PT và điều hướng
-  const handlePTPress = async (ptId) => {
-    try {
-      const response = await gymService.getPTById(ptId);
-      console.log("Full API response:", response);
-      // Thử log nhiều cấp:
-      // console.log('response.data:', response.data);
-      // console.log('response.data.data:', response.data?.data);
-
-      const ptDetails = response.data?.data || response.data || response;
-      console.log("ptDetails", ptDetails);
-
-      if (!ptDetails) {
-        console.warn("Không lấy được dữ liệu PT chi tiết");
-        return;
-      }
-
-      navigation.navigate("PTProfileScreen", { pt: ptDetails });
-    } catch (error) {
-      console.error("Error fetching PT details:", error);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.searchBox}>
@@ -81,7 +58,11 @@ export default function GymPTScreen({ route }) {
         {filteredPT.map((item) => (
           <TouchableOpacity
             key={item.id}
-            onPress={() => handlePTPress(item.id)}
+            onPress={() =>
+              navigation.navigate("PTProfileScreen", {
+                ptId: item.id,
+              })
+            }
           >
             <LinearGradient
               colors={["#FF914D", "#ED2A46"]}

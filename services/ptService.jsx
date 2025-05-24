@@ -33,6 +33,8 @@ const ptService = {
   unactiveSlot: (id) => request("PUT", `v1/pt-slot/${id}/un-active`),
 
   getPtSlot: (params) => request("GET", "v1/pt-slot", null, {}, params),
+
+  getPTDetail: (ptId) => request("GET", `v1/pt/${ptId}`),
 };
 
 export default ptService;

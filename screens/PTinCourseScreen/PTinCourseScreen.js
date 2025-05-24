@@ -15,6 +15,7 @@ import gymService from "../../services/gymService";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCart } from "../../context/CartContext";
 import Toast from "react-native-toast-message";
+import colors from "../../constants/color";
 
 export default function PTinCourseScreen({ route }) {
   const { gymPackage } = route.params;
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   detailButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: colors.red,
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 15,
@@ -247,7 +248,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.5)",
   },
   selectButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "#FF914D",
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 15,
