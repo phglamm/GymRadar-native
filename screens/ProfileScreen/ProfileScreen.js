@@ -71,16 +71,6 @@ const ProfileScreen = () => {
     return "#F44336";
   };
 
-  const getHealthStatus = (bmi) => {
-    if (!bmi)
-      return { icon: "help-circle", color: "#666", text: "Chưa đánh giá" };
-    if (bmi >= 18.5 && bmi < 25)
-      return { icon: "check-circle", color: "#4CAF50", text: "Tốt" };
-    if (bmi < 18.5 || (bmi >= 25 && bmi < 30))
-      return { icon: "alert-circle", color: "#FF9800", text: "Cần chú ý" };
-    return { icon: "close-circle", color: "#F44336", text: "Cần cải thiện" };
-  };
-
   useEffect(() => {
     fetchProfileData();
   }, []);
@@ -152,7 +142,6 @@ const ProfileScreen = () => {
   const bmi = calculateBMI(userProfile.weight, userProfile.height);
   const bmiCategory = getBMICategory(bmi);
   const bmiColor = getBMIColor(bmi);
-  const healthStatus = getHealthStatus(bmi);
 
   return (
     <ScrollView
@@ -173,14 +162,6 @@ const ProfileScreen = () => {
               }}
               style={styles.avatar}
             />
-            <View style={styles.statusBadge}>
-              <MaterialCommunityIcons
-                name={healthStatus.icon}
-                size={16}
-                color={healthStatus.color}
-              />
-              <Text style={styles.statusText}>{healthStatus.text}</Text>
-            </View>
           </View>
 
           <Text style={styles.name}>{userProfile.fullName}</Text>

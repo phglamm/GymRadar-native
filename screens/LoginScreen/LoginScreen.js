@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, Alert } from "react-native";
 import React, { use, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -66,12 +66,11 @@ export default function LoginScreen() {
       }
       console.log("User data saved:", user);
     } catch (error) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: error?.response?.data?.message || "Đã xảy ra lỗi",
-        visibilityTime: 2000,
-      });
+      Alert.alert(
+        "Đăng nhập thất bại",
+        "Số điện thoại hoặc mật khẩu không đúng",
+        [{ text: "OK" }]
+      );
       console.error("Login error:", error);
     }
   };
@@ -119,7 +118,9 @@ export default function LoginScreen() {
           </View>
         </View>
       </LinearGradient>
-      <TouchableOpacity onPress={() => navigation.navigate("ForgotPasswordScreen1")}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("ForgotPasswordScreen1")}
+      >
         <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
       </TouchableOpacity>
       <TouchableOpacity
@@ -220,12 +221,12 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   forgotPassword: {
-  color: "#FF914D",
-  textAlign: "center",
-  marginTop: 20,
-  fontSize: 16,
-  textDecorationLine: "none",
-},
+    color: "#FF914D",
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 16,
+    textDecorationLine: "none",
+  },
 
   loginButtonText: {
     color: "#FFFFFF",
