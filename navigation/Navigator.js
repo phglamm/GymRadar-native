@@ -36,6 +36,7 @@ import PTinCourseScreen from "../screens/PTinCourseScreen/PTinCourseScreen";
 import BlogScreen from "../screens/BlogScreen/BlogScreen";
 import BlogDetailScreen from "../screens/BlogDetailScreen/BlogDetailScreen";
 import PaymentScreen from "../screens/PaymentScreen/PaymentScreen";
+import SubscriptionScreen from "../screens/SubscriptionScreen/SubscriptionScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -383,6 +384,21 @@ export default function Navigator() {
           options={{
             headerShown: true,
             title: "Đổi Mật Khẩu",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+
+        <Stack.Screen
+          name="SubscriptionScreen"
+          component={SubscriptionScreen}
+          options={{
+            headerShown: true,
+            title: "Nâng cấp gói",
             headerTitleAlign: "center",
             headerTitleStyle: {
               fontWeight: "bold",

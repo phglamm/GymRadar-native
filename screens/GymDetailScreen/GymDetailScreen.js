@@ -301,101 +301,109 @@ export default function GymDetailScreen({ route }) {
         <BottomSheetView style={styles.contentContainer}>
           <Text style={styles.bottomSheetTitle}>Lựa chọn gói tập</Text>
           <View style={styles.packageContainer}>
-            <LinearGradient
-              colors={["#FF914D", "#ED2A46"]}
-              style={styles.packageTitleContainer}
-            >
-              <Text style={styles.packageTitle}>Gói Tập Tháng</Text>
-            </LinearGradient>
-            {gymCourse?.packageNormal?.map((item) => (
-              <View
-                key={item.id}
-                style={{
-                  borderBottomWidth: 1,
-                  borderBottomColor: "#D9D9D9",
-                  paddingVertical: 10,
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <View>
-                  <Text style={styles.packageName}>{item.name}</Text>
-                  <Text style={styles.packagePrice}>
-                    {item.price.toLocaleString("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    })}
-                  </Text>
-                </View>
-                <TouchableOpacity>
-                  {isPackageInCart(item.id) ? (
-                    <AntDesign
-                      name="checkcircleo"
-                      size={24}
-                      color="#4CAF50"
-                      style={{ marginRight: 20 }}
-                    />
-                  ) : (
-                    <AntDesign
-                      name="pluscircleo"
-                      size={24}
-                      color="#ED2A46"
-                      style={{ marginRight: 20 }}
-                      onPress={() => handleAddToCart(item)}
-                    />
-                  )}
-                </TouchableOpacity>
-              </View>
-            ))}
+            {gymCourse?.packageNormal?.length > 0 && (
+              <>
+                <LinearGradient
+                  colors={["#FF914D", "#ED2A46"]}
+                  style={styles.packageTitleContainer}
+                >
+                  <Text style={styles.packageTitle}>Gói Tập Tháng</Text>
+                </LinearGradient>
+                {gymCourse?.packageNormal?.map((item) => (
+                  <View
+                    key={item.id}
+                    style={{
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#D9D9D9",
+                      paddingVertical: 10,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.packageName}>{item.name}</Text>
+                      <Text style={styles.packagePrice}>
+                        {item.price.toLocaleString("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        })}
+                      </Text>
+                    </View>
+                    <TouchableOpacity>
+                      {isPackageInCart(item.id) ? (
+                        <AntDesign
+                          name="checkcircleo"
+                          size={24}
+                          color="#4CAF50"
+                          style={{ marginRight: 20 }}
+                        />
+                      ) : (
+                        <AntDesign
+                          name="pluscircleo"
+                          size={24}
+                          color="#ED2A46"
+                          style={{ marginRight: 20 }}
+                          onPress={() => handleAddToCart(item)}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </>
+            )}
 
-            <LinearGradient
-              colors={["#FF914D", "#ED2A46"]}
-              style={styles.packageTitleContainer}
-            >
-              <Text style={styles.packageTitle}>Gói Tập Tháng Kèm PT</Text>
-            </LinearGradient>
-            {gymCourse?.packagePT?.map((item) => (
-              <View
-                key={item.id}
-                style={{
-                  borderBottomWidth: 1,
-                  borderBottomColor: "#D9D9D9",
-                  paddingVertical: 10,
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <View>
-                  <Text style={styles.packageName}>{item.name}</Text>
-                  <Text style={styles.packagePrice}>
-                    {item.price.toLocaleString("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    })}
-                  </Text>
-                </View>
-                <TouchableOpacity>
-                  {isPackageInCart(item.id) ? (
-                    <AntDesign
-                      name="checkcircleo"
-                      size={24}
-                      color="#4CAF50"
-                      style={{ marginRight: 20 }}
-                    />
-                  ) : (
-                    <AntDesign
-                      name="pluscircleo"
-                      size={24}
-                      color="#ED2A46"
-                      style={{ marginRight: 20 }}
-                      onPress={() => handleAddToCartWithPT(item)}
-                    />
-                  )}
-                </TouchableOpacity>
-              </View>
-            ))}
+            {gymCourse?.packagePT?.length > 0 && (
+              <>
+                <LinearGradient
+                  colors={["#FF914D", "#ED2A46"]}
+                  style={styles.packageTitleContainer}
+                >
+                  <Text style={styles.packageTitle}>Gói Tập Tháng Kèm PT</Text>
+                </LinearGradient>
+                {gymCourse?.packagePT?.map((item) => (
+                  <View
+                    key={item.id}
+                    style={{
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#D9D9D9",
+                      paddingVertical: 10,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.packageName}>{item.name}</Text>
+                      <Text style={styles.packagePrice}>
+                        {item.price.toLocaleString("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        })}
+                      </Text>
+                    </View>
+                    <TouchableOpacity>
+                      {isPackageInCart(item.id) ? (
+                        <AntDesign
+                          name="checkcircleo"
+                          size={24}
+                          color="#4CAF50"
+                          style={{ marginRight: 20 }}
+                        />
+                      ) : (
+                        <AntDesign
+                          name="pluscircleo"
+                          size={24}
+                          color="#ED2A46"
+                          style={{ marginRight: 20 }}
+                          onPress={() => handleAddToCartWithPT(item)}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </>
+            )}
           </View>
         </BottomSheetView>
       </BottomSheet>

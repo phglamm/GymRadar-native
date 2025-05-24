@@ -72,6 +72,12 @@ export default function UserMenuScreen() {
     menuItems = [
       ...menuItems,
       {
+        icon: <Ionicons name="time-outline" size={28} color="#ED2A46" />,
+        label: "Nâng Cấp Gói",
+        navigation: "SubscriptionScreen",
+        category: "services",
+      },
+      {
         icon: <Ionicons name="ticket-outline" size={28} color="#ED2A46" />,
         label: "Ưu Đãi",
         navigation: "VoucherScreen",
@@ -193,7 +199,9 @@ export default function UserMenuScreen() {
               </Text>
               {user && user.role && (
                 <View style={styles.roleContainer}>
-                  <Text style={styles.roleText}>{user.role}</Text>
+                  <Text style={styles.roleText}>
+                    {user.role === "PT" ? "PT" : "Người dùng"}
+                  </Text>
                 </View>
               )}
             </View>
