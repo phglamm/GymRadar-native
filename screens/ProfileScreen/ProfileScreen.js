@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import accountService from "./../../services/accountService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ProfileScreen = () => {
   const [userProfile, setUserProfile] = useState({
@@ -127,6 +128,9 @@ const ProfileScreen = () => {
       const response = await accountService.updateProfileUser(updateData);
       console.log("Update response:", response);
 
+      if (global.updateNavigationUser) {
+        global.updateNavigationUser();
+      }
       if (response.status === "200") {
         Alert.alert("Thành công", "Cập nhật hồ sơ thành công");
         fetchProfileData();
