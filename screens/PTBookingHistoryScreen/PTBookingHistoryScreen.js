@@ -398,7 +398,7 @@ export default function PTBookingHistoryScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
   },
   summaryContainer: {
     backgroundColor: "#fff",
