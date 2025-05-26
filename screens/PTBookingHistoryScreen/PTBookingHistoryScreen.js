@@ -26,33 +26,20 @@ const getStatusColor = (status) => {
         background: "rgba(40, 167, 69, 0.1)",
         icon: "✓",
       };
-    case "Pending":
-      return {
-        primary: "#ffc107",
-        secondary: "#fd7e14",
-        background: "rgba(255, 193, 7, 0.1)",
-        icon: "⏳",
-      };
-    case "Cancelled":
+    case "Canceled":
       return {
         primary: "#dc3545",
         secondary: "#e83e8c",
         background: "rgba(220, 53, 69, 0.1)",
         icon: "✕",
       };
-    case "Confirmed":
+    case "Booked":
+    default:
       return {
         primary: "#17a2b8",
         secondary: "#6f42c1",
         background: "rgba(23, 162, 184, 0.1)",
-        icon: "✓",
-      };
-    default:
-      return {
-        primary: "#6c757d",
-        secondary: "#495057",
-        background: "rgba(108, 117, 125, 0.1)",
-        icon: "•",
+        icon: "📅",
       };
   }
 };
@@ -62,14 +49,11 @@ const getStatusText = (status) => {
   switch (status) {
     case "Completed":
       return "Hoàn thành";
-    case "Pending":
-      return "Chờ xác nhận";
-    case "Cancelled":
+    case "Canceled":
       return "Đã hủy";
-    case "Confirmed":
-      return "Đã xác nhận";
+    case "Booked":
     default:
-      return status;
+      return "Đã đặt";
   }
 };
 
@@ -77,6 +61,7 @@ export default function PTBookingHistoryScreen({ navigation }) {
   const [bookingHistory, setBookingHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [updatingBooking, setUpdatingBooking] = useState(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -121,6 +106,111 @@ export default function PTBookingHistoryScreen({ navigation }) {
     fetchBookingHistory(false);
   };
 
+  // Enhanced status update function with proper API call
+  const updateBookingStatus = async (bookingId, newStatus) => {
+    setUpdatingBooking(bookingId);
+
+    try {
+      const response = await bookingService.updateBookingStatus(
+        bookingId,
+        newStatus
+      );
+      console.log("Status update response:", response);
+
+      // Update local state immediately for better UX
+      setBookingHistory((prevHistory) =>
+        prevHistory.map((booking) =>
+          booking.id === bookingId ? { ...booking, status: newStatus } : booking
+        )
+      );
+
+      // Refresh data from server
+      await fetchBookingHistory(false);
+
+      const statusMessage =
+        newStatus === "Completed"
+          ? "Buổi tập đã được đánh dấu hoàn thành!"
+          : "Buổi tập đã được hủy!";
+
+      Alert.alert("Thành công", statusMessage);
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      Alert.alert(
+        "Lỗi",
+        "Không thể cập nhật trạng thái buổi tập. Vui lòng thử lại."
+      );
+    } finally {
+      setUpdatingBooking(null);
+    }
+  };
+
+  // Show status update options - Only for Booked status
+  const showStatusUpdateOptions = (booking) => {
+    const currentStatus = booking.status;
+    const clientName = booking.user.fullName;
+
+    // Only allow updates for Booked status
+    if (currentStatus !== "Booked") {
+      Alert.alert(
+        "Thông báo",
+        `Buổi tập này đã ${getStatusText(
+          currentStatus
+        ).toLowerCase()}, không thể thay đổi trạng thái.`
+      );
+      return;
+    }
+
+    // Show options to Complete or Cancel
+    Alert.alert(
+      "Cập nhật trạng thái buổi tập",
+      `Chọn trạng thái cho buổi tập với ${clientName}:`,
+      [
+        {
+          text: "Đánh dấu hoàn thành",
+          onPress: () =>
+            confirmStatusUpdate(
+              booking.id,
+              "Completed",
+              clientName,
+              "đánh dấu hoàn thành"
+            ),
+        },
+        {
+          text: "Hủy buổi tập",
+          style: "destructive",
+          onPress: () =>
+            confirmStatusUpdate(booking.id, "Canceled", clientName, "hủy"),
+        },
+        {
+          text: "Đóng",
+          style: "cancel",
+        },
+      ]
+    );
+  };
+
+  // Confirmation alert for status update
+  const confirmStatusUpdate = (
+    bookingId,
+    newStatus,
+    clientName,
+    actionText
+  ) => {
+    const confirmationMessage = `Bạn có chắc chắn muốn ${actionText} buổi tập với ${clientName}?`;
+
+    Alert.alert("Xác nhận", confirmationMessage, [
+      {
+        text: "Hủy",
+        style: "cancel",
+      },
+      {
+        text: "Xác nhận",
+        style: newStatus === "Canceled" ? "destructive" : "default",
+        onPress: () => updateBookingStatus(bookingId, newStatus),
+      },
+    ]);
+  };
+
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -135,63 +225,19 @@ export default function PTBookingHistoryScreen({ navigation }) {
     return timeString.substring(0, 5);
   };
 
-  const handleBookingAction = (booking) => {
-    // Handle different actions based on status
-    if (booking.status === "Pending") {
-      Alert.alert(
-        "Xác nhận buổi tập",
-        `Bạn có muốn xác nhận buổi tập với ${booking.user.fullName}?`,
-        [
-          { text: "Hủy", style: "cancel" },
-          { text: "Xác nhận", onPress: () => confirmBooking(booking.id) },
-        ]
-      );
-    } else if (booking.status === "Confirmed") {
-      Alert.alert(
-        "Đánh dấu hoàn thành",
-        `Đánh dấu buổi tập với ${booking.user.fullName} đã hoàn thành?`,
-        [
-          { text: "Hủy", style: "cancel" },
-          { text: "Hoàn thành", onPress: () => completeBooking(booking.id) },
-        ]
-      );
-    }
-  };
-
-  const confirmBooking = async (bookingId) => {
-    try {
-      // Add your confirm booking API call here
-      // await bookingService.confirmBooking(bookingId);
-      fetchBookingHistory(false);
-      Alert.alert("Thành công", "Đã xác nhận buổi tập!");
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể xác nhận buổi tập.");
-    }
-  };
-
-  const completeBooking = async (bookingId) => {
-    try {
-      // Add your complete booking API call here
-      // await bookingService.completeBooking(bookingId);
-      fetchBookingHistory(false);
-      Alert.alert("Thành công", "Đã đánh dấu hoàn thành!");
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể cập nhật trạng thái.");
-    }
-  };
-
   const renderBookingItem = (booking, index) => {
     const statusInfo = getStatusColor(booking.status);
     const statusText = getStatusText(booking.status);
-    const canTakeAction =
-      booking.status === "Pending" || booking.status === "Confirmed";
+    const canUpdate = booking.status === "Booked"; // Only Booked status can be updated
+    const isUpdating = updatingBooking === booking.id;
 
     return (
       <TouchableOpacity
         key={booking.id}
         style={[styles.bookingItem, { transform: [{ scale: 1 }] }]}
         activeOpacity={0.95}
-        onPress={() => canTakeAction && handleBookingAction(booking)}
+        onPress={() => canUpdate && showStatusUpdateOptions(booking)}
+        disabled={isUpdating}
       >
         {/* Gradient Header */}
         <View
@@ -235,9 +281,14 @@ export default function PTBookingHistoryScreen({ navigation }) {
                 <Text style={styles.clientLabel}>Khách hàng</Text>
                 <Text style={styles.clientName}>{booking.user.fullName}</Text>
               </View>
-              {canTakeAction && (
+              {canUpdate && !isUpdating && (
                 <View style={styles.actionIndicator}>
                   <Text style={styles.actionIcon}>👆</Text>
+                </View>
+              )}
+              {isUpdating && (
+                <View style={styles.loadingIndicator}>
+                  <ActivityIndicator size="small" color="#E42D46" />
                 </View>
               )}
             </View>
@@ -271,25 +322,38 @@ export default function PTBookingHistoryScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Action Button for PT */}
-          {canTakeAction && (
+          {/* Enhanced Action Section */}
+          {canUpdate && (
             <View style={styles.actionSection}>
               <TouchableOpacity
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor:
-                      booking.status === "Pending" ? "#17a2b8" : "#28a745",
-                  },
-                ]}
-                onPress={() => handleBookingAction(booking)}
+                style={[styles.updateButton, { opacity: isUpdating ? 0.6 : 1 }]}
+                onPress={() => showStatusUpdateOptions(booking)}
+                disabled={isUpdating}
               >
-                <Text style={styles.actionButtonText}>
-                  {booking.status === "Pending"
-                    ? "Xác nhận buổi tập"
-                    : "Đánh dấu hoàn thành"}
-                </Text>
+                {isUpdating ? (
+                  <View style={styles.loadingButtonContent}>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={styles.updateButtonText}>
+                      Đang cập nhật...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.updateButtonText}>
+                    Cập nhật trạng thái
+                  </Text>
+                )}
               </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Status info for completed/cancelled bookings */}
+          {!canUpdate && (
+            <View style={styles.statusInfoSection}>
+              <Text style={styles.statusInfoText}>
+                {booking.status === "Completed"
+                  ? "✅ Buổi tập đã hoàn thành"
+                  : "❌ Buổi tập đã bị hủy"}
+              </Text>
             </View>
           )}
         </View>
@@ -339,21 +403,21 @@ export default function PTBookingHistoryScreen({ navigation }) {
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookingHistory.filter((b) => b.status === "Pending").length}
+            {bookingHistory.filter((b) => b.status === "Booked").length}
           </Text>
-          <Text style={styles.statLabel}>Chờ xác nhận</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
-            {bookingHistory.filter((b) => b.status === "Confirmed").length}
-          </Text>
-          <Text style={styles.statLabel}>Đã xác nhận</Text>
+          <Text style={styles.statLabel}>Đã đặt</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
             {bookingHistory.filter((b) => b.status === "Completed").length}
           </Text>
           <Text style={styles.statLabel}>Hoàn thành</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>
+            {bookingHistory.filter((b) => b.status === "Canceled").length}
+          </Text>
+          <Text style={styles.statLabel}>Đã hủy</Text>
         </View>
       </View>
 
@@ -621,6 +685,9 @@ const styles = StyleSheet.create({
   actionIcon: {
     fontSize: 16,
   },
+  loadingIndicator: {
+    padding: 8,
+  },
   slotInfo: {
     marginBottom: 16,
   },
@@ -668,7 +735,8 @@ const styles = StyleSheet.create({
   actionSection: {
     marginTop: 8,
   },
-  actionButton: {
+  updateButton: {
+    backgroundColor: "#E42D46",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -679,10 +747,28 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  actionButtonText: {
+  updateButtonText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#fff",
+  },
+  loadingButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statusInfoSection: {
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  statusInfoText: {
+    fontSize: 14,
+    color: "#64748b",
+    fontWeight: "500",
+    fontStyle: "italic",
   },
   bottomBorder: {
     height: 4,

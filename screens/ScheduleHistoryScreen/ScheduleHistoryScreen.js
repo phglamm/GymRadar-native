@@ -26,27 +26,21 @@ const getStatusColor = (status) => {
         background: "rgba(40, 167, 69, 0.1)",
         icon: "✓",
       };
-    case "Pending":
+    case "Booked":
       return {
         primary: "#ffc107",
         secondary: "#fd7e14",
         background: "rgba(255, 193, 7, 0.1)",
         icon: "⏳",
       };
-    case "Cancelled":
+    case "Canceled":
       return {
         primary: "#dc3545",
         secondary: "#e83e8c",
         background: "rgba(220, 53, 69, 0.1)",
         icon: "✕",
       };
-    case "Confirmed":
-      return {
-        primary: "#17a2b8",
-        secondary: "#6f42c1",
-        background: "rgba(23, 162, 184, 0.1)",
-        icon: "✓",
-      };
+
     default:
       return {
         primary: "#6c757d",
@@ -62,12 +56,10 @@ const getStatusText = (status) => {
   switch (status) {
     case "Completed":
       return "Hoàn thành";
-    case "Pending":
-      return "Chờ xác nhận";
-    case "Cancelled":
+    case "Booked":
+      return "Đã đặt";
+    case "Canceled":
       return "Đã hủy";
-    case "Confirmed":
-      return "Đã xác nhận";
     default:
       return status;
   }

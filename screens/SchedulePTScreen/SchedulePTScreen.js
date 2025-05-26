@@ -9,6 +9,7 @@ import {
   Dimensions,
   StatusBar,
   Alert,
+  SafeAreaView,
 } from "react-native";
 import {
   format,
@@ -25,7 +26,7 @@ import ptService from "../../services/ptService";
 import { useFocusEffect } from "@react-navigation/native";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const DAY_ITEM_WIDTH = SCREEN_WIDTH / 7 - 8; // Adjust for padding
+const DAY_ITEM_WIDTH = SCREEN_WIDTH / 7 - 8;
 
 // Vietnamese day names for custom formatting
 const vietnameseDayNames = {
@@ -61,7 +62,7 @@ export default function SchedulePTScreen() {
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const [weekStart, setWeekStart] = useState(currentWeekStart); // Week starts on Monday
+  const [weekStart, setWeekStart] = useState(currentWeekStart);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -82,12 +83,10 @@ export default function SchedulePTScreen() {
       fetchPTSlots();
     }, [])
   );
-  // useEffect(() => {
-  //   fetchSlotsGym();
-  //   fetchPTSlots();
-  // }, []);
+
   // Check if previous week button should be disabled
   const isPrevWeekDisabled = isSameDay(weekStart, currentWeekStart);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -95,7 +94,7 @@ export default function SchedulePTScreen() {
         if (userData) {
           setUser(JSON.parse(userData));
         } else {
-          setUser(null); // Make sure to set null if no user
+          setUser(null);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -105,6 +104,7 @@ export default function SchedulePTScreen() {
 
     fetchUser();
   }, []);
+
   const fetchSlotsGym = async (page = 1, pageSize = 10) => {
     setLoading(true);
     try {
@@ -145,34 +145,28 @@ export default function SchedulePTScreen() {
         slotId,
       });
       console.log(response);
-      // Alert.alert("Thành công", "Đã đăng ký thành công!");
+      Alert.alert("Thành công", "Bạn đã đăng ký thành công lịch tập.");
       fetchSlotsGym();
       fetchPTSlots();
     } catch (error) {
       console.error("Error booking slot:", error);
-      // Alert.alert("Lỗi", "Không thể đặt lịch. Vui lòng thử lại sau.");
     }
   };
 
   const filteredGymSlots = slots.filter((slot) => {
-    // Log the current slot ID we're checking
     console.log("Checking slot ID:", slot.id);
-
-    // Check if this ID exists in any ptSlot
     const exists = ptSlots.some((ptSlot) => {
       console.log("Comparing with ptSlot.slot.id:", ptSlot.slot?.id);
       console.log("ptSlot ID:", ptSlot.slot?.id);
       return ptSlot.slot?.id === slot.id;
     });
-
     console.log("Is this slot ID in ptSlots?", exists);
     return !exists;
   });
 
   console.log("Filtered Gym Slots:", filteredGymSlots);
+
   const getFilteredAndSortedSlots = () => {
-    // Filter slots for the selected date (in a real app, slots would have dates)
-    // For this example, we'll just show all slots for the selected date
     return filteredGymSlots.sort((a, b) =>
       a.startTime.localeCompare(b.startTime)
     );
@@ -181,19 +175,44 @@ export default function SchedulePTScreen() {
   const renderSlot = (slot) => {
     return (
       <View key={slot.id} style={styles.slotItem}>
-        <View style={styles.timeColumn}>
-          <Text style={styles.slotTime}>{slot.startTime.substring(0, 5)}</Text>
-          <Text style={styles.slotTimeDivider}>đến</Text>
-          <Text style={styles.slotTime}>{slot.endTime.substring(0, 5)}</Text>
+        <View style={styles.slotHeader}>
+          <View style={styles.timeContainer}>
+            <View style={styles.timeBlock}>
+              <Text style={styles.timeLabel}>Bắt đầu</Text>
+              <Text style={styles.slotTime}>
+                {slot.startTime.substring(0, 5)}
+              </Text>
+            </View>
+            <View style={styles.timeDivider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>đến</Text>
+              <View style={styles.dividerLine} />
+            </View>
+            <View style={styles.timeBlock}>
+              <Text style={styles.timeLabel}>Kết thúc</Text>
+              <Text style={styles.slotTime}>
+                {slot.endTime.substring(0, 5)}
+              </Text>
+            </View>
+          </View>
         </View>
-        <View style={styles.slotInfo}>
-          <Text style={styles.slotName}>{slot.name}</Text>
+
+        <View style={styles.slotContent}>
+          <View style={styles.slotDetails}>
+            <Text style={styles.slotName}>{slot.name}</Text>
+          </View>
 
           <TouchableOpacity
             style={styles.bookButton}
             onPress={() => registerSlot(slot.id)}
+            activeOpacity={0.8}
           >
-            <Text style={styles.bookButtonText}>Đăng ký</Text>
+            <View style={styles.buttonContent}>
+              <Text style={styles.bookButtonText}>Đăng ký</Text>
+              <View style={styles.buttonIcon}>
+                <Text style={styles.buttonIconText}>→</Text>
+              </View>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -202,217 +221,366 @@ export default function SchedulePTScreen() {
 
   if (loading && slots.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E42D46" />
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color="#E42D46" />
+            <Text style={styles.loadingText}>Đang tải lịch tập...</Text>
+          </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Time Slots */}
-      <ScrollView style={styles.slotsContainer}>
-        {getFilteredAndSortedSlots().map(renderSlot)}
-        {getFilteredAndSortedSlots().length === 0 && (
-          <View style={styles.noSlotsContainer}>
-            <Text style={styles.noSlotsText}>
-              Bạn đã đăng ký lịch hết Slot Tập
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Đăng ký lịch PT</Text>
+        <Text style={styles.headerSubtitle}>Chọn slot phù hợp với bạn</Text>
+      </View>
+
+      {/* Content */}
+      <View style={styles.content}>
+        {/* Stats Card */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>
+              {getFilteredAndSortedSlots().length}
             </Text>
+            <Text style={styles.statLabel}>Slot khả dụng</Text>
           </View>
-        )}
-      </ScrollView>
-    </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{ptSlots.length}</Text>
+            <Text style={styles.statLabel}>Đã đăng ký</Text>
+          </View>
+        </View>
+
+        {/* Time Slots */}
+        <ScrollView
+          style={styles.slotsContainer}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.slotsContentContainer}
+        >
+          {getFilteredAndSortedSlots().map(renderSlot)}
+
+          {getFilteredAndSortedSlots().length === 0 && (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcon}>
+                <Text style={styles.emptyIconText}>📅</Text>
+              </View>
+              <Text style={styles.emptyTitle}>Không có slot nào</Text>
+              <Text style={styles.emptySubtitle}>
+                Bạn đã đăng ký hết tất cả các slot tập có sẵn
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f8f9fa",
+  },
+
+  header: {
     backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f3f5",
+  },
+
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#212529",
+    marginBottom: 4,
+  },
+
+  headerSubtitle: {
+    fontSize: 12,
+    color: "#6c757d",
+    fontWeight: "400",
+  },
+
+  content: {
+    flex: 1,
+    paddingTop: 16,
+    backgroundColor: "#ffffff",
+  },
+
+  statsCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+
+  statItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+
+  statNumber: {
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#E42D46",
+    marginBottom: 4,
+  },
+
+  statLabel: {
+    fontSize: 14,
+    color: "#6c757d",
+    fontWeight: "500",
+  },
+
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: "#e9ecef",
+    marginHorizontal: 20,
   },
 
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    textAlign: "center",
+    backgroundColor: "#f8f9fa",
   },
 
-  navButton: {
-    backgroundColor: "#FF914D",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+  loadingContent: {
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 32,
     borderRadius: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  prevButton: {
-    backgroundColor: "#FF914D",
+
+  loadingText: {
+    fontSize: 16,
+    color: "#6c757d",
+    marginTop: 16,
+    fontWeight: "500",
   },
-  nextButton: {
-    backgroundColor: "#FF914D",
+
+  slotsContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    backgroundColor: "#ffffff",
   },
-  disabledButton: {
-    backgroundColor: "#f8f9fa",
-    borderWidth: 1,
-    borderColor: "#ced4da",
+
+  slotsContentContainer: {
+    paddingBottom: 32,
   },
-  navButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  disabledButtonText: {
-    color: "#adb5bd",
-  },
-  weekRangeText: {
-    fontSize: 14,
-    color: "#E42D46",
-    fontWeight: "600",
-  },
-  datePickerContainer: {
+
+  slotItem: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
     marginBottom: 16,
-    paddingHorizontal: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 6,
   },
-  weekDaysContainer: {
+
+  slotHeader: {
+    backgroundColor: "#f8f9fa",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+
+  timeContainer: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
   },
-  dateItem: {
-    height: 80,
-    justifyContent: "center",
+
+  timeBlock: {
     alignItems: "center",
-    borderRadius: 12,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: "#f1f3f5",
+    flex: 1,
   },
-  selectedDateItem: {
-    backgroundColor: "#E42D46",
-    borderColor: "#E42D46",
+
+  timeLabel: {
+    fontSize: 12,
+    color: "#6c757d",
+    fontWeight: "500",
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  todayDateItem: {
-    borderColor: "#FF914D",
-    borderWidth: 2,
+
+  slotTime: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#E42D46",
   },
-  dayName: {
+
+  timeDivider: {
+    alignItems: "center",
+    paddingHorizontal: 16,
+    flex: 0.8,
+  },
+
+  dividerLine: {
+    height: 1,
+    backgroundColor: "#dee2e6",
+    width: "100%",
+    marginVertical: 4,
+  },
+
+  dividerText: {
+    fontSize: 12,
+    color: "#adb5bd",
+    fontWeight: "500",
+    backgroundColor: "#f8f9fa",
+    paddingHorizontal: 8,
+  },
+
+  slotContent: {
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  slotDetails: {
+    flex: 1,
+    marginRight: 16,
+  },
+
+  slotName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#212529",
+    marginBottom: 8,
+  },
+
+  durationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  durationIcon: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#FF914D",
+    marginRight: 8,
+  },
+
+  durationText: {
     fontSize: 14,
     color: "#6c757d",
     fontWeight: "500",
   },
-  dayNumber: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginTop: 4,
-    color: "#212529",
-  },
 
-  monthName: {
-    fontSize: 12,
-    color: "#6c757d",
-    marginTop: 2,
-  },
-  selectedDateText: {
-    color: "#fff",
-  },
-  selectedDateHeader: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
-    color: "#343a40",
-    paddingHorizontal: 16,
-  },
-  slotsContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  slotItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    marginBottom: 12,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-    borderLeftWidth: 4,
-    borderLeftColor: "#FF914D",
-  },
-  timeColumn: {
-    width: 65,
-    alignItems: "center",
-    marginRight: 14,
-    borderRightWidth: 1,
-    borderRightColor: "#e9ecef",
-    paddingRight: 10,
-  },
-  slotTime: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#E42D46",
-  },
-  slotTimeDivider: {
-    fontSize: 12,
-    color: "#adb5bd",
-    marginVertical: 2,
-  },
-  slotInfo: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  slotName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212529",
-  },
   bookButton: {
     backgroundColor: "#E42D46",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignSelf: "flex-start",
-    marginTop: 6,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    shadowColor: "#E42D46",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
+
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
   bookButtonText: {
     color: "#fff",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: 16,
+    marginRight: 8,
   },
-  noSlotsContainer: {
-    padding: 30,
+
+  buttonIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 16,
-    marginTop: 10,
   },
-  noSlotsText: {
-    fontSize: 15,
-    color: "#6c757d",
+
+  buttonIconText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 48,
+    marginTop: 32,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#f8f9fa",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+
+  emptyIconText: {
+    fontSize: 36,
+  },
+
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#212529",
+    marginBottom: 8,
     textAlign: "center",
   },
-  disabledDateItem: {
-    backgroundColor: "#f8f9fa",
-    opacity: 0.7,
-  },
-  disabledDateText: {
-    color: "#adb5bd",
+
+  emptySubtitle: {
+    fontSize: 16,
+    color: "#6c757d",
+    textAlign: "center",
+    lineHeight: 24,
+    paddingHorizontal: 20,
   },
 });

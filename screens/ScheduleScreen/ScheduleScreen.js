@@ -9,6 +9,7 @@ import {
   Dimensions,
   StatusBar,
   Alert,
+  SafeAreaView,
 } from "react-native";
 import {
   format,
@@ -24,7 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const DAY_ITEM_WIDTH = SCREEN_WIDTH / 7 - 8; // Adjust for padding
+const DAY_ITEM_WIDTH = SCREEN_WIDTH / 7 - 12;
 
 // Vietnamese day names for custom formatting
 const vietnameseDayNames = {
@@ -60,7 +61,7 @@ export default function ScheduleScreen() {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const [weekStart, setWeekStart] = useState(currentWeekStart); // Week starts on Monday
+  const [weekStart, setWeekStart] = useState(currentWeekStart);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -69,6 +70,7 @@ export default function ScheduleScreen() {
 
   const [user, setUser] = useState(null);
   const navigation = useNavigation();
+
   // Check if next week button should be disabled
   const isNextWeekDisabled = isAfter(
     addDays(weekStart, 7),
@@ -77,6 +79,7 @@ export default function ScheduleScreen() {
 
   // Check if previous week button should be disabled
   const isPrevWeekDisabled = isSameDay(weekStart, currentWeekStart);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -84,7 +87,7 @@ export default function ScheduleScreen() {
         if (userData) {
           setUser(JSON.parse(userData));
         } else {
-          setUser(null); // Make sure to set null if no user
+          setUser(null);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -94,6 +97,7 @@ export default function ScheduleScreen() {
 
     fetchUser();
   }, []);
+
   const fetchSlotsGym = async (page = 1, pageSize = 10) => {
     setLoading(true);
     try {
@@ -125,12 +129,6 @@ export default function ScheduleScreen() {
         date: format(selectedDate, "yyyy-MM-dd"),
       };
       console.log(requestData);
-      // await gymService.bookSlot({
-      //   slotId,
-      //   date: format(selectedDate, "yyyy-MM-dd"),
-      // });
-      // Alert.alert("Thành công", "Đã đặt lịch thành công!");
-      // Refresh the slots to show updated availability
       fetchSlotsGym(pagination.current, pagination.pageSize);
     } catch (error) {
       console.error("Error booking slot:", error);
@@ -160,14 +158,12 @@ export default function ScheduleScreen() {
   };
 
   const handleNextWeek = () => {
-    // Only allow going one week forward from current week
     if (!isNextWeekDisabled) {
       setWeekStart(addDays(weekStart, 7));
     }
   };
 
   const handlePrevWeek = () => {
-    // Go back to current week if we're in a future week
     if (!isPrevWeekDisabled) {
       setWeekStart(currentWeekStart);
     }
@@ -199,11 +195,11 @@ export default function ScheduleScreen() {
           isSelected && styles.selectedDateItem,
           isToday && styles.todayDateItem,
           isDisabled && styles.disabledDateItem,
-
           { width: DAY_ITEM_WIDTH },
         ]}
         onPress={() => handleDateSelect(date)}
         disabled={isDisabled}
+        activeOpacity={0.7}
       >
         <Text style={[styles.dayName, isSelected && styles.selectedDateText]}>
           {getVietnameseDayName(date)}
@@ -220,30 +216,74 @@ export default function ScheduleScreen() {
 
   // Get sorted slots for better organization
   const getFilteredAndSortedSlots = () => {
-    // Filter slots for the selected date (in a real app, slots would have dates)
-    // For this example, we'll just show all slots for the selected date
     return slots.sort((a, b) => a.startTime.localeCompare(b.startTime));
   };
 
   const renderSlot = (slot) => {
     return (
       <View key={slot.id} style={styles.slotItem}>
-        <View style={styles.timeColumn}>
-          <Text style={styles.slotTime}>{slot.startTime.substring(0, 5)}</Text>
-          <Text style={styles.slotTimeDivider}>đến</Text>
-          <Text style={styles.slotTime}>{slot.endTime.substring(0, 5)}</Text>
+        <View style={styles.slotHeader}>
+          <View style={styles.timeContainer}>
+            <View style={styles.timeBlock}>
+              <Text style={styles.timeLabel}>Bắt đầu</Text>
+              <Text style={styles.slotTime}>
+                {slot.startTime.substring(0, 5)}
+              </Text>
+            </View>
+            <View style={styles.timeDivider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>đến</Text>
+              <View style={styles.dividerLine} />
+            </View>
+            <View style={styles.timeBlock}>
+              <Text style={styles.timeLabel}>Kết thúc</Text>
+              <Text style={styles.slotTime}>
+                {slot.endTime.substring(0, 5)}
+              </Text>
+            </View>
+          </View>
         </View>
-        <View style={styles.slotInfo}>
-          <Text style={styles.slotName}>{slot.name}</Text>
+
+        <View style={styles.slotContent}>
+          <View style={styles.slotDetails}>
+            <Text style={styles.slotName}>{slot.name}</Text>
+            <View style={styles.durationContainer}>
+              <View style={styles.durationIcon} />
+              <Text style={styles.durationText}>
+                {(() => {
+                  const start = new Date(`2000-01-01T${slot.startTime}`);
+                  const end = new Date(`2000-01-01T${slot.endTime}`);
+                  const diff = (end - start) / (1000 * 60);
+                  return `${diff} phút`;
+                })()}
+              </Text>
+            </View>
+          </View>
 
           <TouchableOpacity
-            style={styles.bookButton}
+            style={[
+              styles.bookButton,
+              bookingLoading && styles.bookButtonDisabled,
+            ]}
             onPress={() => bookSlot(slot.id)}
             disabled={bookingLoading}
+            activeOpacity={0.8}
           >
-            <Text style={styles.bookButtonText}>
-              {bookingLoading ? "Đang đặt..." : "Đặt lịch"}
-            </Text>
+            <View style={styles.buttonContent}>
+              {bookingLoading ? (
+                <>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={styles.bookButtonText}>Đang đặt...</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.bookButtonText}>Đặt lịch</Text>
+                  <View style={styles.buttonIcon}>
+                    <Text style={styles.buttonIconText}>→</Text>
+                  </View>
+                </>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -261,23 +301,31 @@ export default function ScheduleScreen() {
 
   if (loading && slots.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E42D46" />
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color="#E42D46" />
+            <Text style={styles.loadingText}>Đang tải lịch tập...</Text>
+          </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+      {/* Week Navigation */}
       <View style={styles.weekNavigation}>
         <TouchableOpacity
           onPress={handlePrevWeek}
           style={[
             styles.navButton,
-            styles.prevButton,
             isPrevWeekDisabled && styles.disabledButton,
           ]}
           disabled={isPrevWeekDisabled}
+          activeOpacity={0.8}
         >
           <Text
             style={[
@@ -285,7 +333,7 @@ export default function ScheduleScreen() {
               isPrevWeekDisabled && styles.disabledButtonText,
             ]}
           >
-            ◀ Tuần Trước
+            ◀ Tuần trước
           </Text>
         </TouchableOpacity>
 
@@ -297,10 +345,10 @@ export default function ScheduleScreen() {
           onPress={handleNextWeek}
           style={[
             styles.navButton,
-            styles.nextButton,
             isNextWeekDisabled && styles.disabledButton,
           ]}
           disabled={isNextWeekDisabled}
+          activeOpacity={0.8}
         >
           <Text
             style={[
@@ -308,265 +356,520 @@ export default function ScheduleScreen() {
               isNextWeekDisabled && styles.disabledButtonText,
             ]}
           >
-            Tuần Sau ▶
+            Tuần sau ▶
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Date Picker - Full Week */}
       <View style={styles.datePickerContainer}>
-        <View style={styles.weekDaysContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.weekDaysContainer}
+        >
           {weekDates.map((date, index) => renderDateItem(date, index))}
-        </View>
+        </ScrollView>
       </View>
 
-      {/* Selected Date */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-        }}
-      >
-        <Text style={styles.selectedDateHeader}>
-          Ngày {format(selectedDate, "dd/MM/yyyy", { locale: vi })}
-        </Text>
+      {/* Selected Date & History Button */}
+      <View style={styles.dateHeaderContainer}>
+        <View style={styles.selectedDateInfo}>
+          <Text style={styles.selectedDateLabel}>Ngày đã chọn</Text>
+          <Text style={styles.selectedDateHeader}>
+            {format(selectedDate, "EEEE, dd/MM/yyyy", { locale: vi })}
+          </Text>
+        </View>
+
         <TouchableOpacity
           onPress={() => navigation.navigate("ScheduleHistoryScreen")}
-          style={{
-            backgroundColor: "#E42D46",
-            paddingVertical: 8,
-            paddingHorizontal: 20,
-            borderRadius: 20,
-          }}
+          style={styles.historyButton}
+          activeOpacity={0.8}
         >
-          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-            Lịch sử
-          </Text>
+          <View style={styles.historyButtonContent}>
+            <Text style={styles.historyButtonText}>Lịch sử</Text>
+            <View style={styles.historyIcon}>
+              <Text style={styles.historyIconText}>📋</Text>
+            </View>
+          </View>
         </TouchableOpacity>
       </View>
 
       {/* Time Slots */}
-      <ScrollView style={styles.slotsContainer}>
+      <ScrollView
+        style={styles.slotsContainer}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.slotsContentContainer}
+      >
         {getFilteredAndSortedSlots().map(renderSlot)}
+
         {getFilteredAndSortedSlots().length === 0 && (
-          <View style={styles.noSlotsContainer}>
-            <Text style={styles.noSlotsText}>
-              Không có lịch tập vào ngày này
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Text style={styles.emptyIconText}>📅</Text>
+            </View>
+            <Text style={styles.emptyTitle}>Không có lịch tập</Text>
+            <Text style={styles.emptySubtitle}>
+              Không có slot nào khả dụng vào ngày này
             </Text>
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#ffffff",
+  },
+
+  header: {
     backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f3f5",
+  },
+
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#212529",
+    marginBottom: 4,
+  },
+
+  headerSubtitle: {
+    fontSize: 16,
+    color: "#6c757d",
+    fontWeight: "400",
   },
 
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#f8f9fa",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    textAlign: "center",
+
+  loadingContent: {
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 32,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
+
+  loadingText: {
+    fontSize: 16,
+    color: "#6c757d",
+    marginTop: 16,
+    fontWeight: "500",
+  },
+
   weekNavigation: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 12,
-    marginTop: 20,
-    marginBottom: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#fff",
+    marginBottom: 8,
   },
+
   weekBadge: {
     backgroundColor: "#f8f9fa",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 20,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#E42D46",
   },
+
   navButton: {
-    backgroundColor: "#FF914D",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
+    backgroundColor: "#E42D46",
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    shadowColor: "#E42D46",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  prevButton: {
-    backgroundColor: "#FF914D",
-  },
-  nextButton: {
-    backgroundColor: "#FF914D",
-  },
+
   disabledButton: {
     backgroundColor: "#f8f9fa",
     borderWidth: 1,
     borderColor: "#ced4da",
+    shadowOpacity: 0,
+    elevation: 0,
   },
+
   navButtonText: {
     color: "#fff",
     fontWeight: "600",
-    fontSize: 13,
+    fontSize: 12,
   },
+
   disabledButtonText: {
     color: "#adb5bd",
   },
+
   weekRangeText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#E42D46",
-    fontWeight: "600",
+    fontWeight: "700",
   },
+
   datePickerContainer: {
-    marginBottom: 16,
-    paddingHorizontal: 10,
+    backgroundColor: "#fff",
+    paddingVertical: 16,
+    marginBottom: 8,
   },
+
   weekDaysContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    gap: 8,
   },
+
   dateItem: {
-    height: 80,
+    height: 90,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 12,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderRadius: 16,
+    backgroundColor: "#ffffff",
     borderWidth: 1,
     borderColor: "#f1f3f5",
+    position: "relative",
   },
+
   selectedDateItem: {
     backgroundColor: "#E42D46",
     borderColor: "#E42D46",
+    shadowColor: "#E42D46",
+    shadowOpacity: 0.3,
   },
+
   todayDateItem: {
     borderColor: "#FF914D",
     borderWidth: 2,
   },
-  dayName: {
-    fontSize: 14,
-    color: "#6c757d",
-    fontWeight: "500",
+
+  todayIndicator: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF914D",
   },
+
+  dayName: {
+    fontSize: 12,
+    color: "#6c757d",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
   dayNumber: {
-    fontSize: 22,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "800",
     marginTop: 4,
     color: "#212529",
   },
 
   monthName: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#6c757d",
     marginTop: 2,
+    fontWeight: "500",
   },
+
   selectedDateText: {
     color: "#fff",
   },
-  selectedDateHeader: {
-    fontSize: 16,
-    fontWeight: "600",
-    // marginBottom: 12,
-    color: "#343a40",
-    // paddingHorizontal: 16,
+
+  disabledDateItem: {
+    backgroundColor: "#f8f9fa",
+    opacity: 0.5,
   },
-  slotsContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  slotItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    marginBottom: 12,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-    borderLeftWidth: 4,
-    borderLeftColor: "#FF914D",
-  },
-  timeColumn: {
-    width: 65,
-    alignItems: "center",
-    marginRight: 14,
-    borderRightWidth: 1,
-    borderRightColor: "#e9ecef",
-    paddingRight: 10,
-  },
-  slotTime: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#E42D46",
-  },
-  slotTimeDivider: {
-    fontSize: 12,
-    color: "#adb5bd",
-    marginVertical: 2,
-  },
-  slotInfo: {
-    flex: 1,
+
+  dateHeaderContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#fff",
+    marginBottom: 16,
   },
-  slotName: {
-    fontSize: 16,
-    fontWeight: "bold",
+
+  selectedDateInfo: {
+    flex: 1,
+  },
+
+  selectedDateLabel: {
+    fontSize: 12,
+    color: "#6c757d",
+    fontWeight: "500",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+
+  selectedDateHeader: {
+    fontSize: 18,
+    fontWeight: "600",
     color: "#212529",
   },
+
+  historyButton: {
+    backgroundColor: "#E42D46",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: "#E42D46",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+
+  historyButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  historyButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 8,
+  },
+
+  historyIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  historyIconText: {
+    fontSize: 12,
+  },
+
+  slotsContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+
+  slotsContentContainer: {
+    paddingBottom: 32,
+  },
+
+  slotItem: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 6,
+  },
+
+  slotHeader: {
+    backgroundColor: "#f8f9fa",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+
+  timeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  timeBlock: {
+    alignItems: "center",
+    flex: 1,
+  },
+
+  timeLabel: {
+    fontSize: 12,
+    color: "#6c757d",
+    fontWeight: "500",
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
+  slotTime: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#E42D46",
+  },
+
+  timeDivider: {
+    alignItems: "center",
+    paddingHorizontal: 16,
+    flex: 0.8,
+  },
+
+  dividerLine: {
+    height: 1,
+    backgroundColor: "#dee2e6",
+    width: "100%",
+    marginVertical: 4,
+  },
+
+  dividerText: {
+    fontSize: 12,
+    color: "#adb5bd",
+    fontWeight: "500",
+    backgroundColor: "#f8f9fa",
+    paddingHorizontal: 8,
+  },
+
+  slotContent: {
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  slotDetails: {
+    flex: 1,
+    marginRight: 16,
+  },
+
+  slotName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#212529",
+    marginBottom: 8,
+  },
+
+  durationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  durationIcon: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#FF914D",
+    marginRight: 8,
+  },
+
+  durationText: {
+    fontSize: 14,
+    color: "#6c757d",
+    fontWeight: "500",
+  },
+
   bookButton: {
     backgroundColor: "#E42D46",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignSelf: "flex-start",
-    marginTop: 6,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    shadowColor: "#E42D46",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
+
+  bookButtonDisabled: {
+    backgroundColor: "#adb5bd",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
   bookButtonText: {
     color: "#fff",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: 16,
+    marginRight: 8,
   },
-  noSlotsContainer: {
-    padding: 30,
+
+  buttonIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8f9fa",
-    borderRadius: 16,
-    marginTop: 10,
   },
-  noSlotsText: {
-    fontSize: 15,
-    color: "#6c757d",
+
+  buttonIconText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 48,
+    marginTop: 32,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#f8f9fa",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+
+  emptyIconText: {
+    fontSize: 36,
+  },
+
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#212529",
+    marginBottom: 8,
     textAlign: "center",
   },
-  disabledDateItem: {
-    backgroundColor: "#f8f9fa",
-    opacity: 0.7,
-  },
-  disabledDateText: {
-    color: "#adb5bd",
+
+  emptySubtitle: {
+    fontSize: 16,
+    color: "#6c757d",
+    textAlign: "center",
+    lineHeight: 24,
+    paddingHorizontal: 20,
   },
 });
