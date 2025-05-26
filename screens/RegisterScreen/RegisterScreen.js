@@ -17,8 +17,8 @@ import { FontAwesome } from "@expo/vector-icons";
 import { Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import authService from "../../services/authService";
-import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert } from "react-native";
 export default function RegisterScreen() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,22 +30,14 @@ export default function RegisterScreen() {
   const navigation = useNavigation();
   const handleRegister = async () => {
     if (!fullName || !phone || !password || !confirmPassword) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Vui lòng điền đầy đủ thông tin",
-        visibilityTime: 2000,
-      });
+      Alert.alert("Thông báo", "Vui lòng điền đầy đủ thông tin", [
+        { text: "OK" },
+      ]);
       return;
     }
 
     if (password !== confirmPassword) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Mật khẩu không khớp",
-        visibilityTime: 2000,
-      });
+      Alert.alert("Thông báo", "Mật khẩu không khớp", [{ text: "OK" }]);
       return;
     }
 
@@ -61,19 +53,17 @@ export default function RegisterScreen() {
       const response = await authService.register(requestData); // ✅ await it
       console.log("Registration response:", response);
 
-      Toast.show({
-        type: "success",
-        text1: "Đăng ký thành công",
-      });
+      Alert.alert(
+        "Thông báo",
+        "Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.",
+        [{ text: "OK" }]
+      );
 
       navigation.replace("Login");
     } catch (error) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: error?.response?.data?.message || "Đã xảy ra lỗi",
-        visibilityTime: 2000,
-      });
+      Alert.alert("Lỗi đăng ký", "Không thể đăng ký. Vui lòng thử lagi sau.", [
+        { text: "OK" },
+      ]);
       console.error("Registration error:", error);
     }
   };

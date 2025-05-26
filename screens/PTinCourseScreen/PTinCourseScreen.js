@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,7 +15,6 @@ import { useNavigation } from "@react-navigation/native";
 import gymService from "../../services/gymService";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCart } from "../../context/CartContext";
-import Toast from "react-native-toast-message";
 import colors from "../../constants/color";
 
 export default function PTinCourseScreen({ route }) {
@@ -71,11 +71,7 @@ export default function PTinCourseScreen({ route }) {
       successMessage = `Bạn đã thêm gói ${gymPackage.name} với PT ${selectedPT?.fullName} tại ${gymPackage.gymName} vào giỏ hàng`;
     }
 
-    Toast.show({
-      type: "success",
-      text1: "Thêm vào giỏ hàng thành công",
-      text2: successMessage,
-    });
+    Alert.alert("Thông báo", successMessage, [{ text: "OK" }]);
 
     // Navigate back after adding to cart
     navigation.goBack();

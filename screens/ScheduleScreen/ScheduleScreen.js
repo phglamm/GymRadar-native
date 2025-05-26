@@ -21,6 +21,7 @@ import {
 import { vi } from "date-fns/locale";
 import gymService from "../../services/gymService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const DAY_ITEM_WIDTH = SCREEN_WIDTH / 7 - 8; // Adjust for padding
@@ -67,7 +68,7 @@ export default function ScheduleScreen() {
   });
 
   const [user, setUser] = useState(null);
-
+  const navigation = useNavigation();
   // Check if next week button should be disabled
   const isNextWeekDisabled = isAfter(
     addDays(weekStart, 7),
@@ -320,9 +321,32 @@ export default function ScheduleScreen() {
       </View>
 
       {/* Selected Date */}
-      <Text style={styles.selectedDateHeader}>
-        Ngày {format(selectedDate, "dd/MM/yyyy", { locale: vi })}
-      </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+        }}
+      >
+        <Text style={styles.selectedDateHeader}>
+          Ngày {format(selectedDate, "dd/MM/yyyy", { locale: vi })}
+        </Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("ScheduleHistoryScreen")}
+          style={{
+            backgroundColor: "#E42D46",
+            paddingVertical: 8,
+            paddingHorizontal: 20,
+            borderRadius: 20,
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+            Lịch sử
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Time Slots */}
       <ScrollView style={styles.slotsContainer}>
@@ -460,9 +484,9 @@ const styles = StyleSheet.create({
   selectedDateHeader: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 12,
+    // marginBottom: 12,
     color: "#343a40",
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16,
   },
   slotsContainer: {
     flex: 1,

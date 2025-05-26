@@ -8,10 +8,9 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import ptService from "../../services/ptService";
-import Toast from "react-native-toast-message";
 import { useFocusEffect } from "@react-navigation/native";
 
-export default function SlotsPTScreen() {
+export default function SlotsPTScreen({ navigation }) {
   const [ptSlots, setPtSlots] = useState([]);
 
   useFocusEffect(
@@ -50,11 +49,9 @@ export default function SlotsPTScreen() {
 
     try {
       const response = await ptService.activeSlot(id);
-      Toast.show({
-        type: "success",
-        text1: "Thành công",
-        text2: "Đăng ký lịch tập thành công",
-      });
+      Alert.alert("Thành công", "Đăng ký lịch tập thành cong", [
+        { text: "OK" },
+      ]);
       console.log("response Active", response);
       fetchPTSlots();
     } catch (error) {
@@ -67,11 +64,7 @@ export default function SlotsPTScreen() {
     console.log("unActiveSlot", id);
     try {
       const response = await ptService.unactiveSlot(id);
-      Toast.show({
-        type: "success",
-        text1: "Thành công",
-        text2: "Hủy lịch tập thành công",
-      });
+      Alert.alert("Thành công", "Hủy lịch tập thành công", [{ text: "OK" }]);
       console.log("response UnActive", response);
       fetchPTSlots();
     } catch (error) {
@@ -112,6 +105,39 @@ export default function SlotsPTScreen() {
   return (
     <View style={styles.container}>
       {/* Time Slots */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          padding: 16,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => navigation.navigate("PTBookingHistoryScreen")}
+          style={{
+            backgroundColor: "#E42D46",
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            borderRadius: 8,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.08,
+            shadowRadius: 3,
+            elevation: 2,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 16,
+              color: "#ffffff",
+              fontWeight: "bold",
+            }}
+          >
+            Lịch sử
+          </Text>
+        </TouchableOpacity>
+      </View>
       <ScrollView style={styles.slotsContainer}>
         {getFilteredAndSortedSlots().map(renderSlot)}
         {getFilteredAndSortedSlots().length === 0 && (
@@ -143,98 +169,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  navButton: {
-    backgroundColor: "#FF914D",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
-  },
-  prevButton: {
-    backgroundColor: "#FF914D",
-  },
-  nextButton: {
-    backgroundColor: "#FF914D",
-  },
-  disabledButton: {
-    backgroundColor: "#f8f9fa",
-    borderWidth: 1,
-    borderColor: "#ced4da",
-  },
-  navButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  disabledButtonText: {
-    color: "#adb5bd",
-  },
-  weekRangeText: {
-    fontSize: 14,
-    color: "#E42D46",
-    fontWeight: "600",
-  },
-  datePickerContainer: {
-    marginBottom: 16,
-    paddingHorizontal: 10,
-  },
-  weekDaysContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  dateItem: {
-    height: 80,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 12,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: "#f1f3f5",
-  },
-  selectedDateItem: {
-    backgroundColor: "#E42D46",
-    borderColor: "#E42D46",
-  },
-  todayDateItem: {
-    borderColor: "#FF914D",
-    borderWidth: 2,
-  },
-  dayName: {
-    fontSize: 14,
-    color: "#6c757d",
-    fontWeight: "500",
-  },
-  dayNumber: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginTop: 4,
-    color: "#212529",
-  },
-
-  monthName: {
-    fontSize: 12,
-    color: "#6c757d",
-    marginTop: 2,
-  },
-  selectedDateText: {
-    color: "#fff",
-  },
-  selectedDateHeader: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
-    color: "#343a40",
-    paddingHorizontal: 16,
-  },
   slotsContainer: {
     flex: 1,
     paddingHorizontal: 16,

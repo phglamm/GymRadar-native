@@ -37,6 +37,8 @@ import BlogScreen from "../screens/BlogScreen/BlogScreen";
 import BlogDetailScreen from "../screens/BlogDetailScreen/BlogDetailScreen";
 import PaymentScreen from "../screens/PaymentScreen/PaymentScreen";
 import SubscriptionScreen from "../screens/SubscriptionScreen/SubscriptionScreen";
+import ScheduleHistoryScreen from "../screens/ScheduleHistoryScreen/ScheduleHistoryScreen";
+import PTBookingHistoryScreen from "../screens/PTBookingHistoryScreen/PTBookingHistoryScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -242,6 +244,20 @@ export default function Navigator() {
             },
           }}
         />
+        <Stack.Screen
+          name="ScheduleHistoryScreen"
+          component={ScheduleHistoryScreen}
+          options={{
+            headerShown: true,
+            title: "Lịch sử đặt lịch",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
       </Stack.Navigator>
     );
   };
@@ -308,6 +324,20 @@ export default function Navigator() {
             </TopTab.Navigator>
           )}
         </Stack.Screen>
+        <Stack.Screen
+          name="PTBookingHistoryScreen"
+          component={PTBookingHistoryScreen}
+          options={{
+            headerShown: true,
+            title: "Lịch sử đặt lịch PT",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
       </Stack.Navigator>
     );
   };

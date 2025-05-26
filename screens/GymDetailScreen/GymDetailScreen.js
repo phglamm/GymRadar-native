@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Image,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CarouselNative from "../../components/Carousel/Carousel";
@@ -150,12 +151,11 @@ export default function GymDetailScreen({ route }) {
 
     addToCart(gymPackage);
 
-    Toast.show({
-      type: "success",
-      text1: "Thêm vào giỏ hàng thành công",
-      text2: `Gói tập ${packageGym.name} đã được thêm vào giỏ hàng`,
-      visibilityTime: 2000,
-    });
+    Alert.alert(
+      "Thêm vào giỏ hàng thành công",
+      `Bạn đã thêm gói ${packageGym.name} tại ${gymDetail.gymName} vào giỏ hàng`,
+      [{ text: "OK" }]
+    );
   };
 
   const handleAddToCartWithPT = (packageGym) => {

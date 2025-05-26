@@ -9,7 +9,6 @@ import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import authService from "../../services/authService";
-import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
@@ -20,12 +19,9 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!phone || !password) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Vui lòng điền đầy đủ thông tin",
-        visibilityTime: 2000,
-      });
+      Alert.alert("Thông báo", "Vui lòng nhập số điện thoại và mật khẩu", [
+        { text: "OK" },
+      ]);
       return;
     }
     const requestData = {
@@ -44,12 +40,11 @@ export default function LoginScreen() {
           routes: [{ name: "MainApp", params: { screen: "Home" } }],
         });
       } else {
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: "Tài khoản không hợp lệ",
-          visibilityTime: 2000,
-        });
+        Alert.alert(
+          "Thông báo",
+          "Tài khoản của bạn không có quyền truy cập vào ứng dụng này",
+          [{ text: "OK" }]
+        );
         return;
       }
 

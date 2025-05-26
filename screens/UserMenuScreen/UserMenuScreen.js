@@ -16,8 +16,6 @@ import { useNavigation } from "@react-navigation/native";
 
 export default function UserMenuScreen() {
   const [user, setUser] = useState(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -29,18 +27,6 @@ export default function UserMenuScreen() {
     fetchUser();
 
     // Animate on mount
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
   }, []);
 
   const navigation = useNavigation();
@@ -124,19 +110,7 @@ export default function UserMenuScreen() {
   ];
 
   const MenuItem = ({ item, index }) => (
-    <Animated.View
-      style={[
-        styles.menuItemWrapper,
-        {
-          opacity: fadeAnim,
-          transform: [
-            {
-              translateY: slideAnim,
-            },
-          ],
-        },
-      ]}
-    >
+    <View style={[styles.menuItemWrapper]}>
       <TouchableOpacity
         style={styles.menuItem}
         onPress={() =>
@@ -155,7 +129,7 @@ export default function UserMenuScreen() {
         <Text style={styles.menuItemText}>{item.label}</Text>
         <Ionicons name="chevron-forward" size={20} color="#C0C0C0" />
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 
   return (
@@ -168,15 +142,7 @@ export default function UserMenuScreen() {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <Animated.View
-            style={[
-              styles.userInfo,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
-            ]}
-          >
+          <Animated.View style={[styles.userInfo]}>
             <View style={styles.avatarContainer}>
               <Image
                 source={{
