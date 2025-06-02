@@ -46,35 +46,49 @@ export default function PTinCourseScreen({ route }) {
   // Updated function to handle WithPT packages
   const handleAddToCart = async (selectedPT) => {
     // Create the cart item with PT information for WithPT packages
-    const cartItem = {
-      ...gymPackage,
-      pt:
-        gymPackage.type === "WithPT"
-          ? {
-              id: selectedPT.id,
-              fullName: selectedPT.fullName,
-              avatar: selectedPT.avatar,
-              gender: selectedPT.gender,
-              goalTraining: selectedPT.goalTraining,
-            }
-          : null,
-    };
+    if (getCartCount() > 0) {
+      Alert.alert("Giỏ hàng đã có gói tập", "Bạn có muốn xem giỏ hàng không?", [
+        {
+          text: "Không",
+          style: "cancel",
+        },
+        {
+          text: "Xem giỏ hàng",
+          onPress: () => navigation.navigate("CartScreen"),
+        },
+      ]);
+      return;
+    } else {
+      const cartItem = {
+        ...gymPackage,
+        pt:
+          gymPackage.type === "WithPT"
+            ? {
+                id: selectedPT.id,
+                fullName: selectedPT.fullName,
+                avatar: selectedPT.avatar,
+                gender: selectedPT.gender,
+                goalTraining: selectedPT.goalTraining,
+              }
+            : null,
+      };
 
-    addToCart(cartItem);
+      addToCart(cartItem);
 
-    let successMessage = "";
-    if (gymPackage.type === "Normal") {
-      // Normal package
-      successMessage = `Bạn đã thêm gói ${gymPackage.name} tại ${gymPackage.gymName} vào giỏ hàng`;
-    } else if (gymPackage.type === "WithPT") {
-      // WithPT package
-      successMessage = `Bạn đã thêm gói ${gymPackage.name} với PT ${selectedPT?.fullName} tại ${gymPackage.gymName} vào giỏ hàng`;
+      let successMessage = "";
+      if (gymPackage.type === "Normal") {
+        // Normal package
+        successMessage = `Bạn đã thêm gói ${gymPackage.name} tại ${gymPackage.gymName} vào giỏ hàng`;
+      } else if (gymPackage.type === "WithPT") {
+        // WithPT package
+        successMessage = `Bạn đã thêm gói ${gymPackage.name} với PT ${selectedPT?.fullName} tại ${gymPackage.gymName} vào giỏ hàng`;
+      }
+
+      Alert.alert("Thông báo", successMessage, [{ text: "OK" }]);
+
+      // Navigate back after adding to cart
+      navigation.goBack();
     }
-
-    Alert.alert("Thông báo", successMessage, [{ text: "OK" }]);
-
-    // Navigate back after adding to cart
-    navigation.goBack();
   };
 
   return (

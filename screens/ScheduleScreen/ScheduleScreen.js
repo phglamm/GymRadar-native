@@ -98,23 +98,54 @@ export default function ScheduleScreen() {
     fetchUser();
   }, []);
 
-  const fetchSlotsGym = async (page = 1, pageSize = 10) => {
+  // Updated function to fetch slots based on selected date
+  const fetchSlotsGym = async (
+    date = selectedDate,
+    page = 1,
+    pageSize = 10
+  ) => {
     setLoading(true);
     try {
-      const response = await gymService.getSlotOfGym({
-        page,
-        size: pageSize,
-      });
-      const { items, total, page: currentPage } = response.data;
-      setSlots(items);
-      setPagination({
-        current: currentPage,
-        pageSize,
-        total,
-      });
+      const params = {
+        date: format(date, "yyyy-MM-dd"), // Format date to string
+      };
+      const id = "0ef135db-3438-43ac-b701-c660853d0675";
+      const response = await gymService.getSlotOfGym(id, params);
+
+      // Handle the new API response structure
+      const { data } = response;
+
+      if (data && data.ptSlots) {
+        // Map the ptSlots to match your existing slot structure
+        const mappedSlots = data.ptSlots
+          .filter((ptSlot) => ptSlot.active) // Only include active slots
+          .map((ptSlot) => ({
+            id: ptSlot.slot.id,
+            name: ptSlot.slot.name,
+            startTime: ptSlot.slot.startTime,
+            endTime: ptSlot.slot.endTime,
+            ptSlotId: ptSlot.id, // Keep reference to ptSlot ID for booking
+            isBooking: ptSlot.isBooking,
+          }));
+
+        setSlots(mappedSlots);
+        setPagination({
+          current: page,
+          pageSize,
+          total: mappedSlots.length, // Update based on actual data
+        });
+      } else {
+        setSlots([]);
+        setPagination({
+          current: page,
+          pageSize,
+          total: 0,
+        });
+      }
     } catch (error) {
       console.error("Error fetching Slots:", error);
       Alert.alert("Lỗi", "Không thể tải lịch tập. Vui lòng thử lại sau.");
+      setSlots([]);
     } finally {
       setLoading(false);
     }
@@ -122,14 +153,31 @@ export default function ScheduleScreen() {
 
   // Function to book a slot
   const bookSlot = async (slotId) => {
+    if (!user) {
+      Alert.alert("Lỗi", "Vui lòng đăng nhập để đặt lịch.");
+      return;
+    }
+
     setBookingLoading(true);
     try {
       const requestData = {
         slotId,
         date: format(selectedDate, "yyyy-MM-dd"),
       };
-      console.log(requestData);
-      fetchSlotsGym(pagination.current, pagination.pageSize);
+
+      console.log("Booking request:", requestData);
+
+      // Call your booking API here
+      // const response = await gymService.bookSlot(requestData);
+
+      // Refresh slots after booking
+      await fetchSlotsGym(
+        selectedDate,
+        pagination.current,
+        pagination.pageSize
+      );
+
+      Alert.alert("Thành công", "Đặt lịch thành công!");
     } catch (error) {
       console.error("Error booking slot:", error);
       Alert.alert("Lỗi", "Không thể đặt lịch. Vui lòng thử lại sau.");
@@ -138,9 +186,15 @@ export default function ScheduleScreen() {
     }
   };
 
+  // Fetch slots when component mounts
   useEffect(() => {
-    fetchSlotsGym();
+    fetchSlotsGym(selectedDate);
   }, []);
+
+  // Fetch slots when selected date changes
+  useEffect(() => {
+    fetchSlotsGym(selectedDate);
+  }, [selectedDate]);
 
   // Generate dates for the entire week
   const generateWeekDates = () => {
@@ -155,6 +209,7 @@ export default function ScheduleScreen() {
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
+    // Slots will be fetched automatically due to useEffect
   };
 
   const handleNextWeek = () => {
@@ -220,6 +275,8 @@ export default function ScheduleScreen() {
   };
 
   const renderSlot = (slot) => {
+    const isAlreadyBooked = slot.isBooking;
+
     return (
       <View key={slot.id} style={styles.slotItem}>
         <View style={styles.slotHeader}>
@@ -258,15 +315,20 @@ export default function ScheduleScreen() {
                 })()}
               </Text>
             </View>
+            {isAlreadyBooked && (
+              <View style={styles.bookedBadge}>
+                <Text style={styles.bookedBadgeText}>Đã đặt</Text>
+              </View>
+            )}
           </View>
 
           <TouchableOpacity
             style={[
               styles.bookButton,
-              bookingLoading && styles.bookButtonDisabled,
+              (bookingLoading || isAlreadyBooked) && styles.bookButtonDisabled,
             ]}
             onPress={() => bookSlot(slot.id)}
-            disabled={bookingLoading}
+            disabled={bookingLoading || isAlreadyBooked}
             activeOpacity={0.8}
           >
             <View style={styles.buttonContent}>
@@ -275,6 +337,8 @@ export default function ScheduleScreen() {
                   <ActivityIndicator size="small" color="#fff" />
                   <Text style={styles.bookButtonText}>Đang đặt...</Text>
                 </>
+              ) : isAlreadyBooked ? (
+                <Text style={styles.bookButtonText}>Đã đặt</Text>
               ) : (
                 <>
                   <Text style={styles.bookButtonText}>Đặt lịch</Text>
@@ -768,6 +832,7 @@ const styles = StyleSheet.create({
   durationContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 8,
   },
 
   durationIcon: {
@@ -782,6 +847,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6c757d",
     fontWeight: "500",
+  },
+
+  bookedBadge: {
+    backgroundColor: "#28a745",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+
+  bookedBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
 
   bookButton: {

@@ -28,7 +28,7 @@ const gymService = {
   getCourseByGymId: (id) => request("GET", `v1/gym/${id}/courses`),
   getPTByGymId: (id) => request("GET", `v1/gym/${id}/pts`),
 
-  getSlotOfGym: (params) => request("GET", "v1/slot", null, {}, params),
+  getSlotOfGym: (id) => request("GET", `v1/pt-slot/${id}/user`),
 
   // Thêm hàm mới này:
   getPTById: (id) => request("GET", `v1/pt/${id}`),

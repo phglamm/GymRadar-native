@@ -22,6 +22,7 @@ import MapView, { Marker } from "react-native-maps";
 import { ActivityIndicator } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useCart } from "../../context/CartContext"; // Import the modified CartContext
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;
@@ -35,7 +36,7 @@ export default function GymDetailScreen({ route }) {
   const [gymDetail, setGymDetail] = useState({});
   const [gymCourse, setGymCourse] = useState([]);
   const [lowestPackage, setLowestPackage] = useState(null);
-  const { cart, addToCart } = useCart(); // Use the cart context
+  const { cart, addToCart, getCartCount } = useCart(); // Use the cart context
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -138,24 +139,40 @@ export default function GymDetailScreen({ route }) {
   // Handle adding package to cart
   const handleAddToCart = (packageGym) => {
     // Create structured gym package object for the cart
-    const gymPackage = {
-      gymId: gymDetail.id,
-      gymName: gymDetail.gymName,
-      gymAddress: gymDetail.address,
-      gymImage: image[0].url, // Using the first image as thumbnail
-      id: packageGym.id,
-      name: packageGym.name,
-      type: packageGym.type,
-      price: packageGym.price,
-    };
+    getCartCount();
 
-    addToCart(gymPackage);
+    if (getCartCount() > 0) {
+      Alert.alert("Giỏ hàng đã có gói tập", "Bạn có muốn xem giỏ hàng không?", [
+        {
+          text: "Không",
+          style: "cancel",
+        },
+        {
+          text: "Xem giỏ hàng",
+          onPress: () => navigation.navigate("CartScreen"),
+        },
+      ]);
+      return;
+    } else {
+      const gymPackage = {
+        gymId: gymDetail.id,
+        gymName: gymDetail.gymName,
+        gymAddress: gymDetail.address,
+        gymImage: image[0].url, // Using the first image as thumbnail
+        id: packageGym.id,
+        name: packageGym.name,
+        type: packageGym.type,
+        price: packageGym.price,
+      };
 
-    Alert.alert(
-      "Thêm vào giỏ hàng thành công",
-      `Bạn đã thêm gói ${packageGym.name} tại ${gymDetail.gymName} vào giỏ hàng`,
-      [{ text: "OK" }]
-    );
+      addToCart(gymPackage);
+
+      Alert.alert(
+        "Thêm vào giỏ hàng thành công",
+        `Bạn đã thêm gói ${packageGym.name} tại ${gymDetail.gymName} vào giỏ hàng`,
+        [{ text: "OK" }]
+      );
+    }
   };
 
   const handleAddToCartWithPT = (packageGym) => {

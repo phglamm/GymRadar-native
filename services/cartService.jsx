@@ -1,11 +1,11 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const request = async (method, url, data = null, headers = {}, params = {}) => {
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
   console.log(API_BASE_URL);
   const token = await AsyncStorage.getItem("token");
-
+  console.log("token:", token);
   const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
   try {
     const response = await axios({
@@ -26,18 +26,9 @@ const request = async (method, url, data = null, headers = {}, params = {}) => {
   }
 };
 
-const ptService = {
-  getAllSlotsOfGym: (params) => request("GET", "v1/slot", null, {}, params),
-  registerSlot: (data) => request("POST", "v1/pt-slot", data),
-  activeSlot: (id) => request("PUT", `v1/pt-slot/${id}/active`),
-  unactiveSlot: (id) => request("PUT", `v1/pt-slot/${id}/un-active`),
-
-  getPtSlot: (params) => request("GET", "v1/pt-slot", null, {}, params),
-
-  getPTDetail: (ptId) => request("GET", `v1/pt/${ptId}`),
-
-  getPTForUser: (id, params) =>
-    request("GET", `v1/pt-slot/${id}/user`, null, {}, params),
+const cartService = {
+  processCart: (data) => request("POST", "v1/cart", data),
+  checkStatus: (params) => request("GET", `v1/cart/status`, null, {}, params),
 };
 
-export default ptService;
+export default cartService;

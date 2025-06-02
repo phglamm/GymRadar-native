@@ -39,6 +39,8 @@ import PaymentScreen from "../screens/PaymentScreen/PaymentScreen";
 import SubscriptionScreen from "../screens/SubscriptionScreen/SubscriptionScreen";
 import ScheduleHistoryScreen from "../screens/ScheduleHistoryScreen/ScheduleHistoryScreen";
 import PTBookingHistoryScreen from "../screens/PTBookingHistoryScreen/PTBookingHistoryScreen";
+import UserPTSlotScreen from "../screens/UserPTSlotScreen/UserPTSlotScreen";
+import OrderSuccessScreen from "../screens/OrderSuccessScreen/OrderSuccessScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -183,6 +185,15 @@ export default function Navigator() {
             title: "Tiến hành thanh toán",
           }}
         />
+        <Stack.Screen
+          name="OrderSuccessScreen"
+          component={OrderSuccessScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Tiến thành thanh toán",
+          }}
+        />
       </Stack.Navigator>
     );
   };
@@ -230,6 +241,20 @@ export default function Navigator() {
             ) : null,
         })}
       >
+        {/* <Stack.Screen
+          name="UserPTSlotScreen"
+          component={UserPTSlotScreen}
+          options={{
+            headerShown: true,
+            title: "PT đã đăng ký",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        /> */}
         <Stack.Screen
           name="ScheduleScreen"
           component={ScheduleScreen}

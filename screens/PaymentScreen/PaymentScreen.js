@@ -12,14 +12,57 @@ import React, { useState } from "react";
 import { useCart } from "../../context/CartContext";
 import CartCard from "../../components/CartCard/CartCard";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import cartService from "../../services/cartService";
 
-export default function PaymentScreen() {
+export default function PaymentScreen({ navigation }) {
   const { cart, getTotalPrice, removeFromCart } = useCart();
   const totalPrice = getTotalPrice();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("bank");
-
+  console.log(cart);
   const handleCheckout = async () => {
-    Linking.openURL("https://www.google.com");
+    const requestData = {
+      gymCourseId: cart[0]?.id, // Assuming all items in cart are from the same course
+      ptId: cart[0]?.pt?.id || null, // Optional PT ID
+    };
+    try {
+      const response = await cartService.processCart(requestData);
+      console.log("Checkout response:", response);
+      console.log(
+        "Full response structure:",
+        JSON.stringify(response, null, 2)
+      );
+
+      // Check if response has the expected structure
+      let checkoutUrl;
+
+      if (response.checkoutUrl) {
+        checkoutUrl = response.checkoutUrl;
+      } else if (response.data && response.data.checkoutUrl) {
+        checkoutUrl = response.data.checkoutUrl;
+      } else if (response.result && response.result.checkoutUrl) {
+        checkoutUrl = response.result.checkoutUrl;
+      }
+
+      if (checkoutUrl && typeof checkoutUrl === "string") {
+        Linking.openURL(checkoutUrl);
+        navigation.navigate("OrderSuccessScreen", {
+          orderCode: response.data.orderCode,
+        });
+      } else {
+        console.error("Invalid or missing checkoutUrl:", checkoutUrl);
+        Alert.alert(
+          "Lỗi",
+          "Không thể lấy được link thanh toán. Vui lòng thử lại sau."
+        );
+      }
+    } catch (error) {
+      console.error("Error processing cart:", error);
+      Alert.alert(
+        "Lỗi",
+        "Đã xảy ra lỗi khi xử lý giỏ hàng. Vui lòng thử lại sau."
+      );
+      return;
+    }
   };
 
   const handleRemoveItem = (cartItemId) => {
