@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Animated } from "react-native";
+import { View, Text, ScrollView, Animated, Alert } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -99,12 +99,37 @@ export default function UserMenuScreen() {
       navigation: "UserMenu",
       category: "settings",
       onPress: async () => {
-        await AsyncStorage.removeItem("user");
-        await AsyncStorage.removeItem("token");
-        if (global.updateNavigationUser) {
-          global.updateNavigationUser();
-        }
-        navigation.replace("Login");
+        Alert.alert(
+          "Xác nhận đăng xuất", // Title of the alert
+          "Bạn có chắc chắn muốn đăng xuất?", // Message of the alert
+          [
+            {
+              text: "Hủy", // Cancel button
+              style: "cancel", // Style for cancel button (iOS/Android)
+            },
+            {
+              text: "Đăng Xuất", // Confirm button
+              style: "destructive", // Red color for destructive action (iOS/Android)
+              onPress: async () => {
+                try {
+                  await AsyncStorage.removeItem("user");
+                  await AsyncStorage.removeItem("token");
+                  if (global.updateNavigationUser) {
+                    global.updateNavigationUser();
+                  }
+                  navigation.replace("Login");
+                } catch (error) {
+                  console.error("Error during logout:", error);
+                  Alert.alert(
+                    "Lỗi",
+                    "Đã có lỗi xảy ra khi đăng xuất. Vui lòng thử lại."
+                  );
+                }
+              },
+            },
+          ],
+          { cancelable: true } // Allow dismissing the alert by tapping outside (optional)
+        );
       },
     },
   ];

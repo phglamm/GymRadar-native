@@ -110,7 +110,7 @@ export default function SubscriptionScreen() {
 
         <PackageCard
           title="Premium"
-          price="199.000đ"
+          price="49.000đ"
           period="/tháng"
           packageType="premium"
           isPopular={true}

@@ -41,6 +41,7 @@ import ScheduleHistoryScreen from "../screens/ScheduleHistoryScreen/ScheduleHist
 import PTBookingHistoryScreen from "../screens/PTBookingHistoryScreen/PTBookingHistoryScreen";
 import UserPTSlotScreen from "../screens/UserPTSlotScreen/UserPTSlotScreen";
 import OrderSuccessScreen from "../screens/OrderSuccessScreen/OrderSuccessScreen";
+import ChatScreen from "../screens/ChatScreen/ChatScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -56,7 +57,7 @@ export default function Navigator() {
         if (userData) {
           setUser(JSON.parse(userData));
         } else {
-          setUser(null); // Make sure to set null if no user
+          setUser(null);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -67,10 +68,8 @@ export default function Navigator() {
     fetchUser();
   }, []);
 
-  // Create a function that can be called from login/logout functions
-  // Add this to the component's exposed methods
+  // Expose a method to update navigation when auth state changes
   React.useEffect(() => {
-    // Expose a method to update navigation when auth state changes
     if (global.updateNavigationUser === undefined) {
       global.updateNavigationUser = async () => {
         try {
@@ -88,7 +87,6 @@ export default function Navigator() {
     }
 
     return () => {
-      // Clean up global reference when component unmounts
       delete global.updateNavigationUser;
     };
   }, []);
@@ -99,7 +97,7 @@ export default function Navigator() {
         screenOptions={({ navigation, route }) => ({
           headerTitleAlign: "center",
           headerShown: false,
-          headerTintColor: "#ED2A46", // back button arrow color
+          headerTintColor: "#ED2A46",
           headerLeft: (props) =>
             navigation.canGoBack() ? (
               <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -241,20 +239,6 @@ export default function Navigator() {
             ) : null,
         })}
       >
-        {/* <Stack.Screen
-          name="UserPTSlotScreen"
-          component={UserPTSlotScreen}
-          options={{
-            headerShown: true,
-            title: "PT đã đăng ký",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 20,
-              color: "#ED2A46",
-            },
-          }}
-        /> */}
         <Stack.Screen
           name="ScheduleScreen"
           component={ScheduleScreen}
@@ -314,22 +298,18 @@ export default function Navigator() {
               lazy={true}
               lazyPreloadDistance={0}
               screenOptions={{
-                // Customize the indicator that appears under the selected tab
                 tabBarIndicatorStyle: {
-                  backgroundColor: "#ED2A46", // Match your brand color
-                  height: 3, // Make it thicker
+                  backgroundColor: "#ED2A46",
+                  height: 3,
                 },
-                // Customize the tab bar itself
                 tabBarStyle: {
-                  backgroundColor: "#FFFFFF", // Background color of the tab bar
-                  elevation: 0, // Remove shadow on Android
-                  shadowOpacity: 0, // Remove shadow on iOS
+                  backgroundColor: "#FFFFFF",
+                  elevation: 0,
+                  shadowOpacity: 0,
                   borderBottomWidth: 1,
                   borderBottomColor: "#E0E0E0",
                 },
-
-                // Customize colors
-                tabBarActiveTintColor: "#ED2A46", // Color of active tab text
+                tabBarActiveTintColor: "#ED2A46",
               }}
             >
               <TopTab.Screen
@@ -368,7 +348,30 @@ export default function Navigator() {
   };
 
   const ChatStack = () => {
-    return <></>;
+    return (
+      <Stack.Navigator
+        screenOptions={({ navigation, route }) => ({
+          headerTitleAlign: "center",
+          headerShown: false,
+          headerTintColor: "#ED2A46",
+        })}
+      >
+        <Stack.Screen
+          name="ChatScreen"
+          component={ChatScreen}
+          options={{
+            headerShown: true,
+            title: "Chatbox AI",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+      </Stack.Navigator>
+    );
   };
 
   const ProfileStack = () => {
@@ -447,7 +450,6 @@ export default function Navigator() {
             },
           }}
         />
-
         <Stack.Screen
           name="SubscriptionScreen"
           component={SubscriptionScreen}
@@ -509,19 +511,15 @@ export default function Navigator() {
   };
 
   const MainTab = () => {
-    // KEY FIX: This component now depends on the user state value
-    // and will re-render when user changes
     return (
       <Tab.Navigator
-        key={user?.role || "guest"} // This key forces re-render when user role changes
+        key={user?.role || "guest"}
         screenOptions={({ route }) => {
-          // Get the route name from the navigator
           const routeName = getFocusedRouteNameFromRoute(route) ?? "";
-
-          // Check if CartScreen is active
           const shouldHideTabBar =
-            routeName === "CartScreen" || routeName === "PaymentScreen";
-
+            routeName === "ChatScreen" ||
+            routeName === "CartScreen" ||
+            routeName === "PaymentScreen";
           return {
             tabBarStyle: shouldHideTabBar
               ? { display: "none" }
@@ -699,7 +697,6 @@ export default function Navigator() {
             },
           }}
         />
-
         <Stack.Screen name="MainApp" component={MainTab} />
       </Stack.Navigator>
     </NavigationContainer>

@@ -16,18 +16,20 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";
 const { width } = Dimensions.get("window");
 import AntDesign from "@expo/vector-icons/AntDesign";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Toast from "react-native-toast-message";
 import gymService from "../../services/gymService";
 import MapView, { Marker } from "react-native-maps";
 import { ActivityIndicator } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { useCart } from "../../context/CartContext"; // Import the modified CartContext
+import { useCart } from "../../context/CartContext";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;
   const bottomSheetRef = useRef(null);
-  const snapPoints = useMemo(() => ["50%", "70%"], []);
+  const snapPoints = useMemo(() => ["50%", "80%"], []);
   const handleSheetChanges = useCallback((index) => {
     console.log("handleSheetChanges", index);
   }, []);
@@ -36,7 +38,7 @@ export default function GymDetailScreen({ route }) {
   const [gymDetail, setGymDetail] = useState({});
   const [gymCourse, setGymCourse] = useState([]);
   const [lowestPackage, setLowestPackage] = useState(null);
-  const { cart, addToCart, getCartCount } = useCart(); // Use the cart context
+  const { cart, addToCart, getCartCount } = useCart();
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -123,8 +125,9 @@ export default function GymDetailScreen({ route }) {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#ED2A46" />
+        <Text style={styles.loadingText}>Đang tải...</Text>
       </View>
     );
   }
@@ -138,7 +141,6 @@ export default function GymDetailScreen({ route }) {
 
   // Handle adding package to cart
   const handleAddToCart = (packageGym) => {
-    // Create structured gym package object for the cart
     getCartCount();
 
     if (getCartCount() > 0) {
@@ -158,7 +160,7 @@ export default function GymDetailScreen({ route }) {
         gymId: gymDetail.id,
         gymName: gymDetail.gymName,
         gymAddress: gymDetail.address,
-        gymImage: image[0].url, // Using the first image as thumbnail
+        gymImage: image[0].url,
         id: packageGym.id,
         name: packageGym.name,
         type: packageGym.type,
@@ -176,12 +178,11 @@ export default function GymDetailScreen({ route }) {
   };
 
   const handleAddToCartWithPT = (packageGym) => {
-    // Create structured gym package object for the cart
     const gymPackage = {
       gymId: gymDetail.id,
       gymName: gymDetail.gymName,
       gymAddress: gymDetail.address,
-      gymImage: image[0].url, // Using the first image as thumbnail
+      gymImage: image[0].url,
       id: packageGym.id,
       name: packageGym.name,
       type: packageGym.type,
@@ -191,71 +192,169 @@ export default function GymDetailScreen({ route }) {
     navigation.navigate("PTinCourseScreen", { gymPackage: gymPackage });
   };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
-      <ScrollView>
-        <CarouselNative
-          width={width}
-          height={300}
-          autoPlay={true}
-          scrollAnimationDuration={1000}
-          style={styles.carousel}
-          data={image}
-        />
+  const averageRating =
+    comments.reduce((sum, comment) => sum + comment.rating, 0) /
+    comments.length;
 
+  return (
+    <View style={styles.container}>
+      {/* Cart Icon */}
+      <View style={styles.cartIconContainer}>
+        <TouchableOpacity
+          style={styles.cartButton}
+          onPress={() => navigation.navigate("CartScreen")}
+        >
+          <Ionicons name="bag-outline" size={24} color="#ED2A46" />
+          {getCartCount() > 0 && (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{getCartCount()}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Enhanced Carousel with Overlay */}
+        <View style={styles.carouselContainer}>
+          <CarouselNative
+            width={width}
+            height={350}
+            autoPlay={true}
+            scrollAnimationDuration={1000}
+            style={styles.carousel}
+            data={image}
+          />
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.7)"]}
+            style={styles.carouselOverlay}
+          />
+        </View>
+
+        {/* Enhanced Main Card */}
         <View style={styles.cardDetail}>
-          <Text style={styles.gymName}>{gymDetail?.gymName}</Text>
-          <Text style={styles.gymAddress}>📍{gymDetail?.address}</Text>
-          <Text style={styles.gymStartPrice}>
-            từ{" "}
-            {lowestPackage?.toLocaleString("vi-VN", {
-              style: "currency",
-              currency: "VND",
-            })}
-            / tháng
-          </Text>
-          <View style={styles.buttonContainer}>
+          <View style={styles.headerSection}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.gymName}>{gymDetail?.gymName}</Text>
+              {gymDetail.hotResearch && (
+                <View style={styles.hotBadge}>
+                  <FontAwesome6 name="fire" size={14} color="#FFF" />
+                  <Text style={styles.hotText}>HOT</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.locationContainer}>
+              <Ionicons name="location-outline" size={16} color="#666" />
+              <Text style={styles.gymAddress}>{gymDetail?.address}</Text>
+            </View>
+
+            <View style={styles.priceRatingContainer}>
+              <View style={styles.priceContainer}>
+                <Text style={styles.priceLabel}>Từ </Text>
+                <Text style={styles.gymStartPrice}>
+                  {lowestPackage?.toLocaleString("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  })}
+                </Text>
+                <Text style={styles.priceUnit}>/tháng</Text>
+              </View>
+
+              <View style={styles.ratingBadge}>
+                <Ionicons name="star" size={16} color="#FFD700" />
+                <Text style={styles.ratingText}>
+                  {averageRating.toFixed(1)}
+                </Text>
+                <Text style={styles.reviewCount}>({comments.length})</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Enhanced Action Buttons */}
+          <View style={styles.actionButtonsContainer}>
             <TouchableOpacity
+              style={[styles.actionButton, styles.secondaryButton]}
               onPress={() => navigation.navigate("GymPTScreen", { gymId })}
             >
-              <Text style={styles.buttonText}>Tham Khảo Danh Sách PT</Text>
+              <MaterialIcons name="fitness-center" size={20} color="#ED2A46" />
+              <Text style={styles.secondaryButtonText}>Danh Sách PT</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => bottomSheetRef.current?.expand()}>
-              <Text style={styles.buttonText}>Tham Khảo Gói Tập</Text>
+
+            <TouchableOpacity
+              style={[styles.actionButton, styles.primaryButton]}
+              onPress={() => bottomSheetRef.current?.expand()}
+            >
+              <Ionicons name="list-outline" size={20} color="#FFF" />
+              <Text style={styles.primaryButtonText}>Gói Tập Luyện</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.gymDescription}>
-            <Text style={{ fontSize: 15, fontWeight: "bold" }}>Mô tả</Text>
-            <Text style={{ fontSize: 13, marginTop: 10 }}>
+          {/* Enhanced Description Section */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Ionicons
+                name="information-circle-outline"
+                size={20}
+                color="#ED2A46"
+              />
+              <Text style={styles.sectionTitle}>Mô tả</Text>
+            </View>
+            <Text style={styles.descriptionText}>
               {gymDetail?.description ||
-                "Loren ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum"}
+                "Loren ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"}
             </Text>
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "bold", marginTop: 20 }}>
-            Vị trí
-          </Text>
+          {/* Enhanced Map Section */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="map-outline" size={20} color="#ED2A46" />
+              <Text style={styles.sectionTitle}>Vị trí</Text>
+            </View>
 
-          <View style={styles.gymMap}>
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              initialRegion={{
-                longitude: gymDetail?.longitude,
-                latitude: gymDetail?.latitude,
-                longitudeDelta: 0.01,
-                latitudeDelta: 0.01,
-              }}
-              showsPointsOfInterest={false}
-              zoomEnabled={false}
-              scrollEnabled={false}
-            >
-              <Marker
-                coordinate={{
+            <View style={styles.mapContainer}>
+              <MapView
+                ref={mapRef}
+                style={styles.map}
+                initialRegion={{
                   longitude: gymDetail?.longitude,
                   latitude: gymDetail?.latitude,
+                  longitudeDelta: 0.01,
+                  latitudeDelta: 0.01,
                 }}
+                showsPointsOfInterest={false}
+                zoomEnabled={false}
+                scrollEnabled={false}
+              >
+                <Marker
+                  coordinate={{
+                    longitude: gymDetail?.longitude,
+                    latitude: gymDetail?.latitude,
+                  }}
+                  onPress={() => {
+                    navigation.navigate("Bản Đồ", {
+                      screen: "MapScreen",
+                      params: {
+                        longitude: gymDetail?.longitude,
+                        latitude: gymDetail?.latitude,
+                      },
+                    });
+                  }}
+                  tracksViewChanges={true}
+                >
+                  <View style={styles.markerContainer}>
+                    <Image
+                      source={require("../../assets/LogoColor.png")}
+                      style={styles.markerImage}
+                    />
+                    {gymDetail.hotResearch && (
+                      <FontAwesome6 name="fire" size={20} color="#ED2A46" />
+                    )}
+                  </View>
+                </Marker>
+              </MapView>
+              <TouchableOpacity
+                style={styles.mapOverlay}
                 onPress={() => {
                   navigation.navigate("Bản Đồ", {
                     screen: "MapScreen",
@@ -265,163 +364,178 @@ export default function GymDetailScreen({ route }) {
                     },
                   });
                 }}
-                tracksViewChanges={true}
               >
-                <View style={styles.markerContainer}>
-                  <Image
-                    source={require("../../assets/LogoColor.png")}
-                    style={styles.markerImage}
-                  />
-                  {gymDetail.hotResearch && (
-                    <FontAwesome6 name="fire" size={20} color="#ED2A46" />
-                  )}
-                </View>
-              </Marker>
-            </MapView>
+                <Text style={styles.mapOverlayText}>
+                  Nhấn để xem bản đồ đầy đủ
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        <View style={styles.ratingContainer}>
-          <Text style={styles.ratingTitle}>Đánh Giá</Text>
-          <View style={styles.commentContainer}>
+        {/* Enhanced Reviews Section */}
+        <View style={styles.reviewsSection}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="chatbubbles-outline" size={20} color="#ED2A46" />
+            <Text style={styles.sectionTitle}>Đánh Giá & Nhận Xét</Text>
+          </View>
+
+          <View style={styles.reviewsContainer}>
             {comments.map((comment) => (
-              <View key={comment.id} style={styles.commentSection}>
-                <View style={styles.userComment}>
-                  <Image
-                    source={{ uri: comment.avatar }}
-                    style={styles.avatar}
+              <View key={comment.id} style={styles.reviewCard}>
+                <View style={styles.reviewHeader}>
+                  <View style={styles.userInfo}>
+                    <Image
+                      source={{ uri: comment.avatar }}
+                      style={styles.avatar}
+                    />
+                    <View style={styles.userDetails}>
+                      <Text style={styles.userName}>{comment.name}</Text>
+                      <Text style={styles.reviewDate}>{comment.date}</Text>
+                    </View>
+                  </View>
+                  <StarRatingDisplay
+                    starSize={18}
+                    rating={comment?.rating || 0}
+                    maxStars={5}
+                    enableHalfStar={true}
                   />
-                  <Text style={{ fontWeight: "bold" }}>{comment.name}</Text>
                 </View>
-                <StarRatingDisplay
-                  starSize={25}
-                  rating={comment?.rating || 0}
-                  maxStars={5}
-                  enableHalfStar={true}
-                  style={{ marginLeft: 40 }}
-                />
-                <Text style={styles.commentText}>{comment.comment}</Text>
-                <Text style={styles.dateText}>{comment.date}</Text>
+                <Text style={styles.reviewText}>{comment.comment}</Text>
               </View>
             ))}
           </View>
         </View>
       </ScrollView>
+
+      {/* Enhanced Bottom Sheet */}
       <BottomSheet
         ref={bottomSheetRef}
-        index={-1} // -1 = hidden initially
+        index={-1}
         snapPoints={snapPoints}
         onChange={handleSheetChanges}
         enablePanDownToClose={true}
         style={styles.sheetContainer}
+        handleIndicatorStyle={styles.sheetIndicator}
       >
         <BottomSheetView style={styles.contentContainer}>
-          <Text style={styles.bottomSheetTitle}>Lựa chọn gói tập</Text>
-          <View style={styles.packageContainer}>
-            {gymCourse?.packageNormal?.length > 0 && (
-              <>
-                <LinearGradient
-                  colors={["#FF914D", "#ED2A46"]}
-                  style={styles.packageTitleContainer}
-                >
-                  <Text style={styles.packageTitle}>Gói Tập Tháng</Text>
-                </LinearGradient>
-                {gymCourse?.packageNormal?.map((item) => (
-                  <View
-                    key={item.id}
-                    style={{
-                      borderBottomWidth: 1,
-                      borderBottomColor: "#D9D9D9",
-                      paddingVertical: 10,
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <View>
-                      <Text style={styles.packageName}>{item.name}</Text>
-                      <Text style={styles.packagePrice}>
-                        {item.price.toLocaleString("vi-VN", {
-                          style: "currency",
-                          currency: "VND",
-                        })}
-                      </Text>
-                    </View>
-                    <TouchableOpacity>
-                      {isPackageInCart(item.id) ? (
-                        <AntDesign
-                          name="checkcircleo"
-                          size={24}
-                          color="#4CAF50"
-                          style={{ marginRight: 20 }}
-                        />
-                      ) : (
-                        <AntDesign
-                          name="pluscircleo"
-                          size={24}
-                          color="#ED2A46"
-                          style={{ marginRight: 20 }}
-                          onPress={() => handleAddToCart(item)}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </>
-            )}
-
-            {gymCourse?.packagePT?.length > 0 && (
-              <>
-                <LinearGradient
-                  colors={["#FF914D", "#ED2A46"]}
-                  style={styles.packageTitleContainer}
-                >
-                  <Text style={styles.packageTitle}>Gói Tập Tháng Kèm PT</Text>
-                </LinearGradient>
-                {gymCourse?.packagePT?.map((item) => (
-                  <View
-                    key={item.id}
-                    style={{
-                      borderBottomWidth: 1,
-                      borderBottomColor: "#D9D9D9",
-                      paddingVertical: 10,
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <View>
-                      <Text style={styles.packageName}>{item.name}</Text>
-                      <Text style={styles.packagePrice}>
-                        {item.price.toLocaleString("vi-VN", {
-                          style: "currency",
-                          currency: "VND",
-                        })}
-                      </Text>
-                    </View>
-                    <TouchableOpacity>
-                      {isPackageInCart(item.id) ? (
-                        <AntDesign
-                          name="checkcircleo"
-                          size={24}
-                          color="#4CAF50"
-                          style={{ marginRight: 20 }}
-                        />
-                      ) : (
-                        <AntDesign
-                          name="pluscircleo"
-                          size={24}
-                          color="#ED2A46"
-                          style={{ marginRight: 20 }}
-                          onPress={() => handleAddToCartWithPT(item)}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </>
-            )}
+          <View style={styles.bottomSheetHeader}>
+            <Text style={styles.bottomSheetTitle}>Lựa chọn gói tập</Text>
+            <TouchableOpacity onPress={() => bottomSheetRef.current?.close()}>
+              <Ionicons name="close-circle-outline" size={24} color="#666" />
+            </TouchableOpacity>
           </View>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.packageContainer}>
+              {gymCourse?.packageNormal?.length > 0 && (
+                <View style={styles.packageSection}>
+                  <LinearGradient
+                    colors={["#FF914D", "#ED2A46"]}
+                    style={styles.packageTitleContainer}
+                  >
+                    <MaterialIcons
+                      name="fitness-center"
+                      size={20}
+                      color="#FFF"
+                    />
+                    <Text style={styles.packageTitle}>Gói Tập Tháng</Text>
+                  </LinearGradient>
+
+                  {gymCourse?.packageNormal?.map((item) => (
+                    <View key={item.id} style={styles.packageItem}>
+                      <View style={styles.packageInfo}>
+                        <Text style={styles.packageName}>{item.name}</Text>
+                        <Text style={styles.packagePrice}>
+                          {item.price.toLocaleString("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          })}
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.addButton,
+                          isPackageInCart(item.id) && styles.addedButton,
+                        ]}
+                        onPress={() =>
+                          !isPackageInCart(item.id) && handleAddToCart(item)
+                        }
+                      >
+                        {isPackageInCart(item.id) ? (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={24}
+                            color="#FFF"
+                          />
+                        ) : (
+                          <Ionicons
+                            name="add-circle-outline"
+                            size={24}
+                            color="#ED2A46"
+                          />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {gymCourse?.packagePT?.length > 0 && (
+                <View style={styles.packageSection}>
+                  <LinearGradient
+                    colors={["#FF914D", "#ED2A46"]}
+                    style={styles.packageTitleContainer}
+                  >
+                    <MaterialIcons name="people" size={20} color="#FFF" />
+                    <Text style={styles.packageTitle}>
+                      Gói Tập Tháng Kèm PT
+                    </Text>
+                  </LinearGradient>
+
+                  {gymCourse?.packagePT?.map((item) => (
+                    <View key={item.id} style={styles.packageItem}>
+                      <View style={styles.packageInfo}>
+                        <Text style={styles.packageName}>{item.name}</Text>
+                        <Text style={styles.packagePrice}>
+                          {item.price.toLocaleString("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          })}
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.addButton,
+                          isPackageInCart(item.id) && styles.addedButton,
+                        ]}
+                        onPress={() =>
+                          !isPackageInCart(item.id) &&
+                          handleAddToCartWithPT(item)
+                        }
+                      >
+                        {isPackageInCart(item.id) ? (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={24}
+                            color="#FFF"
+                          />
+                        ) : (
+                          <Ionicons
+                            name="add-circle-outline"
+                            size={24}
+                            color="#ED2A46"
+                          />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          </ScrollView>
         </BottomSheetView>
       </BottomSheet>
     </View>
@@ -429,218 +543,457 @@ export default function GymDetailScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F8F9FA",
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F8F9FA",
+  },
+
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666",
+  },
+
+  // Cart Icon Styles
+  cartIconContainer: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 1000,
+  },
+
+  cartButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 25,
+    padding: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+
+  cartBadge: {
+    position: "absolute",
+    right: -5,
+    top: -5,
+    backgroundColor: "#ED2A46",
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FFF",
+  },
+
+  cartBadgeText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+
+  // Carousel Styles
+  carouselContainer: {
+    position: "relative",
+  },
+
   carousel: {
     width: "100%",
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
     overflow: "hidden",
   },
+
+  // Main Card Styles
   cardDetail: {
-    alignSelf: "center",
-    width: "93%",
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    marginTop: 20,
+    backgroundColor: "#FFF",
+    borderRadius: 25,
+    marginHorizontal: 16,
+    marginTop: -20,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 1,
-      height: 1,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 6,
-    padding: 20,
-  },
-  gymName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FF914D",
-  },
-  gymAddress: {
-    fontSize: 13,
-    color: "#444",
-    marginTop: 10,
-  },
-  gymStartPrice: {
-    fontSize: 15,
-    color: "#ED2A46",
-    marginTop: 10,
-  },
-  buttonContainer: {
-    marginTop: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    alignSelf: "center",
-  },
-  buttonText: {
-    fontSize: 11,
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    paddingVertical: 13,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: "#ED2A46",
-    borderRadius: 20,
-    backgroundColor: "#ED2A46",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 1,
-      height: 1,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    padding: 24,
+    zIndex: 10,
   },
 
-  ratingContainer: {
-    alignItems: "start",
-    padding: 20,
+  headerSection: {
+    marginBottom: 24,
   },
 
-  ratingTitle: {
-    fontSize: 20,
-    fontWeight: "normal",
-    color: "#ED2A46",
-  },
-  commentContainer: {
-    marginTop: 10,
-  },
-
-  userComment: {
+  titleContainer: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  commentSection: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#D9D9D9",
-    paddingVertical: 10,
-    width: "100%",
+    marginBottom: 8,
   },
 
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#ED2A46",
-    marginRight: 10,
-  },
-  commentText: {
-    fontSize: 13,
-    color: "#444",
-    marginTop: 10,
-    marginLeft: 50,
-  },
-  dateText: {
-    fontSize: 11,
-    color: "#444",
-    marginTop: 10,
-    marginLeft: 50,
-  },
-
-  sheetContainer: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 1,
-      height: 1,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 100,
-    elevation: 6,
-  },
-  contentContainer: {
+  gymName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1a1a1a",
     flex: 1,
   },
 
-  bottomSheetTitle: {
+  hotBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ED2A46",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+
+  hotText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "bold",
+    marginLeft: 4,
+  },
+
+  locationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  gymAddress: {
+    fontSize: 14,
+    color: "#666",
+    marginLeft: 6,
+    flex: 1,
+  },
+
+  priceRatingContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+
+  priceLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+
+  gymStartPrice: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#FF914D",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  packageContainer: {
-    marginTop: 10,
-  },
-  packageTitleContainer: {},
-  packageTitle: {
-    fontSize: 15,
-    color: "#FFFFFF",
-    paddingVertical: 10,
-    marginLeft: 20,
-  },
-  packageName: {
-    fontSize: 15,
-    color: "#000000",
-    marginLeft: 20,
-  },
-  packagePrice: {
-    fontSize: 13,
     color: "#ED2A46",
-    marginLeft: 20,
-    marginTop: 5,
   },
 
-  gymDescription: {
-    marginTop: 20,
+  priceUnit: {
+    fontSize: 14,
+    color: "#666",
+    marginLeft: 2,
   },
 
-  gymMap: {
-    marginTop: 20,
-    height: 300,
-    backgroundColor: "#E42D46",
-    justifyContent: "center",
+  ratingBadge: {
+    flexDirection: "row",
     alignItems: "center",
-    borderRadius: 30,
+    backgroundColor: "#F8F9FA",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
   },
+
+  ratingText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    marginLeft: 4,
+  },
+
+  reviewCount: {
+    fontSize: 12,
+    color: "#666",
+    marginLeft: 4,
+  },
+
+  // Action Buttons
+  actionButtonsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 16,
+    gap: 8,
+  },
+
+  primaryButton: {
+    backgroundColor: "#ED2A46",
+    shadowColor: "#ED2A46",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+
+  secondaryButton: {
+    backgroundColor: "#FFF",
+    borderWidth: 2,
+    borderColor: "#ED2A46",
+  },
+
+  primaryButtonText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+  secondaryButtonText: {
+    color: "#ED2A46",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+  // Section Styles
+  sectionContainer: {
+    marginBottom: 24,
+  },
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    marginLeft: 8,
+  },
+
+  descriptionText: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: "#666",
+  },
+
+  // Map Styles
+  mapContainer: {
+    position: "relative",
+    height: 200,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+
   map: {
     width: "100%",
     height: "100%",
-    borderRadius: 30,
+  },
+
+  mapOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    padding: 12,
+    alignItems: "center",
+  },
+
+  mapOverlayText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "500",
   },
 
   markerContainer: {
     alignItems: "center",
     justifyContent: "center",
   },
+
   markerImage: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
   },
 
-  // Cart icon and badge styles
-  cartIconContainer: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    zIndex: 999,
+  // Reviews Section
+  reviewsSection: {
+    backgroundColor: "#FFF",
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 100,
+    borderRadius: 25,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  cartButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
+
+  reviewsContainer: {
+    gap: 16,
+  },
+
+  reviewCard: {
+    backgroundColor: "#F8F9FA",
+    borderRadius: 16,
+    padding: 16,
+  },
+
+  reviewHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  userInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+
+  userDetails: {
+    flex: 1,
+  },
+
+  userName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+  },
+
+  reviewDate: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 2,
+  },
+
+  reviewText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#444",
+  },
+
+  // Bottom Sheet Styles
+  sheetContainer: {
+    backgroundColor: "#FFF",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+
+  sheetIndicator: {
+    backgroundColor: "#E0E0E0",
+    width: 40,
+    height: 4,
+  },
+
+  contentContainer: {
+    flex: 1,
+    padding: 20,
+  },
+
+  bottomSheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+
+  bottomSheetTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+  },
+
+  // Package Styles
+  packageContainer: {
+    gap: 20,
+  },
+
+  packageSection: {
+    backgroundColor: "#F8F9FA",
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+
+  packageTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+
+  packageTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFF",
+    marginLeft: 8,
+  },
+
+  packageItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+
+  packageInfo: {
+    flex: 1,
+  },
+
+  packageName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginBottom: 4,
+  },
+
+  packagePrice: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#ED2A46",
+  },
+
+  addButton: {
+    padding: 8,
+    borderRadius: 20,
+  },
+
+  addedButton: {
+    backgroundColor: "#4CAF50",
     borderRadius: 20,
     padding: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  cartBadge: {
-    position: "absolute",
-    right: -5,
-    top: -5,
-    backgroundColor: "#ED2A46",
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cartBadgeText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "bold",
   },
 });

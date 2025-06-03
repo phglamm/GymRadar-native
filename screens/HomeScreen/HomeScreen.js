@@ -1,4 +1,12 @@
-import { View, Text, Dimensions, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Dimensions,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import HeaderHome from "../../components/HeaderHome/HeaderHome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -13,9 +21,11 @@ export default function HomeScreen() {
   const [user, setUser] = useState(null);
   const [allGyms, setAllGyms] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [coords, setCoords] = useState(null);
   const [nearbyGyms, setNearbyGyms] = useState([]);
   const navigation = useNavigation();
+
   const isValidCoordinate = (lat, lng) => {
     return (
       lat !== undefined &&
@@ -36,9 +46,9 @@ export default function HomeScreen() {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(deg2rad(lat1)) *
-      Math.cos(deg2rad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // Distance in km
     return distance;
@@ -74,47 +84,55 @@ export default function HomeScreen() {
     setNearbyGyms(nearbyGyms);
   };
 
+  const fetchLocation = async () => {
+    try {
+      const userLocation = await AsyncStorage.getItem("userLocation");
+      if (userLocation !== null) {
+        const parsed = JSON.parse(userLocation);
+        setCoords(parsed.coords);
+      }
+    } catch (error) {
+      console.log("Error reading user location:", error);
+    }
+  };
+
+  const fetchUser = async () => {
+    const userData = await AsyncStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  };
+
+  const fetchAllGyms = async (page = 1, pageSize = 10) => {
+    try {
+      const response = await gymService.getAllGyms({
+        page,
+        size: pageSize,
+      });
+      const { items, total, page: currentPage } = response.data;
+
+      setAllGyms(items);
+      console.log("All Gyms:", items);
+      console.log(response);
+    } catch (error) {
+      console.error("Error fetching hot research gym:", error);
+    }
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    await Promise.all([fetchUser(), fetchAllGyms(), fetchLocation()]);
+    setLoading(false);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
   useEffect(() => {
-    const fetchLocation = async () => {
-      try {
-        const userLocation = await AsyncStorage.getItem("userLocation");
-        if (userLocation !== null) {
-          const parsed = JSON.parse(userLocation);
-          setCoords(parsed.coords);
-        }
-      } catch (error) {
-        console.log("Error reading user location:", error);
-      }
-    };
-
-    const fetchUser = async () => {
-      const userData = await AsyncStorage.getItem("user");
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    };
-
-    const fetchAllGyms = async (page = 1, pageSize = 10) => {
-      setLoading(true);
-      try {
-        const response = await gymService.getAllGyms({
-          page,
-          size: pageSize,
-        });
-        const { items, total, page: currentPage } = response.data;
-
-        setAllGyms(items);
-        console.log("All Gyms:", items);
-        console.log(response);
-      } catch (error) {
-        console.error("Error fetching hot research gym:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-    fetchAllGyms();
-    fetchLocation();
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -129,7 +147,7 @@ export default function HomeScreen() {
   const blog = [
     {
       id: 1,
-      title: "Tập luyện",
+      title: "Tập 321312",
       imageUrl:
         "https://img.freepik.com/free-psd/gym-fitness-facebook-cover-banner-template_106176-3896.jpg?semt=ais_hybrid&w=740",
       summary:
@@ -180,6 +198,7 @@ export default function HomeScreen() {
       url: "https://img.freepik.com/premium-psd/red-horizontal-workout-gym-poster-banner_179813-347.jpg",
     },
   ];
+
   const renderGymCard = (item) => {
     return <GymCard gym={item} />;
   };
@@ -191,11 +210,22 @@ export default function HomeScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <HeaderHome user={user} />
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#ED2A46"]} // Android
+            tintColor="#ED2A46" // iOS
+            title="Đang làm mới..." // iOS
+            titleColor="#ED2A46" // iOS
+          />
+        }
+      >
         <View style={styles.carouselContainer}>
           <CarouselNative
             width={widthCarousel}
-            height={150}
+            height={160}
             autoPlay={true}
             scrollAnimationDuration={1000}
             style={styles.carousel}
@@ -204,14 +234,10 @@ export default function HomeScreen() {
 
           <View style={styles.gymSection}>
             <View style={styles.titleContainer}>
-              <Text
-                style={{
-                  fontSize: 20,
-                  color: "#ED2A46",
-                }}
-              >
-                Phòng Gym Nổi Bật
-              </Text>
+              <View style={styles.titleWithIcon}>
+                <Text style={styles.sectionTitle}>Phòng Gym Nổi Bật</Text>
+                <View style={styles.titleUnderline} />
+              </View>
             </View>
 
             {loading ? (
@@ -222,10 +248,10 @@ export default function HomeScreen() {
                 renderItem={renderGymCard}
                 showsPagination={true}
                 itemsPerSlide={2}
-                height={220}
+                height={240}
                 loop={allGyms.length > 2}
-                dotStyle={{ backgroundColor: "#D9D9D9" }}
-                activeDotStyle={{ backgroundColor: "#ED2A46" }}
+                dotStyle={styles.paginationDot}
+                activeDotStyle={styles.activePaginationDot}
                 containerStyle={styles.swiperContainer}
               />
             ) : (
@@ -235,22 +261,19 @@ export default function HomeScreen() {
 
           <View style={styles.gymSection}>
             <View style={styles.titleContainer}>
-              <Text
-                style={{
-                  fontSize: 20,
-                  color: "#ED2A46",
-                }}
-              >
-                Phòng Gym Gần Tôi
-              </Text>
-              <Text
-                style={{ fontSize: 13, color: "#6B6B6B" }}
+              <View style={styles.titleWithIcon}>
+                <Text style={styles.sectionTitle}>Phòng Gym Gần Tôi</Text>
+                <View style={styles.titleUnderline} />
+              </View>
+              <TouchableOpacity
+                style={styles.viewMoreButton}
                 onPress={() =>
                   navigation.navigate("Bản Đồ", { screen: "MapScreen" })
                 }
+                activeOpacity={0.7}
               >
-                Xem thêm
-              </Text>
+                <Text style={styles.viewMoreText}>Xem thêm</Text>
+              </TouchableOpacity>
             </View>
 
             {loading ? (
@@ -261,33 +284,33 @@ export default function HomeScreen() {
                 showsPagination={true}
                 renderItem={renderGymCard}
                 itemsPerSlide={2}
-                height={220}
+                height={240}
                 loop={true}
-                dotStyle={{ backgroundColor: "#D9D9D9" }}
-                activeDotStyle={{ backgroundColor: "#ED2A46" }}
+                dotStyle={styles.paginationDot}
+                activeDotStyle={styles.activePaginationDot}
                 containerStyle={styles.swiperContainer}
               />
             ) : (
-              <View>
-                <Text style={{ alignSelf: "center", paddingVertical: 30 }}>
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
                   Hiện không có phòng gym nào gần bạn
                 </Text>
               </View>
             )}
           </View>
+
           <View style={styles.gymSection}>
             <View style={styles.titleContainer}>
-              <Text
-                style={{
-                  fontSize: 20,
-                  color: "#ED2A46",
-                }}
+              <View style={styles.titleWithIcon}>
+                <Text style={styles.sectionTitle}>Blog</Text>
+                <View style={styles.titleUnderline} />
+              </View>
+              <TouchableOpacity
+                style={styles.viewMoreButton}
+                onPress={() => navigation.navigate("BlogScreen")}
+                activeOpacity={0.7}
               >
-                Blog
-              </Text>
-
-              <TouchableOpacity onPress={() => navigation.navigate("BlogScreen")}>
-                <Text style={{ fontSize: 13, color: "#6B6B6B" }}>Xem thêm</Text>
+                <Text style={styles.viewMoreText}>Xem thêm</Text>
               </TouchableOpacity>
             </View>
 
@@ -296,10 +319,10 @@ export default function HomeScreen() {
               renderItem={renderBlogCard}
               showsPagination={true}
               itemsPerSlide={2}
-              height={200}
+              height={220}
               loop={true}
-              dotStyle={{ backgroundColor: "#D9D9D9" }}
-              activeDotStyle={{ backgroundColor: "#ED2A46" }}
+              dotStyle={styles.paginationDot}
+              activeDotStyle={styles.activePaginationDot}
               containerStyle={styles.swiperContainer}
             />
           </View>
@@ -320,7 +343,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   gymSection: {
-    marginTop: 20,
+    marginTop: 25,
     paddingHorizontal: 15,
     width: "100%",
   },
@@ -329,9 +352,77 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
-    marginBottom: 15,
+    marginBottom: 18,
+  },
+  titleWithIcon: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#ED2A46",
+    letterSpacing: 0.5,
+  },
+  titleUnderline: {
+    width: 40,
+    height: 3,
+    backgroundColor: "#ED2A46",
+    marginTop: 4,
+    borderRadius: 2,
+  },
+  viewMoreButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#FFF5F6",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#ED2A46",
+    shadowColor: "#ED2A46",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  viewMoreText: {
+    fontSize: 13,
+    color: "#ED2A46",
+    fontWeight: "600",
   },
   swiperContainer: {
-    paddingBottom: 20,
+    paddingBottom: 25,
+  },
+  paginationDot: {
+    backgroundColor: "#E0E0E0",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  activePaginationDot: {
+    backgroundColor: "#ED2A46",
+    width: 24,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  emptyContainer: {
+    backgroundColor: "#F8F9FA",
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
+    borderStyle: "dashed",
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#6B6B6B",
+    textAlign: "center",
+    fontWeight: "500",
   },
 });
