@@ -7,6 +7,8 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  RefreshControl,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -16,6 +18,8 @@ export default function TransactionHistoryScreen() {
   const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Helper function to format price
   const formatPrice = (price) => {
@@ -39,17 +43,33 @@ export default function TransactionHistoryScreen() {
     }
   };
 
-  // Helper function to get status color
-  const getStatusColor = (status) => {
+  // Helper function to get status color and background
+  const getStatusStyle = (status) => {
     switch (status) {
       case "COMPLETED":
-        return "green";
+        return {
+          color: "#059669",
+          backgroundColor: "#ECFDF5",
+          borderColor: "#A7F3D0",
+        };
       case "PENDING":
-        return "#FF914D";
+        return {
+          color: "#D97706",
+          backgroundColor: "#FFFBEB",
+          borderColor: "#FDE68A",
+        };
       case "FAILED":
-        return "#ED2A46";
+        return {
+          color: "#DC2626",
+          backgroundColor: "#FEF2F2",
+          borderColor: "#FECACA",
+        };
       default:
-        return "#999";
+        return {
+          color: "#6B7280",
+          backgroundColor: "#F9FAFB",
+          borderColor: "#E5E7EB",
+        };
     }
   };
 
@@ -64,107 +84,193 @@ export default function TransactionHistoryScreen() {
     return courseName;
   };
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      setLoading(true);
-      try {
-        const response = await transactionService.getTransactions();
-        if (response.data && response.data.items) {
-          setTransactions(response.data.items);
-        }
-      } catch (error) {
-        console.error("Error fetching transactions:", error);
-      } finally {
-        setLoading(false);
+  // Filter transactions based on search query
+  const filteredTransactions = transactions.filter((transaction) => {
+    const gymName = transaction.gym?.gymName?.toLowerCase() || "";
+    const packageInfo = formatPackageInfo(transaction).toLowerCase();
+    const query = searchQuery.toLowerCase();
+    return gymName.includes(query) || packageInfo.includes(query);
+  });
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await transactionService.getTransactions();
+      if (response.data && response.data.items) {
+        setTransactions(response.data.items);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchTransactions();
+  };
+
+  useEffect(() => {
+    setLoading(true);
     fetchTransactions();
   }, []);
 
   if (loading) {
     return (
-      <View
-        style={[
-          styles.container,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <Text>Đang tải...</Text>
+      <View style={styles.loadingContainer}>
+        <View style={styles.loadingSpinner}>
+          <Ionicons name="reload-outline" size={32} color="#FF914D" />
+          <Text style={styles.loadingText}>Đang tải giao dịch...</Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Header */}
+
       {/* Search */}
-      <View style={styles.searchBox}>
-        <Ionicons
-          name="search"
-          size={16}
-          color="#999"
-          style={{ marginHorizontal: 8 }}
-        />
-        <TextInput
-          placeholder="Tìm kiếm giao dịch"
-          placeholderTextColor="#999"
-          style={styles.searchInput}
-        />
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search" size={20} color="#6B7280" />
+          <TextInput
+            placeholder="Tìm kiếm theo tên gym hoặc gói..."
+            placeholderTextColor="#9CA3AF"
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Transaction Summary */}
+      <View style={styles.summaryContainer}>
+        <Text style={styles.summaryText}>
+          {filteredTransactions.length} giao dịch
+        </Text>
       </View>
 
       {/* List */}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
       >
-        {transactions.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Image
-                source={require("../../assets/gymroom.jpg")}
-                style={styles.image}
-              />
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.gymName}>
-                  {item.gym?.gymName || "Không có tên gym"}
-                </Text>
-                <Text numberOfLines={2} style={styles.package}>
-                  {formatPackageInfo(item)}
-                </Text>
+        {filteredTransactions.map((item, index) => (
+          <TouchableOpacity
+            key={item.id}
+            style={[styles.card, index === 0 && styles.firstCard]}
+            activeOpacity={0.7}
+          >
+            <View style={styles.cardContent}>
+              {/* Header with image and info */}
+              <View style={styles.cardHeader}>
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={require("../../assets/gymroom.jpg")}
+                    style={styles.gymImage}
+                  />
+                </View>
+
+                <View style={styles.gymInfo}>
+                  <Text style={styles.gymName} numberOfLines={1}>
+                    {item.gym?.gymName || "Không có tên gym"}
+                  </Text>
+                  <Text style={styles.packageText} numberOfLines={2}>
+                    {formatPackageInfo(item)}
+                  </Text>
+                </View>
+
+                <View style={styles.statusContainer}>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      {
+                        backgroundColor: getStatusStyle(item.status)
+                          .backgroundColor,
+                        borderColor: getStatusStyle(item.status).borderColor,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusText,
+                        { color: getStatusStyle(item.status).color },
+                      ]}
+                    >
+                      {getStatusText(item.status)}
+                    </Text>
+                  </View>
+                </View>
               </View>
-              <TouchableOpacity>
-                <Text style={styles.detailText}>Chi tiết &gt;</Text>
-              </TouchableOpacity>
+
+              {/* Divider */}
+              <View style={styles.divider} />
+
+              {/* Footer with price and date */}
+              <View style={styles.cardFooter}>
+                <View style={styles.priceSection}>
+                  <Text style={styles.priceLabel}>Tổng thanh toán</Text>
+                  <Text style={styles.priceValue}>
+                    {formatPrice(item.price)}
+                  </Text>
+                </View>
+
+                <View style={styles.dateSection}>
+                  <Ionicons name="time-outline" size={14} color="#6B7280" />
+                  <Text style={styles.dateText}>
+                    {item.createAt
+                      ? new Date(item.createAt).toLocaleDateString("vi-VN", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })
+                      : "Không có thông tin"}
+                  </Text>
+                </View>
+              </View>
             </View>
 
-            <View style={styles.separator} />
-
-            <View style={styles.cardFooter}>
-              <Text>
-                Tổng thanh toán:{" "}
-                <Text style={styles.price}>{formatPrice(item.price)}</Text>
-              </Text>
-              <View style={styles.footerBottom}>
-                <Text>
-                  Ngày giao dịch:{" "}
-                  {item.createAt
-                    ? new Date(item.createAt).toLocaleDateString("vi-VN")
-                    : "Không có thông tin"}
-                </Text>
-                <Text
-                  style={[
-                    styles.success,
-                    { color: getStatusColor(item.status) },
-                  ]}
-                >
-                  {getStatusText(item.status)}
-                </Text>
-              </View>
+            {/* Arrow indicator */}
+            <View style={styles.arrowContainer}>
+              <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
 
-        {transactions.length === 0 && (
+        {filteredTransactions.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>Không có giao dịch nào</Text>
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="receipt-outline" size={64} color="#D1D5DB" />
+            </View>
+            <Text style={styles.emptyTitle}>
+              {searchQuery ? "Không tìm thấy giao dịch" : "Chưa có giao dịch"}
+            </Text>
+            <Text style={styles.emptySubtitle}>
+              {searchQuery
+                ? "Thử tìm kiếm với từ khóa khác"
+                : "Các giao dịch của bạn sẽ hiển thị tại đây"}
+            </Text>
+            {searchQuery && (
+              <TouchableOpacity
+                style={styles.clearSearchButton}
+                onPress={() => setSearchQuery("")}
+              >
+                <Text style={styles.clearSearchText}>Xóa tìm kiếm</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </ScrollView>
@@ -175,113 +281,224 @@ export default function TransactionHistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F9FAFB",
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingSpinner: {
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#6B7280",
+    fontWeight: "500",
   },
   header: {
-    backgroundColor: "#fff",
-    paddingTop: 40,
+    backgroundColor: "#FFFFFF",
+    paddingTop: 12,
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 16,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   backButton: {
-    padding: 10,
-  },
-  triangle: {
-    width: 0,
-    height: 0,
-    borderTopWidth: 10,
-    borderBottomWidth: 10,
-    borderRightWidth: 14,
-    borderTopColor: "transparent",
-    borderBottomColor: "transparent",
-    borderRightColor: "#ED2A46",
+    padding: 8,
+    marginLeft: -8,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#ED2A46",
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1F2937",
+    textAlign: "center",
+    marginHorizontal: 16,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  searchContainer: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#D6EFF2",
-    margin: 16,
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    height: 36,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 44,
+    gap: 12,
   },
   searchInput: {
     flex: 1,
+    fontSize: 16,
+    color: "#1F2937",
+    fontWeight: "400",
+  },
+  summaryContainer: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  summaryText: {
     fontSize: 14,
-    textAlignVertical: "center",
-    color: "#000",
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  scrollContent: {
+    padding: 16,
+    paddingTop: 8,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    marginBottom: 16,
-    padding: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
     elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
+  },
+  firstCard: {
+    marginTop: 4,
+  },
+  cardContent: {
+    flex: 1,
+    padding: 16,
   },
   cardHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 6,
+    marginBottom: 16,
   },
-  image: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
+  imageContainer: {
+    marginRight: 12,
+  },
+  gymImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+  },
+  gymInfo: {
+    flex: 1,
+    marginRight: 12,
   },
   gymName: {
-    fontWeight: "bold",
-    color: "#FF914D",
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginBottom: 4,
   },
-  package: {
+  packageText: {
     fontSize: 14,
-    color: "#000",
-    marginTop: 2,
-    lineHeight: 18,
+    color: "#6B7280",
+    lineHeight: 20,
   },
-  detailText: {
-    color: "#999",
-    fontSize: 13,
+  statusContainer: {
+    alignItems: "flex-end",
   },
-  cardFooter: {
-    marginTop: 8,
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
   },
-  price: {
-    color: "#ED2A46",
-    fontWeight: "bold",
-  },
-  footerBottom: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  success: {
+  statusText: {
+    fontSize: 12,
     fontWeight: "600",
   },
-  separator: {
+  divider: {
     height: 1,
-    backgroundColor: "#E0E0E0",
-    marginVertical: 8,
+    backgroundColor: "#F3F4F6",
+    marginBottom: 16,
+  },
+  cardFooter: {
+    gap: 12,
+  },
+  priceSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  priceLabel: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  priceValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#DC2626",
+  },
+  dateSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  dateText: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "400",
+  },
+  arrowContainer: {
+    paddingRight: 16,
+    paddingLeft: 8,
   },
   emptyState: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 50,
+    justifyContent: "center",
+    paddingVertical: 80,
+    paddingHorizontal: 32,
   },
-  emptyText: {
-    fontSize: 16,
-    color: "#999",
+  emptyIconContainer: {
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  clearSearchButton: {
+    backgroundColor: "#FF914D",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  clearSearchText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

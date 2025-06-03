@@ -22,9 +22,7 @@ export default function HeaderHome({ user }) {
   const [coords, setCoords] = useState(null);
   useEffect(() => {
     fetchLocation();
-    setTimeout(() => {
-      fetchWeather();
-    }, 500); // Delay to ensure location is fetched before weather
+    fetchWeather();
   }, []);
   const fetchLocation = async () => {
     try {

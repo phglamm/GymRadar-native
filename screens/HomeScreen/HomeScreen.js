@@ -149,9 +149,8 @@ export default function HomeScreen() {
       id: 1,
       title: "Tập 321312",
       imageUrl:
-        "https://img.freepik.com/free-psd/gym-fitness-facebook-cover-banner-template_106176-3896.jpg?semt=ais_hybrid&w=740",
-      summary:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "https://hips.hearstapps.com/menshealth-uk/main/thumbs/38177/abs.jpg",
+      summary: "1232",
     },
     {
       id: 2,

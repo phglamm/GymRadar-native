@@ -35,9 +35,6 @@ export default function BlogCard({ blog }) {
         <Text style={styles.summary} numberOfLines={3} ellipsizeMode="tail">
           {blog?.summary}
         </Text>
-        <View style={styles.readMoreContainer}>
-          <Text style={styles.readMore}>Đọc thêm →</Text>
-        </View>
       </View>
     </TouchableOpacity>
   );
@@ -75,7 +72,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   infoContainer: {
-    padding: 12,
+    // padding: 12,
+    paddingHorizontal: 12,
+    marginTop: 8,
     flex: 1,
     justifyContent: "space-between",
   },
@@ -91,13 +90,5 @@ const styles = StyleSheet.create({
     color: "#6B6B6B",
     lineHeight: 15,
     marginBottom: 8,
-  },
-  readMoreContainer: {
-    alignSelf: "flex-end",
-  },
-  readMore: {
-    fontSize: 11,
-    color: "#ED2A46",
-    fontWeight: "600",
   },
 });
