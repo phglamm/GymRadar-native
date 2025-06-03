@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,39 +10,89 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-
-const transactions = [
-  {
-    id: 1,
-    gymName: "Phòng GYM A",
-    package: "Gói tập 1 tháng + 12 buổi PT",
-    price: "6.000.000đ",
-    date: "12/03/2025",
-    status: "Thành công",
-    image: require("../../assets/gymroom.jpg"),
-  },
-  {
-    id: 2,
-    gymName: "Phòng GYM A",
-    package: "Gói tập 3 tháng",
-    price: "6.000.000đ",
-    date: "01/12/2025",
-    status: "Thành công",
-    image: require("../../assets/gymroom.jpg"),
-  },
-  {
-    id: 3,
-    gymName: "Phòng GYM A",
-    package: "Gói tập 1 tháng",
-    price: "6.000.000đ",
-    date: "01/11/2024",
-    status: "Thành công",
-    image: require("../../assets/gymroom.jpg"),
-  },
-];
+import transactionService from "../../services/transactionService";
 
 export default function TransactionHistoryScreen() {
   const navigation = useNavigation();
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Helper function to format price
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
+  // Helper function to format status
+  const getStatusText = (status) => {
+    switch (status) {
+      case "COMPLETED":
+        return "Thành công";
+      case "PENDING":
+        return "Đang xử lý";
+      case "FAILED":
+        return "Thất bại";
+      default:
+        return status;
+    }
+  };
+
+  // Helper function to get status color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "COMPLETED":
+        return "green";
+      case "PENDING":
+        return "#FF914D";
+      case "FAILED":
+        return "#ED2A46";
+      default:
+        return "#999";
+    }
+  };
+
+  // Helper function to format package info
+  const formatPackageInfo = (transaction) => {
+    const courseName = transaction.gym?.course?.name || "Không có thông tin";
+    const ptName = transaction.gym?.pt?.fullName;
+
+    if (ptName) {
+      return `${courseName} + PT ${ptName}`;
+    }
+    return courseName;
+  };
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      setLoading(true);
+      try {
+        const response = await transactionService.getTransactions();
+        if (response.data && response.data.items) {
+          setTransactions(response.data.items);
+        }
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTransactions();
+  }, []);
+
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <Text>Đang tải...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -68,11 +118,16 @@ export default function TransactionHistoryScreen() {
         {transactions.map((item) => (
           <View key={item.id} style={styles.card}>
             <View style={styles.cardHeader}>
-              <Image source={item.image} style={styles.image} />
+              <Image
+                source={require("../../assets/gymroom.jpg")}
+                style={styles.image}
+              />
               <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.gymName}>{item.gymName}</Text>
-                <Text numberOfLines={1} style={styles.package}>
-                  {item.package}
+                <Text style={styles.gymName}>
+                  {item.gym?.gymName || "Không có tên gym"}
+                </Text>
+                <Text numberOfLines={2} style={styles.package}>
+                  {formatPackageInfo(item)}
                 </Text>
               </View>
               <TouchableOpacity>
@@ -84,15 +139,34 @@ export default function TransactionHistoryScreen() {
 
             <View style={styles.cardFooter}>
               <Text>
-                Tổng thanh toán: <Text style={styles.price}>{item.price}</Text>
+                Tổng thanh toán:{" "}
+                <Text style={styles.price}>{formatPrice(item.price)}</Text>
               </Text>
               <View style={styles.footerBottom}>
-                <Text>Ngày giao dịch: {item.date}</Text>
-                <Text style={styles.success}>{item.status}</Text>
+                <Text>
+                  Ngày giao dịch:{" "}
+                  {item.createAt
+                    ? new Date(item.createAt).toLocaleDateString("vi-VN")
+                    : "Không có thông tin"}
+                </Text>
+                <Text
+                  style={[
+                    styles.success,
+                    { color: getStatusColor(item.status) },
+                  ]}
+                >
+                  {getStatusText(item.status)}
+                </Text>
               </View>
             </View>
           </View>
         ))}
+
+        {transactions.length === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>Không có giao dịch nào</Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -157,7 +231,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 6,
   },
   image: {
@@ -168,10 +242,13 @@ const styles = StyleSheet.create({
   gymName: {
     fontWeight: "bold",
     color: "#FF914D",
+    fontSize: 15,
   },
   package: {
     fontSize: 14,
     color: "#000",
+    marginTop: 2,
+    lineHeight: 18,
   },
   detailText: {
     color: "#999",
@@ -190,12 +267,21 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   success: {
-    color: "green",
     fontWeight: "600",
   },
   separator: {
     height: 1,
     backgroundColor: "#E0E0E0",
     marginVertical: 8,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#999",
   },
 });
