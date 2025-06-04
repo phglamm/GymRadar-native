@@ -13,10 +13,11 @@ import {
 } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useCart } from "../../context/CartContext";
 
 export default function UserMenuScreen() {
   const [user, setUser] = useState(null);
-
+  const { clearCart } = useCart(); // Assuming useCart is defined in your context or service
   useEffect(() => {
     const fetchUser = async () => {
       const userData = await AsyncStorage.getItem("user");
@@ -114,6 +115,7 @@ export default function UserMenuScreen() {
                 try {
                   await AsyncStorage.removeItem("user");
                   await AsyncStorage.removeItem("token");
+                  clearCart(); // Assuming clearCart is defined in your context or service
                   if (global.updateNavigationUser) {
                     global.updateNavigationUser();
                   }

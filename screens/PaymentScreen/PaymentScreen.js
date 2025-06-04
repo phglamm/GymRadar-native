@@ -15,17 +15,35 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import cartService from "../../services/cartService";
 
 export default function PaymentScreen({ navigation }) {
-  const { cart, getTotalPrice, removeFromCart } = useCart();
+  const { cart, getTotalPrice, removeFromCart, clearCart } = useCart();
   const totalPrice = getTotalPrice();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("bank");
   console.log(cart);
   const handleCheckout = async () => {
-    const requestData = {
-      gymCourseId: cart[0]?.id, // Assuming all items in cart are from the same course
-      ptId: cart[0]?.pt?.id || null, // Optional PT ID
-    };
+    let requestData = {};
+
+    if (cart[0].type === "WithPT" && cart[0].pt) {
+      requestData = {
+        gymCourseId: cart[0]?.id, // Assuming all items in cart are from the same course
+        ptId: cart[0]?.pt?.id || null, // Optional PT ID
+      };
+    } else if (cart[0].type === "Normal") {
+      requestData = {
+        gymCourseId: cart[0]?.id, // Assuming all items in cart are from the same course
+      };
+    } else {
+      Alert.alert("Lỗi", "Không thể xử lý gói tập này. Vui lòng thử lại sau.");
+      return;
+    }
+
     try {
-      const response = await cartService.processCart(requestData);
+      let response;
+
+      if (cart[0].type === "WithPT") {
+        response = await cartService.processCartPT(requestData);
+      } else if (cart[0].type === "Normal") {
+        response = await cartService.processCartNormal(requestData);
+      }
       console.log("Checkout response:", response);
       console.log(
         "Full response structure:",
@@ -55,6 +73,7 @@ export default function PaymentScreen({ navigation }) {
           "Không thể lấy được link thanh toán. Vui lòng thử lại sau."
         );
       }
+      clearCart(); // Clear cart after successful checkout
     } catch (error) {
       console.error("Error processing cart:", error);
       Alert.alert(
