@@ -276,6 +276,11 @@ const styles = StyleSheet.create({
     borderBottomColor: "#DDD9D9",
   },
   orderSummary: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+
     paddingVertical: 35,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,

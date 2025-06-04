@@ -76,13 +76,16 @@ export default function TransactionHistoryScreen() {
   // Helper function to format package info
   const formatPackageInfo = (transaction) => {
     const courseName = transaction.gym?.course?.name || "Không có thông tin";
+    return courseName;
+  };
+
+  const formatPTName = (transaction) => {
     const ptName = transaction.gym?.pt?.fullName;
 
     if (ptName) {
-      return `${courseName}
-PT: ${ptName}`;
+      return `PT: ${ptName}`;
     }
-    return courseName;
+    return ptName;
   };
 
   // Filter transactions based on search query
@@ -97,7 +100,11 @@ PT: ${ptName}`;
     try {
       const response = await transactionService.getTransactions();
       if (response.data && response.data.items) {
-        setTransactions(response.data.items);
+        setTransactions(
+          response.data.items.sort(
+            (a, b) => new Date(b.createAt) - new Date(a.createAt)
+          )
+        );
       }
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -191,6 +198,9 @@ PT: ${ptName}`;
                   </Text>
                   <Text style={styles.packageText} numberOfLines={2}>
                     {formatPackageInfo(item)}
+                  </Text>
+                  <Text style={styles.packageText} numberOfLines={2}>
+                    {formatPTName(item)}
                   </Text>
                 </View>
 

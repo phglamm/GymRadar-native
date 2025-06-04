@@ -168,6 +168,10 @@ const styles = StyleSheet.create({
   },
 
   orderSummary: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     paddingVertical: 40,
     borderColor: "#ccc",
     shadowColor: "#000",

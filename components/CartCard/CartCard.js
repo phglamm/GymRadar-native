@@ -40,8 +40,9 @@ export default function CartCard({ product, onRemove, showRemove = true }) {
                 ★ {product.rating}/5
               </Text>
               <Text
-                style={{ color: "#1A191A", fontSize: 12 }}
+                style={{ color: "#1A191A", fontSize: 12, width: 150 }}
                 numberOfLines={1}
+                ellipsizeMode="tail"
               >
                 {product.address}
               </Text>
