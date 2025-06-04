@@ -63,7 +63,8 @@ export default function GymDetailScreen({ route }) {
         console.log("Course Gym:", response.data);
         const { items, total, page: currentPage } = response.data;
 
-        const lowestPackage = Math.min(...items.map((item) => item.price));
+        const lowestPackage =
+          items.length > 0 ? Math.min(...items.map((item) => item.price)) : 0;
         setLowestPackage(lowestPackage);
         console.log("Lowest Package:", lowestPackage);
         const courseFiltered = {
@@ -131,7 +132,13 @@ export default function GymDetailScreen({ route }) {
       </View>
     );
   }
-
+  if (!gymId) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Không tìm thấy phòng gym.</Text>
+      </View>
+    );
+  }
   // Check if package is already in the cart
   const isPackageInCart = (packageId) => {
     return cart.some(
@@ -317,8 +324,8 @@ export default function GymDetailScreen({ route }) {
                 ref={mapRef}
                 style={styles.map}
                 initialRegion={{
-                  longitude: gymDetail?.longitude,
-                  latitude: gymDetail?.latitude,
+                  longitude: gymDetail?.longitude || 106.6297,
+                  latitude: gymDetail?.latitude || 10.8231,
                   longitudeDelta: 0.01,
                   latitudeDelta: 0.01,
                 }}

@@ -12,18 +12,13 @@ import { useNavigation } from "@react-navigation/native";
 import { useCart } from "../../context/CartContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function HeaderHome({ user }) {
+export default function HeaderHome({ user, weather }) {
   const [searchText, setSearchText] = useState("");
-  const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
   const { cart, getCartCount } = useCart();
 
   const [coords, setCoords] = useState(null);
-  useEffect(() => {
-    fetchLocation();
-    fetchWeather();
-  }, []);
   const fetchLocation = async () => {
     try {
       const userLocation = await AsyncStorage.getItem("userLocation");
@@ -36,43 +31,10 @@ export default function HeaderHome({ user }) {
       console.log("Error reading user location:", error);
     }
   };
-  const fetchWeather = async () => {
-    if (!coords) return;
 
-    try {
-      setLoading(true);
-      // Using Open-Meteo API (completely free, no API key needed)
-      // Coordinates for Ho Chi Minh City: 10.8231, 106.6297
-      const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${
-          coords?.latitude || 10.8231
-        }&longitude=${
-          coords?.longitude || 106.6297
-        }&current=temperature_2m,weather_code&timezone=Asia/Bangkok`
-      );
-      const data = await response.json();
-      console.log("Weather data:", data);
-      if (data.current) {
-        setWeather({
-          current: {
-            temperature_2m: data.current.temperature_2m,
-            weather_code: data.current.weather_code,
-          },
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching weather:", error);
-      // Set default rainy weather as fallback
-      setWeather({
-        current: {
-          temperature_2m: 28,
-          weather_code: 61, // Rain code
-        },
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchLocation();
+  }, []);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
