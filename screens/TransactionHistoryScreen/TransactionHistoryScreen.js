@@ -79,7 +79,8 @@ export default function TransactionHistoryScreen() {
     const ptName = transaction.gym?.pt?.fullName;
 
     if (ptName) {
-      return `${courseName} + PT ${ptName}`;
+      return `${courseName}
+PT: ${ptName}`;
     }
     return courseName;
   };
