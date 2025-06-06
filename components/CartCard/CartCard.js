@@ -7,7 +7,7 @@ export default function CartCard({ product, onRemove, showRemove = true }) {
   return (
     <View style={styles.cartCart}>
       <View style={styles.cartUpper}>
-        <Image source={{ uri: product.image }} style={styles.gymImage} />
+        <Image source={{ uri: product.url }} style={styles.gymImage} />
         <View style={styles.infoContainer}>
           <View style={styles.titleContainer}>
             <View
@@ -94,6 +94,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 15,
+    objectFit: "fill",
   },
   cartCart: {
     alignSelf: "center",

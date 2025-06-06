@@ -66,7 +66,7 @@ export default function CarouselNative({
 const styles = StyleSheet.create({
   image: {
     height: "100%",
-    resizeMode: "cover",
+    resizeMode: "contain",
     alignSelf: "center",
   },
 });

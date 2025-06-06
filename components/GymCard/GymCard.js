@@ -22,7 +22,7 @@ export default function GymCard({ gym }) {
         <Image
           source={{
             uri:
-              gym?.imageUrl ||
+              gym?.mainImage ||
               "https://thesaigontimes.vn/wp-content/uploads/2024/12/g1-2.jpeg",
           }}
           style={styles.image}

@@ -108,7 +108,7 @@ export default function HomeScreen() {
     }
   };
 
-  const fetchAllGyms = async (page = 1, pageSize = 10) => {
+  const fetchAllGyms = async (page = 1, pageSize = 30) => {
     try {
       const response = await gymService.getAllGyms({
         page,

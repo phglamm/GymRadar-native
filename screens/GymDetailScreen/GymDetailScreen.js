@@ -25,6 +25,7 @@ import { ActivityIndicator } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useCart } from "../../context/CartContext";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import { SafeAreaView } from "react-native";
 
 export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;
@@ -81,18 +82,6 @@ export default function GymDetailScreen({ route }) {
     fetchGymDetail();
     fetchCourseGym();
   }, [gymId]);
-
-  const image = [
-    {
-      url: "https://img.freepik.com/free-psd/gym-fitness-facebook-cover-banner-template_106176-3896.jpg?semt=ais_hybrid&w=740",
-    },
-    {
-      url: "https://img.freepik.com/premium-psd/fitness-gym-red-banner-template_1073294-95.jpg",
-    },
-    {
-      url: "https://img.freepik.com/premium-psd/red-horizontal-workout-gym-poster-banner_179813-347.jpg",
-    },
-  ];
 
   const comments = [
     {
@@ -167,7 +156,10 @@ export default function GymDetailScreen({ route }) {
         gymId: gymDetail.id,
         gymName: gymDetail.gymName,
         gymAddress: gymDetail.address,
-        gymImage: image[0].url,
+        gymImage:
+          gymDetail?.mainImage ||
+          gymDetail?.images[0]?.url ||
+          "https://levelfyc.com/wp-content/uploads/2024/08/khong-gian-4.jpg",
         id: packageGym.id,
         name: packageGym.name,
         type: packageGym.type,
@@ -189,7 +181,10 @@ export default function GymDetailScreen({ route }) {
       gymId: gymDetail.id,
       gymName: gymDetail.gymName,
       gymAddress: gymDetail.address,
-      gymImage: image[0].url,
+      gymImage:
+        gymDetail.mainImage ||
+        gymDetail?.images[0]?.url ||
+        "https://levelfyc.com/wp-content/uploads/2024/08/khong-gian-4.jpg",
       id: packageGym.id,
       name: packageGym.name,
       type: packageGym.type,
@@ -229,7 +224,7 @@ export default function GymDetailScreen({ route }) {
             autoPlay={true}
             scrollAnimationDuration={1000}
             style={styles.carousel}
-            data={image}
+            data={gymDetail?.images || []}
           />
           <LinearGradient
             colors={["transparent", "rgba(0,0,0,0.7)"]}
