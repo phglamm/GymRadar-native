@@ -224,7 +224,11 @@ export default function GymDetailScreen({ route }) {
             autoPlay={true}
             scrollAnimationDuration={1000}
             style={styles.carousel}
-            data={gymDetail?.images || []}
+            data={
+              gymDetail?.images || [
+                "https://levelfyc.com/wp-content/uploads/2024/08/khong-gian-4.jpg",
+              ]
+            }
           />
           <LinearGradient
             colors={["transparent", "rgba(0,0,0,0.7)"]}

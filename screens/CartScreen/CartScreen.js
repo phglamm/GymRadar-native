@@ -64,7 +64,7 @@ export default function CartScreen() {
                   gymName: item.gymName,
                   rating: 5, // Default since we don't have ratings in cart items
                   address: item.gymAddress,
-                  image: item.gymImage,
+                  image: item?.gymImage,
                   selectedPackage: {
                     packageId: item.id,
                     packageName: item.name,

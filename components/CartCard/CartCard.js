@@ -7,7 +7,7 @@ export default function CartCard({ product, onRemove, showRemove = true }) {
   return (
     <View style={styles.cartCart}>
       <View style={styles.cartUpper}>
-        <Image source={{ uri: product.url }} style={styles.gymImage} />
+        <Image source={{ uri: product.image }} style={styles.gymImage} />
         <View style={styles.infoContainer}>
           <View style={styles.titleContainer}>
             <View
