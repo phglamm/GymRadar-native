@@ -2,7 +2,7 @@
   "expo": {
     "name": "GymRadar",
     "scheme": "gymradar",
-    "slug": "GymRadar-native",
+    "slug": "gymradar",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/LogoColor.png",
@@ -37,9 +37,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "4de1fd03-5231-4d27-8e98-40ff7123d339"
+        "projectId": "7334b3f9-a93f-4725-bc9d-34d9a696322c"
       }
     },
-    "owner": "phonglqse183161"
+    "owner": "lamphong1507"
   }
 }
