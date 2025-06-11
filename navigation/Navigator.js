@@ -42,13 +42,26 @@ import PTBookingHistoryScreen from "../screens/PTBookingHistoryScreen/PTBookingH
 import UserPTSlotScreen from "../screens/UserPTSlotScreen/UserPTSlotScreen";
 import OrderSuccessScreen from "../screens/OrderSuccessScreen/OrderSuccessScreen";
 import ChatScreen from "../screens/ChatScreen/ChatScreen";
+import * as Linking from "expo-linking";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
   const Stack = createNativeStackNavigator();
   const TopTab = createMaterialTopTabNavigator();
   const [user, setUser] = useState(null);
-
+  const linking = {
+    prefixes: [
+      Linking.createURL("/"),
+      "gymradar://", // Thêm scheme custom của bạn
+    ],
+    config: {
+      screens: {
+        PaymentScreen: "payment",
+        OrderSuccessScreen: "orderprocess",
+        // Thêm các màn khác nếu cần
+      },
+    },
+  };
   // Fetch user data on initial load only
   useEffect(() => {
     const fetchUser = async () => {
@@ -612,7 +625,7 @@ export default function Navigator() {
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator
         screenOptions={({ navigation, route }) => ({
           headerTitleAlign: "center",

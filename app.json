@@ -1,34 +1,45 @@
 {
   "expo": {
-    "name": "GymRadar-native",
+    "name": "GymRadar",
+    "scheme": "gymradar",
     "slug": "GymRadar-native",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/LogoColor.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./assets/LogoColor.png",
+      "resizeMode": "contain"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gymradar.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.gymradar.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/LogoColor.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "config": {
         "googleMaps": {
-          "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
+          "apiKey": "AIzaSyB888lP_qYwkhxe4ivpt_kjRKee-95Kf0E"
         }
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/LogoColor.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4de1fd03-5231-4d27-8e98-40ff7123d339"
+      }
+    },
+    "owner": "phonglqse183161"
   }
 }
