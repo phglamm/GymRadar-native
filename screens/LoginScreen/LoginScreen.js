@@ -6,6 +6,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,7 +19,6 @@ import { Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import authService from "../../services/authService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -242,7 +242,11 @@ export default function LoginScreen() {
           <View style={styles.signUpSection}>
             <Text style={styles.signUpQuestion}>Bạn chưa có tài khoản? </Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate("Register")}
+              onPress={() => {
+                // navigation.navigate("Register");
+                Linking.openURL("exp://10.87.63.150:8081/register");
+                console.log(process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY);
+              }}
               activeOpacity={0.7}
             >
               <Text style={styles.signUpText}>Đăng ký ngay</Text>

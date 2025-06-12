@@ -49,6 +49,7 @@ export default function Navigator() {
   const Stack = createNativeStackNavigator();
   const TopTab = createMaterialTopTabNavigator();
   const [user, setUser] = useState(null);
+
   const linking = {
     prefixes: [
       Linking.createURL("/"),
@@ -56,12 +57,27 @@ export default function Navigator() {
     ],
     config: {
       screens: {
-        PaymentScreen: "payment",
-        OrderSuccessScreen: "orderprocess",
+        MainApp: {
+          screens: {
+            "Trang chủ": {
+              screens: {
+                PaymentScreen: "payment",
+                OrderSuccessScreen: "orderprocess",
+              },
+            },
+          },
+        },
+        // PaymentScreen: "payment",
+        // OrderSuccessScreen: "orderprocess",
+        Login: "login",
+        Register: "register",
+        Splash: "splash",
+
         // Thêm các màn khác nếu cần
       },
     },
   };
+
   // Fetch user data on initial load only
   useEffect(() => {
     const fetchUser = async () => {
@@ -532,7 +548,8 @@ export default function Navigator() {
           const shouldHideTabBar =
             routeName === "ChatScreen" ||
             routeName === "CartScreen" ||
-            routeName === "PaymentScreen";
+            routeName === "PaymentScreen" ||
+            routeName === "OrderSuccessScreen"; // Added OrderSuccessScreen here
           return {
             tabBarStyle: shouldHideTabBar
               ? { display: "none" }
