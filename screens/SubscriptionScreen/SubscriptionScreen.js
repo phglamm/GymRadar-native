@@ -6,28 +6,80 @@ import {
   ScrollView,
   Dimensions,
   Alert,
+  Linking,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import premiumService from "../../services/premiumService";
+import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
 export default function SubscriptionScreen() {
-  const [selectedPackage, setSelectedPackage] = useState("premium");
-  const handleUpgrade = (packageType) => {
-    if (packageType === "premium") {
-      Alert.alert("Bạn đang sử dụng gói Normal. Không thể nâng cấp.");
-    } else {
-      Alert.alert("Nâng cấp thành công!", "Bạn đã nâng cấp lên gói Premium.");
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch subscriptions from the API when the component mounts
+  const navigation = useNavigation();
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      try {
+        // Fetch subscriptions from the API
+        const response = await premiumService.getAllPremium();
+        console.log(response.data.items);
+        setSubscriptions(response.data.items || []);
+
+        // Set first subscription as default selected if available
+        if (response.data.items && response.data.items.length > 0) {
+          setSelectedPackage(response.data.items[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching subscriptions:", error);
+        Alert.alert("Lỗi", "Không thể tải danh sách gói dịch vụ");
+      }
+    };
+    fetchSubscriptions();
+  }, []);
+
+  const handleUpgrade = async () => {
+    if (!selectedPackage) {
+      Alert.alert("Thông báo", "Vui lòng chọn gói dịch vụ");
+      return;
     }
-    setSelectedPackage(packageType);
+
+    setLoading(true);
+    try {
+      const response = await premiumService.buyPremium({ id: selectedPackage });
+      Linking.openURL(response.data.checkoutUrl);
+      navigation.navigate("Trang chủ", {
+        screen: "OrderSuccessScreen",
+        params: {
+          orderCode: response.data.orderCode,
+        },
+      });
+      console.log("Upgrade response:", response);
+    } catch (error) {
+      console.error("Error upgrading:", error);
+      Alert.alert("Lỗi", "Không thể nâng cấp gói dịch vụ. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
   const PackageCard = ({
+    id,
     title,
     price,
-    period,
+    description,
     features,
     isPopular,
-    packageType,
     isSelected,
     onSelect,
   }) => (
@@ -37,7 +89,7 @@ export default function SubscriptionScreen() {
         isSelected && styles.selectedCard,
         isPopular && styles.popularCard,
       ]}
-      onPress={() => onSelect(packageType)}
+      onPress={() => onSelect(id)}
       activeOpacity={0.8}
     >
       {isPopular && (
@@ -52,12 +104,17 @@ export default function SubscriptionScreen() {
         </Text>
         <View style={styles.priceContainer}>
           <Text style={[styles.price, isSelected && styles.selectedText]}>
-            {price}
+            {formatPrice(price)}
           </Text>
           <Text style={[styles.period, isSelected && styles.selectedText]}>
-            {period}
+            /tháng
           </Text>
         </View>
+        {description && (
+          <Text style={[styles.description, isSelected && styles.selectedText]}>
+            {description}
+          </Text>
+        )}
       </View>
 
       <View style={styles.featuresContainer}>
@@ -75,14 +132,26 @@ export default function SubscriptionScreen() {
           </View>
         ))}
       </View>
-
-      {packageType === "normal" && (
-        <View style={styles.currentPackageBadge}>
-          <Text style={styles.currentPackageText}>GÓI HIỆN TẠI</Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
+
+  // Default features for premium packages
+  const getDefaultFeatures = (packageName) => {
+    const defaultFeatures = [
+      "Chat với PT AI: Không giới hạn",
+      "Truy cập tất cả tính năng",
+      "Hỗ trợ ưu tiên 24/7",
+      "Tính năng nâng cao",
+      "Không quảng cáo",
+    ];
+
+    // You can customize features based on package name or price
+    if (packageName.toLowerCase().includes("premium")) {
+      return defaultFeatures;
+    }
+
+    return defaultFeatures.slice(0, 3); // Show fewer features for basic packages
+  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -94,36 +163,19 @@ export default function SubscriptionScreen() {
       </View>
 
       <View style={styles.packagesContainer}>
-        <PackageCard
-          title="Normal"
-          price="Miễn phí"
-          period=""
-          packageType="normal"
-          isSelected={selectedPackage === "normal"}
-          onSelect={setSelectedPackage}
-          features={[
-            "Chat với PT AI: 10 tin nhắn/ngày",
-            "Truy cập các tính năng cơ bản",
-            "Hỗ trợ qua email",
-          ]}
-        />
-
-        <PackageCard
-          title="Premium"
-          price="49.000đ"
-          period="/tháng"
-          packageType="premium"
-          isPopular={true}
-          isSelected={selectedPackage === "premium"}
-          onSelect={setSelectedPackage}
-          features={[
-            "Chat với PT AI: Không giới hạn",
-            "Truy cập tất cả tính năng",
-            "Hỗ trợ ưu tiên 24/7",
-            "Tính năng nâng cao",
-            "Không quảng cáo",
-          ]}
-        />
+        {subscriptions.map((subscription, index) => (
+          <PackageCard
+            key={subscription.id}
+            id={subscription.id}
+            title={subscription.name}
+            price={subscription.price}
+            description={subscription.description}
+            isPopular={index === 0} // Mark first package as popular
+            isSelected={selectedPackage === subscription.id}
+            onSelect={setSelectedPackage}
+            features={getDefaultFeatures(subscription.name)}
+          />
+        ))}
       </View>
 
       <View style={styles.comparisonSection}>
@@ -132,7 +184,7 @@ export default function SubscriptionScreen() {
         <View style={styles.comparisonTable}>
           <View style={styles.comparisonHeader}>
             <Text style={styles.featureColumnHeader}>Tính năng</Text>
-            <Text style={styles.packageColumnHeader}>Normal</Text>
+            <Text style={styles.packageColumnHeader}>Free</Text>
             <Text style={styles.packageColumnHeader}>Premium</Text>
           </View>
 
@@ -159,14 +211,14 @@ export default function SubscriptionScreen() {
       <TouchableOpacity
         style={[
           styles.upgradeButton,
-          selectedPackage === "normal" && styles.disabledButton,
+          (!selectedPackage || loading) && styles.disabledButton,
         ]}
-        disabled={selectedPackage === "normal"}
+        disabled={!selectedPackage || loading}
         activeOpacity={0.8}
-        onPress={() => handleUpgrade(selectedPackage)}
+        onPress={handleUpgrade}
       >
         <Text style={styles.upgradeButtonText}>
-          {selectedPackage === "normal" ? "GÓI HIỆN TẠI" : "NÂNG CẤP NGAY"}
+          {loading ? "ĐANG XỬ LÝ..." : "NÂNG CẤP NGAY"}
         </Text>
       </TouchableOpacity>
 
@@ -259,6 +311,7 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: "row",
     alignItems: "baseline",
+    marginBottom: 8,
   },
   price: {
     fontSize: 32,
@@ -269,6 +322,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666666",
     marginLeft: 4,
+  },
+  description: {
+    fontSize: 14,
+    color: "#666666",
+    fontStyle: "italic",
   },
   featuresContainer: {
     gap: 12,
@@ -290,20 +348,6 @@ const styles = StyleSheet.create({
   },
   selectedFeatureText: {
     color: "#ED2A46",
-  },
-  currentPackageBadge: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    backgroundColor: "#4CAF50",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  currentPackageText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "bold",
   },
   comparisonSection: {
     paddingHorizontal: 20,

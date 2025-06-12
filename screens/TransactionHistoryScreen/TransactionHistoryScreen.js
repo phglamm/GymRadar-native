@@ -20,6 +20,7 @@ export default function TransactionHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("Course"); // "Course" or "Subscription"
 
   // Helper function to format price
   const formatPrice = (price) => {
@@ -79,22 +80,59 @@ export default function TransactionHistoryScreen() {
     return courseName;
   };
 
+  const formatPremiumSubscription = (transaction) => {
+    // For Premium subscriptions, we can show the type
+    if (transaction.type === "Premium") {
+      return "Gói Premium";
+    }
+    return "Gói đăng ký";
+  };
+
   const formatPTName = (transaction) => {
     const ptName = transaction.gym?.pt?.fullName;
-
     if (ptName) {
       return `PT: ${ptName}`;
     }
-    return ptName;
+    return null;
   };
 
-  // Filter transactions based on search query
-  const filteredTransactions = transactions.filter((transaction) => {
-    const gymName = transaction.gym?.gymName?.toLowerCase() || "";
-    const packageInfo = formatPackageInfo(transaction).toLowerCase();
-    const query = searchQuery.toLowerCase();
-    return gymName.includes(query) || packageInfo.includes(query);
-  });
+  // Filter transactions by tab and search query
+  const getFilteredTransactions = () => {
+    let filteredByTab = [];
+
+    if (activeTab === "Course") {
+      // Show Course type transactions and transactions with gym info
+      filteredByTab = transactions.filter(
+        (transaction) =>
+          transaction.type === "Course" ||
+          (transaction.gym && transaction.type !== "Premium")
+      );
+    } else {
+      // Show Premium type transactions and transactions without gym info
+      filteredByTab = transactions.filter(
+        (transaction) =>
+          transaction.type === "Premium" ||
+          (!transaction.gym && transaction.type !== "Course")
+      );
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filteredByTab = filteredByTab.filter((transaction) => {
+        const gymName = transaction.gym?.gymName?.toLowerCase() || "";
+        const packageInfo =
+          activeTab === "Course"
+            ? formatPackageInfo(transaction).toLowerCase()
+            : formatPremiumSubscription(transaction).toLowerCase();
+        return gymName.includes(query) || packageInfo.includes(query);
+      });
+    }
+
+    return filteredByTab;
+  };
+
+  const filteredTransactions = getFilteredTransactions();
 
   const fetchTransactions = async () => {
     try {
@@ -106,6 +144,7 @@ export default function TransactionHistoryScreen() {
           )
         );
       }
+      console.log(response.data.items);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     } finally {
@@ -137,16 +176,46 @@ export default function TransactionHistoryScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Header */}
+      {/* Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "Course" && styles.activeTab]}
+          onPress={() => setActiveTab("Course")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "Course" && styles.activeTabText,
+            ]}
+          >
+            Khóa học
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "Subscription" && styles.activeTab]}
+          onPress={() => setActiveTab("Subscription")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "Subscription" && styles.activeTabText,
+            ]}
+          >
+            Đăng ký
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Search */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
           <Ionicons name="search" size={20} color="#6B7280" />
           <TextInput
-            placeholder="Tìm kiếm theo tên gym hoặc gói..."
+            placeholder={
+              activeTab === "Course"
+                ? "Tìm kiếm theo tên gym hoặc khóa học..."
+                : "Tìm kiếm theo gói đăng ký..."
+            }
             placeholderTextColor="#9CA3AF"
             style={styles.searchInput}
             value={searchQuery}
@@ -163,7 +232,8 @@ export default function TransactionHistoryScreen() {
       {/* Transaction Summary */}
       <View style={styles.summaryContainer}>
         <Text style={styles.summaryText}>
-          {filteredTransactions.length} giao dịch
+          {filteredTransactions.length} giao dịch{" "}
+          {activeTab === "Course" ? "khóa học" : "đăng ký"}
         </Text>
       </View>
 
@@ -194,14 +264,20 @@ export default function TransactionHistoryScreen() {
 
                 <View style={styles.gymInfo}>
                   <Text style={styles.gymName} numberOfLines={1}>
-                    {item.gym?.gymName || "Không có tên gym"}
+                    {activeTab === "Course"
+                      ? item.gym?.gymName || "Không có tên gym"
+                      : "Gói Premium"}
                   </Text>
                   <Text style={styles.packageText} numberOfLines={2}>
-                    {formatPackageInfo(item)}
+                    {activeTab === "Course"
+                      ? formatPackageInfo(item)
+                      : formatPremiumSubscription(item)}
                   </Text>
-                  <Text style={styles.packageText} numberOfLines={2}>
-                    {formatPTName(item)}
-                  </Text>
+                  {activeTab === "Course" && formatPTName(item) && (
+                    <Text style={styles.packageText} numberOfLines={2}>
+                      {formatPTName(item)}
+                    </Text>
+                  )}
                 </View>
 
                 <View style={styles.statusContainer}>
@@ -270,12 +346,18 @@ export default function TransactionHistoryScreen() {
               <Ionicons name="receipt-outline" size={64} color="#D1D5DB" />
             </View>
             <Text style={styles.emptyTitle}>
-              {searchQuery ? "Không tìm thấy giao dịch" : "Chưa có giao dịch"}
+              {searchQuery
+                ? "Không tìm thấy giao dịch"
+                : `Chưa có giao dịch ${
+                    activeTab === "Course" ? "khóa học" : "đăng ký"
+                  }`}
             </Text>
             <Text style={styles.emptySubtitle}>
               {searchQuery
                 ? "Thử tìm kiếm với từ khóa khác"
-                : "Các giao dịch của bạn sẽ hiển thị tại đây"}
+                : `Các giao dịch ${
+                    activeTab === "Course" ? "khóa học" : "đăng ký"
+                  } của bạn sẽ hiển thị tại đây`}
             </Text>
             {searchQuery && (
               <TouchableOpacity
@@ -341,6 +423,32 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  tabContainer: {
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  activeTab: {
+    borderBottomColor: "#FF914D",
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  activeTabText: {
+    color: "#FF914D",
+    fontWeight: "600",
   },
   searchContainer: {
     backgroundColor: "#FFFFFF",

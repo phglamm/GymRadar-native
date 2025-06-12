@@ -63,6 +63,12 @@ export default function Navigator() {
               screens: {
                 PaymentScreen: "payment",
                 OrderSuccessScreen: "orderprocess",
+                GymDetailScreen: "gym/:gymId",
+              },
+            },
+            "Bản Đồ": {
+              screens: {
+                MapScreen: "map/user",
               },
             },
           },
