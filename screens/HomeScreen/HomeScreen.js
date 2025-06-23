@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import HeaderHome from "../../components/HeaderHome/HeaderHome";
@@ -16,6 +17,7 @@ import BlogCard from "../../components/BlogCard/BlogCard";
 import PairedSwiper from "../../components/PairSwiper/PairSwiper";
 import gymService from "../../services/gymService";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
 
 export default function HomeScreen() {
   const [user, setUser] = useState(null);
@@ -25,12 +27,6 @@ export default function HomeScreen() {
   const [coords, setCoords] = useState(null);
   const [nearbyGyms, setNearbyGyms] = useState([]);
   const navigation = useNavigation();
-  const [weather, setWeather] = useState({
-    current: {
-      temperature_2m: 28, // Default temperature
-      weather_code: 61, // Default weather code (rain)
-    },
-  });
   const isValidCoordinate = (lat, lng) => {
     return (
       lat !== undefined &&
@@ -124,37 +120,6 @@ export default function HomeScreen() {
     }
   };
 
-  const fetchWeather = async () => {
-    if (!coords) return;
-
-    try {
-      // Using Open-Meteo API (completely free, no API key needed)
-      // Coordinates for Ho Chi Minh City: 10.8231, 106.6297
-      const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=10.8231&longitude=106.6297&current=temperature_2m,weather_code&timezone=Asia/Bangkok`
-      );
-      const data = await response.json();
-      console.log("Weather data:", data);
-      if (data.current) {
-        setWeather({
-          current: {
-            temperature_2m: data.current.temperature_2m,
-            weather_code: data.current.weather_code,
-          },
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching weather:", error);
-      // Set default rainy weather as fallback
-      setWeather({
-        current: {
-          temperature_2m: 28,
-          weather_code: 61, // Rain code
-        },
-      });
-    }
-  };
-
   const loadData = async () => {
     setLoading(true);
     await Promise.all([fetchUser(), fetchAllGyms(), fetchLocation()]);
@@ -164,13 +129,10 @@ export default function HomeScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
-    await fetchWeather();
-
     setRefreshing(false);
   };
 
   useEffect(() => {
-    fetchWeather();
     loadData();
   }, []);
 
@@ -247,7 +209,7 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
-      <HeaderHome user={user} weather={weather} />
+      <HeaderHome user={user} />
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -279,7 +241,11 @@ export default function HomeScreen() {
             </View>
 
             {loading ? (
-              <></>
+              <>
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#ED2A46" />
+                </View>
+              </>
             ) : allGyms && allGyms.length > 0 ? (
               <PairedSwiper
                 data={allGyms}
@@ -315,7 +281,11 @@ export default function HomeScreen() {
             </View>
 
             {loading ? (
-              <></>
+              <>
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#ED2A46" />
+                </View>
+              </>
             ) : nearbyGyms && nearbyGyms.length > 0 ? (
               <PairedSwiper
                 data={nearbyGyms}
@@ -462,5 +432,11 @@ const styles = StyleSheet.create({
     color: "#6B6B6B",
     textAlign: "center",
     fontWeight: "500",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 20,
   },
 });

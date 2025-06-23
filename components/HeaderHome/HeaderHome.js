@@ -11,14 +11,49 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { useCart } from "../../context/CartContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
-export default function HeaderHome({ user, weather }) {
+export default function HeaderHome({ user }) {
   const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
   const { cart, getCartCount } = useCart();
+  const [weather, setWeather] = useState({});
 
   const [coords, setCoords] = useState(null);
+  const fetchWeather = async () => {
+    setLoading(true);
+    try {
+      // Using Open-Meteo API (completely free, no API key needed)
+      // Use coords if available, otherwise default to Ho Chi Minh City
+      const lat = coords?.latitude || 10.8231;
+      const lng = coords?.longitude || 106.6297;
+
+      const response = await axios.get(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code&timezone=Asia/Bangkok`
+      );
+      console.log("Weather data:", response.data);
+      if (response && response.data.current) {
+        setWeather({
+          current: {
+            temperature_2m: response.data.current.temperature_2m,
+            weather_code: response.data.current.weather_code,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching weather:", error);
+      // Set default rainy weather as fallback
+      setWeather({
+        current: {
+          temperature_2m: 28,
+          weather_code: 61, // Rain code
+        },
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   const fetchLocation = async () => {
     try {
       const userLocation = await AsyncStorage.getItem("userLocation");
@@ -35,6 +70,11 @@ export default function HeaderHome({ user, weather }) {
   useEffect(() => {
     fetchLocation();
   }, []);
+
+  // Fetch weather when coords change or on initial load
+  useEffect(() => {
+    fetchWeather();
+  }, [coords]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
