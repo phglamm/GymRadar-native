@@ -99,57 +99,6 @@ export default function ScheduleScreen() {
   }, []);
 
   // Updated function to fetch slots based on selected date
-  const fetchSlotsGym = async (
-    date = selectedDate,
-    page = 1,
-    pageSize = 10
-  ) => {
-    setLoading(true);
-    try {
-      const params = {
-        date: format(date, "yyyy-MM-dd"), // Format date to string
-      };
-      const id = "0ef135db-3438-43ac-b701-c660853d0675";
-      const response = await gymService.getSlotOfGym(id, params);
-
-      // Handle the new API response structure
-      const { data } = response;
-
-      if (data && data.ptSlots) {
-        // Map the ptSlots to match your existing slot structure
-        const mappedSlots = data.ptSlots
-          .filter((ptSlot) => ptSlot.active) // Only include active slots
-          .map((ptSlot) => ({
-            id: ptSlot.slot.id,
-            name: ptSlot.slot.name,
-            startTime: ptSlot.slot.startTime,
-            endTime: ptSlot.slot.endTime,
-            ptSlotId: ptSlot.id, // Keep reference to ptSlot ID for booking
-            isBooking: ptSlot.isBooking,
-          }));
-
-        setSlots(mappedSlots);
-        setPagination({
-          current: page,
-          pageSize,
-          total: mappedSlots.length, // Update based on actual data
-        });
-      } else {
-        setSlots([]);
-        setPagination({
-          current: page,
-          pageSize,
-          total: 0,
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching Slots:", error);
-      Alert.alert("Lỗi", "Không thể tải lịch tập. Vui lòng thử lại sau.");
-      setSlots([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Function to book a slot
   const bookSlot = async (slotId) => {
@@ -169,11 +118,6 @@ export default function ScheduleScreen() {
       // const response = await gymService.bookSlot(requestData);
 
       // Refresh slots after booking
-      await fetchSlotsGym(
-        selectedDate,
-        pagination.current,
-        pagination.pageSize
-      );
 
       Alert.alert("Thành công", "Đặt lịch thành công!");
     } catch (error) {
@@ -185,14 +129,14 @@ export default function ScheduleScreen() {
   };
 
   // Fetch slots when component mounts
-  useEffect(() => {
-    fetchSlotsGym(selectedDate);
-  }, []);
+  // useEffect(() => {
+  //   fetchSlotsGym(selectedDate);
+  // }, []);
 
-  // Fetch slots when selected date changes
-  useEffect(() => {
-    fetchSlotsGym(selectedDate);
-  }, [selectedDate]);
+  // // Fetch slots when selected date changes
+  // useEffect(() => {
+  //   fetchSlotsGym(selectedDate);
+  // }, [selectedDate]);
 
   // Generate dates for the entire week
   const generateWeekDates = () => {

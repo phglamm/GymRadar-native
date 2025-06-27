@@ -187,7 +187,7 @@ export default function TransactionHistoryScreen() {
               activeTab === "Course" && styles.activeTabText,
             ]}
           >
-            Khóa học
+            Gói Tập
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -212,7 +212,7 @@ export default function TransactionHistoryScreen() {
           <TextInput
             placeholder={
               activeTab === "Course"
-                ? "Tìm kiếm theo tên gym hoặc khóa học..."
+                ? "Tìm kiếm theo tên gym hoặc gói tập..."
                 : "Tìm kiếm theo gói đăng ký..."
             }
             placeholderTextColor="#9CA3AF"
@@ -232,7 +232,7 @@ export default function TransactionHistoryScreen() {
       <View style={styles.summaryContainer}>
         <Text style={styles.summaryText}>
           {filteredTransactions.length} giao dịch{" "}
-          {activeTab === "Course" ? "khóa học" : "đăng ký"}
+          {activeTab === "Course" ? "gói tập" : "đăng ký"}
         </Text>
       </View>
 
@@ -348,14 +348,14 @@ export default function TransactionHistoryScreen() {
               {searchQuery
                 ? "Không tìm thấy giao dịch"
                 : `Chưa có giao dịch ${
-                    activeTab === "Course" ? "khóa học" : "đăng ký"
+                    activeTab === "Course" ? "gói tập" : "đăng ký"
                   }`}
             </Text>
             <Text style={styles.emptySubtitle}>
               {searchQuery
-                ? "Thử tìm kiếm với từ khóa khác"
+                ? "Thử tìm kiếm với từ gói khác"
                 : `Các giao dịch ${
-                    activeTab === "Course" ? "khóa học" : "đăng ký"
+                    activeTab === "Course" ? "gói tập" : "đăng ký"
                   } của bạn sẽ hiển thị tại đây`}
             </Text>
             {searchQuery && (
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     backgroundColor: "#FFFFFF",
     flexDirection: "row",
-    paddingHorizontal: 16,
+    paddingHorizontal: 1,
     paddingTop: 8,
   },
   tab: {
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    padding: 16,
+    padding: 10,
   },
   cardHeader: {
     flexDirection: "row",

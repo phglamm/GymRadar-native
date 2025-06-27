@@ -10,12 +10,12 @@ import {
   Alert,
   Platform,
   Modal,
+  KeyboardAvoidingView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import accountService from "./../../services/accountService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ProfileScreen = () => {
   const [userProfile, setUserProfile] = useState({
@@ -26,11 +26,13 @@ const ProfileScreen = () => {
     age: 0,
     weight: 0,
     height: 0,
+    gender: "",
+    address: "",
   });
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [tempDate, setTempDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showGenderPicker, setShowGenderPicker] = useState(false);
   const [displayDate, setDisplayDate] = useState("");
 
   const formatDisplayDate = (dateString) => {
@@ -82,8 +84,80 @@ const ProfileScreen = () => {
   }, [userProfile.dob]);
 
   const openDatePicker = () => {
-    setTempDate(userProfile.dob ? new Date(userProfile.dob) : new Date());
-    setShowDatePicker(true);
+    if (isEditMode) {
+      setShowDatePicker(true);
+    }
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    // For Android, always hide the picker after any interaction
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+
+    // Handle user cancellation or dismissal
+    if (event.type === "dismissed" || !selectedDate) {
+      // For iOS, hide the picker on dismissal
+      if (Platform.OS === "ios") {
+        setShowDatePicker(false);
+      }
+      return;
+    }
+
+    // Handle date selection
+    if (event.type === "set") {
+      const newDateString = formatAPIDate(selectedDate);
+
+      // Validate age
+      if (!validateAge(newDateString)) {
+        Alert.alert(
+          "Ngày sinh không hợp lệ",
+          "Vui lòng chọn ngày sinh hợp lệ (tuổi từ 13-100)"
+        );
+        // For iOS, keep the picker open for correction
+        if (Platform.OS === "android") {
+          return;
+        }
+      } else {
+        // Valid date - update profile and close picker
+        setUserProfile({
+          ...userProfile,
+          dob: newDateString,
+        });
+
+        // For iOS, close the picker after successful selection
+        if (Platform.OS === "ios") {
+          setShowDatePicker(false);
+        }
+      }
+    }
+  };
+
+  const genderOptions = [
+    { label: "Nam", value: "Male" },
+    { label: "Nữ", value: "Female" },
+  ];
+
+  const getGenderLabel = (value) => {
+    const option = genderOptions.find((opt) => opt.value === value);
+    return option ? option.label : "Chọn giới tính";
+  };
+
+  const validateAge = (dateString) => {
+    if (!dateString) return true;
+    const birthDate = new Date(dateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age >= 13 && age <= 100; // Reasonable age range
   };
 
   const fetchProfileData = async () => {
@@ -111,6 +185,8 @@ const ProfileScreen = () => {
         dob: userProfile.dob,
         weight: parseFloat(userProfile.weight) || 0,
         height: parseFloat(userProfile.height) || 0,
+        gender: userProfile.gender,
+        address: userProfile.address,
       };
 
       const response = await accountService.updateProfileUser(updateData);
@@ -141,362 +217,462 @@ const ProfileScreen = () => {
   const bmiColor = getBMIColor(bmi);
 
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 20 }}
-      showsVerticalScrollIndicator={false}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
-      {/* Header Section with Gradient */}
-      <LinearGradient
-        colors={["#FF914D", "#ED2A46"]}
-        style={styles.gradientContainer}
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={{
-                uri: "https://randomuser.me/api/portraits/women/44.jpg",
-              }}
-              style={styles.avatar}
-            />
-          </View>
-
-          <Text style={styles.name}>{userProfile.fullName}</Text>
-          <Text style={styles.email}>{userProfile.email}</Text>
-
-          <View style={styles.basicInfoContainer}>
-            <View style={styles.basicInfoItem}>
-              <MaterialCommunityIcons
-                name="calendar"
-                size={18}
-                color="#FFD700"
+        {/* Header Section with Gradient */}
+        <LinearGradient
+          colors={["#FF914D", "#ED2A46"]}
+          style={styles.gradientContainer}
+        >
+          <View style={styles.profileHeader}>
+            <View style={styles.avatarContainer}>
+              <Image
+                source={{
+                  uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNL_ZnOTpXSvhf1UaK7beHey2BX42U6solRA&s",
+                }}
+                style={styles.avatar}
               />
-              <Text style={styles.basicInfoText}>{userProfile.age} tuổi</Text>
             </View>
-            <View style={styles.basicInfoItem}>
-              <MaterialCommunityIcons
-                name="cake-variant"
-                size={18}
-                color="#FFD700"
-              />
-              <Text style={styles.basicInfoText}>{displayDate}</Text>
+
+            <Text style={styles.name}>{userProfile.fullName}</Text>
+            <Text style={styles.email}>{userProfile.email}</Text>
+
+            <View style={styles.basicInfoContainer}>
+              <View style={styles.basicInfoItem}>
+                <MaterialCommunityIcons
+                  name="calendar"
+                  size={18}
+                  color="#FFD700"
+                />
+                <Text style={styles.basicInfoText}>{userProfile.age} tuổi</Text>
+              </View>
+              <View style={styles.basicInfoItem}>
+                <MaterialCommunityIcons
+                  name="cake-variant"
+                  size={18}
+                  color="#FFD700"
+                />
+                <Text style={styles.basicInfoText}>{displayDate}</Text>
+              </View>
+              {userProfile.gender && (
+                <View style={styles.basicInfoItem}>
+                  <MaterialCommunityIcons
+                    name="gender-male-female"
+                    size={18}
+                    color="#FFD700"
+                  />
+                  <Text style={styles.basicInfoText}>
+                    {getGenderLabel(userProfile.gender)}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
-        </View>
-      </LinearGradient>
+        </LinearGradient>
 
-      {/* Quick Stats Cards */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <MaterialCommunityIcons
-            name="weight-kilogram"
-            size={24}
-            color="#FF914D"
-          />
-          <Text style={styles.statValue}>{userProfile.weight}</Text>
-          <Text style={styles.statLabel}>kg</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <MaterialCommunityIcons
-            name="human-male-height"
-            size={24}
-            color="#FF914D"
-          />
-          <Text style={styles.statValue}>{userProfile.height}</Text>
-          <Text style={styles.statLabel}>cm</Text>
-        </View>
-
-        {bmi && (
+        {/* Quick Stats Cards */}
+        <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <MaterialCommunityIcons
-              name="heart-pulse"
+              name="weight-kilogram"
               size={24}
-              color={bmiColor}
+              color="#FF914D"
             />
-            <Text style={[styles.statValue, { color: bmiColor }]}>{bmi}</Text>
-            <Text style={styles.statLabel}>BMI</Text>
+            <Text style={styles.statValue}>{userProfile.weight}</Text>
+            <Text style={styles.statLabel}>kg</Text>
           </View>
-        )}
-      </View>
 
-      {/* Health Metrics Section */}
-      {bmi && (
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Chỉ số sức khỏe</Text>
+          <View style={styles.statCard}>
+            <MaterialCommunityIcons
+              name="human-male-height"
+              size={24}
+              color="#FF914D"
+            />
+            <Text style={styles.statValue}>{userProfile.height}</Text>
+            <Text style={styles.statLabel}>cm</Text>
+          </View>
 
-          <View style={styles.healthCard}>
-            <View style={styles.healthHeader}>
+          {bmi && (
+            <View style={styles.statCard}>
               <MaterialCommunityIcons
                 name="heart-pulse"
                 size={24}
                 color={bmiColor}
               />
-              <View style={styles.healthInfo}>
-                <Text style={styles.healthTitle}>Chỉ số BMI</Text>
-                <Text style={styles.healthSubtitle}>{bmiCategory}</Text>
-              </View>
-              <Text style={[styles.healthValue, { color: bmiColor }]}>
-                {bmi}
-              </Text>
+              <Text style={[styles.statValue, { color: bmiColor }]}>{bmi}</Text>
+              <Text style={styles.statLabel}>BMI</Text>
             </View>
-
-            <View style={styles.bmiProgressContainer}>
-              <View style={styles.bmiProgress}>
-                <View
-                  style={[
-                    styles.bmiIndicator,
-                    {
-                      left: `${Math.min(
-                        Math.max(((bmi - 15) / 25) * 100, 0),
-                        100
-                      )}%`,
-                      backgroundColor: bmiColor,
-                    },
-                  ]}
-                />
-              </View>
-              <View style={styles.bmiLabels}>
-                <Text style={styles.bmiLabel}>15</Text>
-                <Text style={styles.bmiLabel}>18.5</Text>
-                <Text style={styles.bmiLabel}>25</Text>
-                <Text style={styles.bmiLabel}>30</Text>
-                <Text style={styles.bmiLabel}>40</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* Personal Information Form */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
-          <TouchableOpacity
-            style={styles.editToggle}
-            onPress={() =>
-              isEditMode ? cancelEditMode() : setIsEditMode(true)
-            }
-          >
-            <MaterialCommunityIcons
-              name={isEditMode ? "close" : "pencil"}
-              size={20}
-              color={isEditMode ? "#f44336" : "#FF914D"}
-            />
-          </TouchableOpacity>
+          )}
         </View>
 
-        <View style={styles.formContainer}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              <MaterialCommunityIcons
-                name="account"
-                size={16}
-                color="#FF914D"
-              />{" "}
-              Họ và tên
-            </Text>
-            <TextInput
-              style={[styles.textInput, !isEditMode && styles.disabledInput]}
-              value={userProfile.fullName}
-              onChangeText={(text) =>
-                setUserProfile({ ...userProfile, fullName: text })
-              }
-              placeholder="Nhập họ và tên"
-              editable={isEditMode}
-            />
-          </View>
+        {/* Health Metrics Section */}
+        {bmi && (
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Chỉ số sức khỏe</Text>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              <MaterialCommunityIcons name="email" size={16} color="#FF914D" />{" "}
-              Email
-            </Text>
-            <TextInput
-              style={[styles.textInput, styles.disabledInput]}
-              value={userProfile.email}
-              editable={false}
-              placeholder="Email"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              <MaterialCommunityIcons name="phone" size={16} color="#FF914D" />{" "}
-              Số điện thoại
-            </Text>
-            <TextInput
-              style={[styles.textInput, styles.disabledInput]}
-              value={userProfile.phone}
-              editable={false}
-              placeholder="Số điện thoại"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              <MaterialCommunityIcons
-                name="calendar"
-                size={16}
-                color="#FF914D"
-              />{" "}
-              Ngày sinh
-            </Text>
-            <TouchableOpacity
-              onPress={() => isEditMode && openDatePicker()}
-              disabled={!isEditMode}
-            >
-              <View
-                style={[styles.dateInput, !isEditMode && styles.disabledInput]}
-              >
-                <Text
-                  style={[
-                    styles.dateText,
-                    !displayDate && styles.placeholderText,
-                  ]}
-                >
-                  {displayDate || "Chọn ngày sinh"}
-                </Text>
+            <View style={styles.healthCard}>
+              <View style={styles.healthHeader}>
                 <MaterialCommunityIcons
-                  name="calendar"
-                  size={20}
-                  color={isEditMode ? "#FF914D" : "#999"}
+                  name="heart-pulse"
+                  size={24}
+                  color={bmiColor}
                 />
+                <View style={styles.healthInfo}>
+                  <Text style={styles.healthTitle}>Chỉ số BMI</Text>
+                  <Text style={styles.healthSubtitle}>{bmiCategory}</Text>
+                </View>
+                <Text style={[styles.healthValue, { color: bmiColor }]}>
+                  {bmi}
+                </Text>
               </View>
+
+              <View style={styles.bmiProgressContainer}>
+                <View style={styles.bmiProgress}>
+                  <View
+                    style={[
+                      styles.bmiIndicator,
+                      {
+                        left: `${Math.min(
+                          Math.max(((bmi - 15) / 25) * 100, 0),
+                          100
+                        )}%`,
+                        backgroundColor: bmiColor,
+                      },
+                    ]}
+                  />
+                </View>
+                <View style={styles.bmiLabels}>
+                  <Text style={styles.bmiLabel}>15</Text>
+                  <Text style={styles.bmiLabel}>18.5</Text>
+                  <Text style={styles.bmiLabel}>25</Text>
+                  <Text style={styles.bmiLabel}>30</Text>
+                  <Text style={styles.bmiLabel}>40</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Personal Information Form */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
+            <TouchableOpacity
+              style={styles.editToggle}
+              onPress={() =>
+                isEditMode ? cancelEditMode() : setIsEditMode(true)
+              }
+            >
+              <MaterialCommunityIcons
+                name={isEditMode ? "close" : "pencil"}
+                size={20}
+                color={isEditMode ? "#f44336" : "#FF914D"}
+              />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.inputRow}>
-            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+          <View style={styles.formContainer}>
+            <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
                 <MaterialCommunityIcons
-                  name="weight-kilogram"
+                  name="account"
                   size={16}
                   color="#FF914D"
                 />{" "}
-                Cân nặng (kg)
+                Họ và tên
               </Text>
               <TextInput
                 style={[styles.textInput, !isEditMode && styles.disabledInput]}
-                value={userProfile.weight?.toString()}
+                value={userProfile.fullName}
                 onChangeText={(text) =>
-                  setUserProfile({ ...userProfile, weight: text })
+                  setUserProfile({ ...userProfile, fullName: text })
                 }
-                placeholder="0"
-                keyboardType="numeric"
+                placeholder="Nhập họ và tên"
                 editable={isEditMode}
               />
             </View>
 
-            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+            <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
                 <MaterialCommunityIcons
-                  name="human-male-height"
+                  name="email"
                   size={16}
                   color="#FF914D"
                 />{" "}
-                Chiều cao (cm)
+                Email
+              </Text>
+              <TextInput
+                style={[styles.textInput, styles.disabledInput]}
+                value={userProfile.email}
+                editable={false}
+                placeholder="Email"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                <MaterialCommunityIcons
+                  name="phone"
+                  size={16}
+                  color="#FF914D"
+                />{" "}
+                Số điện thoại
+              </Text>
+              <TextInput
+                style={[styles.textInput, styles.disabledInput]}
+                value={userProfile.phone}
+                editable={false}
+                placeholder="Số điện thoại"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                <MaterialCommunityIcons
+                  name="calendar"
+                  size={16}
+                  color="#FF914D"
+                />{" "}
+                Ngày sinh
+              </Text>
+              <TouchableOpacity onPress={openDatePicker} disabled={!isEditMode}>
+                <View
+                  style={[
+                    styles.dateInput,
+                    !isEditMode && styles.disabledInput,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.dateText,
+                      !displayDate && styles.placeholderText,
+                    ]}
+                  >
+                    {displayDate || "Chọn ngày sinh"}
+                  </Text>
+                  <MaterialCommunityIcons
+                    name="calendar"
+                    size={20}
+                    color={isEditMode ? "#FF914D" : "#999"}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputRow}>
+              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                <Text style={styles.inputLabel}>
+                  <MaterialCommunityIcons
+                    name="weight-kilogram"
+                    size={16}
+                    color="#FF914D"
+                  />{" "}
+                  Cân nặng (kg)
+                </Text>
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    !isEditMode && styles.disabledInput,
+                  ]}
+                  value={userProfile.weight?.toString()}
+                  onChangeText={(text) =>
+                    setUserProfile({ ...userProfile, weight: text })
+                  }
+                  placeholder="0"
+                  keyboardType="numeric"
+                  editable={isEditMode}
+                />
+              </View>
+
+              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                <Text style={styles.inputLabel}>
+                  <MaterialCommunityIcons
+                    name="human-male-height"
+                    size={16}
+                    color="#FF914D"
+                  />{" "}
+                  Chiều cao (cm)
+                </Text>
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    !isEditMode && styles.disabledInput,
+                  ]}
+                  value={userProfile.height?.toString()}
+                  onChangeText={(text) =>
+                    setUserProfile({ ...userProfile, height: text })
+                  }
+                  placeholder="0"
+                  keyboardType="numeric"
+                  editable={isEditMode}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                <MaterialCommunityIcons
+                  name="gender-male-female"
+                  size={16}
+                  color="#FF914D"
+                />{" "}
+                Giới tính
+              </Text>
+              <TouchableOpacity
+                onPress={() => isEditMode && setShowGenderPicker(true)}
+                disabled={!isEditMode}
+              >
+                <View
+                  style={[
+                    styles.dateInput,
+                    !isEditMode && styles.disabledInput,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.dateText,
+                      !userProfile.gender && styles.placeholderText,
+                    ]}
+                  >
+                    {getGenderLabel(userProfile.gender)}
+                  </Text>
+                  <MaterialCommunityIcons
+                    name="chevron-down"
+                    size={20}
+                    color={isEditMode ? "#FF914D" : "#999"}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                <MaterialCommunityIcons
+                  name="map-marker"
+                  size={16}
+                  color="#FF914D"
+                />{" "}
+                Địa chỉ
               </Text>
               <TextInput
                 style={[styles.textInput, !isEditMode && styles.disabledInput]}
-                value={userProfile.height?.toString()}
+                value={userProfile.address}
                 onChangeText={(text) =>
-                  setUserProfile({ ...userProfile, height: text })
+                  setUserProfile({ ...userProfile, address: text })
                 }
-                placeholder="0"
-                keyboardType="numeric"
+                placeholder="Nhập địa chỉ"
                 editable={isEditMode}
+                multiline={true}
+                numberOfLines={2}
               />
             </View>
           </View>
         </View>
-      </View>
 
-      {/* Action Buttons */}
-      {isEditMode && (
-        <View style={styles.actionContainer}>
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleUpdateProfile}
-          >
-            <MaterialCommunityIcons
-              name="content-save"
-              size={20}
-              color="#fff"
-            />
-            <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
-          </TouchableOpacity>
+        {/* Action Buttons */}
+        {isEditMode && (
+          <View style={styles.actionContainer}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleUpdateProfile}
+            >
+              <MaterialCommunityIcons
+                name="content-save"
+                size={20}
+                color="#fff"
+              />
+              <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={cancelEditMode}
-          >
-            <MaterialCommunityIcons name="close" size={20} color="#f44336" />
-            <Text style={styles.cancelButtonText}>Hủy</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={cancelEditMode}
+            >
+              <MaterialCommunityIcons name="close" size={20} color="#f44336" />
+              <Text style={styles.cancelButtonText}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-      {/* Date Picker Modal for iOS */}
-      {Platform.OS === "ios" && (
+        {/* Gender Picker Modal */}
         <Modal
-          visible={showDatePicker}
+          visible={showGenderPicker}
           transparent={true}
           animationType="slide"
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.datePickerModal}>
-              <View style={styles.datePickerHeader}>
-                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.datePickerCancel}>Hủy</Text>
+            <View style={styles.pickerModal}>
+              <View style={styles.pickerHeader}>
+                <TouchableOpacity onPress={() => setShowGenderPicker(false)}>
+                  <Text style={styles.pickerCancel}>Hủy</Text>
                 </TouchableOpacity>
-                <Text style={styles.datePickerTitle}>Chọn ngày sinh</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setUserProfile({
-                      ...userProfile,
-                      dob: formatAPIDate(tempDate),
-                    });
-                    setShowDatePicker(false);
-                  }}
-                >
-                  <Text style={styles.datePickerDone}>Xong</Text>
+                <Text style={styles.pickerTitle}>Chọn giới tính</Text>
+                <TouchableOpacity onPress={() => setShowGenderPicker(false)}>
+                  <Text style={styles.pickerDone}>Xong</Text>
                 </TouchableOpacity>
               </View>
-              <DateTimePicker
-                value={tempDate}
-                mode="date"
-                display="spinner"
-                onChange={(event, selectedDate) => {
-                  if (selectedDate) {
-                    setTempDate(selectedDate);
-                  }
-                }}
-                style={styles.datePicker}
-              />
+              <View style={styles.pickerOptions}>
+                {genderOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.pickerOption,
+                      userProfile.gender === option.value &&
+                        styles.selectedOption,
+                    ]}
+                    onPress={() => {
+                      setUserProfile({ ...userProfile, gender: option.value });
+                      setShowGenderPicker(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.pickerOptionText,
+                        userProfile.gender === option.value &&
+                          styles.selectedOptionText,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {userProfile.gender === option.value && (
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={20}
+                        color="#FF914D"
+                      />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
         </Modal>
-      )}
+      </ScrollView>
 
-      {/* Date Picker for Android */}
-      {Platform.OS === "android" && showDatePicker && (
+      {/* Native Date Picker - Platform specific display */}
+      {showDatePicker && (
         <DateTimePicker
           value={userProfile.dob ? new Date(userProfile.dob) : new Date()}
           mode="date"
-          display="spinner"
-          onChange={(event, selectedDate) => {
-            setShowDatePicker(false);
-            if (event.type === "set" && selectedDate) {
-              setUserProfile({
-                ...userProfile,
-                dob: formatAPIDate(selectedDate),
-              });
-            }
-          }}
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+          minimumDate={new Date(1924, 0, 1)}
+          themeVariant="light"
+          {...(Platform.OS === "ios" && {
+            textColor: "#333333",
+          })}
         />
       )}
-    </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -504,6 +680,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f9fa",
+  },
+  scrollContainer: {
+    flex: 1,
   },
   gradientContainer: {
     paddingVertical: 40,
@@ -558,7 +737,9 @@ const styles = StyleSheet.create({
   },
   basicInfoContainer: {
     flexDirection: "row",
-    gap: 20,
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
   },
   basicInfoItem: {
     flexDirection: "row",
@@ -777,15 +958,15 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.5)",
   },
-  datePickerModal: {
+  pickerModal: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: Platform.OS === "ios" ? 40 : 20,
+    maxHeight: "50%",
   },
-  datePickerHeader: {
+  pickerHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -794,24 +975,42 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
-  datePickerTitle: {
+  pickerTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: "#333",
   },
-  datePickerCancel: {
+  pickerCancel: {
     color: "#666",
     fontSize: 16,
   },
-  datePickerDone: {
+  pickerDone: {
     color: "#FF914D",
     fontSize: 16,
     fontWeight: "600",
   },
-  datePicker: {
-    backgroundColor: "#fff",
-    width: "100%",
-    height: 200,
+  pickerOptions: {
+    paddingHorizontal: 16,
+  },
+  pickerOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  selectedOption: {
+    backgroundColor: "#fff5f6",
+  },
+  pickerOptionText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  selectedOptionText: {
+    color: "#FF914D",
+    fontWeight: "600",
   },
 });
 
