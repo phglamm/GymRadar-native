@@ -42,6 +42,7 @@ import PTBookingHistoryScreen from "../screens/PTBookingHistoryScreen/PTBookingH
 import UserPTSlotScreen from "../screens/UserPTSlotScreen/UserPTSlotScreen";
 import OrderSuccessScreen from "../screens/OrderSuccessScreen/OrderSuccessScreen";
 import ChatScreen from "../screens/ChatScreen/ChatScreen";
+import SearchGymScreen from "../screens/SearchGymScreen/SearchGymScreen";
 import * as Linking from "expo-linking";
 
 export default function Navigator() {
@@ -64,6 +65,7 @@ export default function Navigator() {
                 PaymentScreen: "payment",
                 OrderSuccessScreen: "orderprocess",
                 GymDetailScreen: "gym/:gymId",
+                SearchGymScreen: "search",
               },
             },
             "Bản Đồ": {
@@ -180,6 +182,15 @@ export default function Navigator() {
             headerTitleAlign: "center",
             headerShown: true,
             title: "Blog",
+          }}
+        />
+        <Stack.Screen
+          name="SearchGymScreen"
+          component={SearchGymScreen}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: true,
+            title: "Tìm kiếm phòng gym",
           }}
         />
         <Stack.Screen

@@ -219,6 +219,13 @@ export default function HomeScreen() {
                 <Text style={styles.sectionTitle}>Phòng Gym Nổi Bật</Text>
                 <View style={styles.titleUnderline} />
               </View>
+              <TouchableOpacity
+                style={styles.viewMoreButton}
+                onPress={() => navigation.navigate("SearchGymScreen")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.viewMoreText}>Tìm kiếm</Text>
+              </TouchableOpacity>
             </View>
 
             {loading ? (

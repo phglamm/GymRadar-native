@@ -144,18 +144,36 @@ export default function HeaderHome({ user }) {
         <View style={styles.actionSection}>
           <View style={styles.searchContainer}>
             <View style={styles.searchBox}>
-              <Ionicons
-                name="search"
-                size={18}
-                color="#999"
-                style={styles.searchIcon}
-              />
+              <TouchableOpacity
+                onPress={() => {
+                  if (searchText.trim()) {
+                    navigation.navigate("SearchGymScreen", {
+                      searchQuery: searchText.trim(),
+                    });
+                  }
+                }}
+              >
+                <Ionicons
+                  name="search"
+                  size={18}
+                  color="#999"
+                  style={styles.searchIcon}
+                />
+              </TouchableOpacity>
               <TextInput
                 value={searchText}
                 onChangeText={setSearchText}
-                placeholder="Tìm kiếm phòng gym gần bạn..."
+                placeholder="Tìm kiếm phòng gym..."
                 placeholderTextColor="#A39F9F"
                 style={styles.searchInput}
+                onSubmitEditing={() => {
+                  if (searchText.trim()) {
+                    navigation.navigate("SearchGymScreen", {
+                      searchQuery: searchText.trim(),
+                    });
+                  }
+                }}
+                returnKeyType="search"
               />
               {searchText.length > 0 && (
                 <TouchableOpacity onPress={() => setSearchText("")}>

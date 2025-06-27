@@ -7,12 +7,12 @@ import { LinearGradient } from "expo-linear-gradient";
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width / 2 - 25;
 
-export default function GymCard({ gym }) {
+export default function GymCard({ gym, fullWidth = false, height = 130 }) {
   const navigation = useNavigation();
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, fullWidth && styles.fullWidthCard]}
       activeOpacity={0.8}
       onPress={() =>
         navigation.navigate("GymDetailScreen", { gymId: gym.id, gym: gym })
@@ -25,16 +25,14 @@ export default function GymCard({ gym }) {
               gym?.mainImage ||
               "https://thesaigontimes.vn/wp-content/uploads/2024/12/g1-2.jpeg",
           }}
-          style={styles.image}
+          style={[styles.image, { height: height }]}
           resizeMode="cover"
         />
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.7)"]}
           style={styles.gradient}
         />
-        <View style={styles.ratingBadge}>
-          <Text style={styles.ratingBadgeText}>★ {gym?.rating || 5}</Text>
-        </View>
+
         {gym?.distance && (
           <View style={styles.distanceBadge}>
             <Text style={styles.distanceBadgeText}>
@@ -86,6 +84,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
   },
+  fullWidthCard: {
+    width: "100%",
+  },
   imageContainer: {
     position: "relative",
     borderRadius: 16,
@@ -94,7 +95,6 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 130,
     resizeMode: "contain",
   },
 
