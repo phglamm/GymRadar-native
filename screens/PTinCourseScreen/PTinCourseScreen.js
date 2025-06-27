@@ -35,7 +35,6 @@ export default function PTinCourseScreen({ route }) {
         const response = await gymService.getPTinGymCourse(gymPackage.id);
         const { items } = response.data;
         setPT(items);
-        console.log("Pts in course:", items);
       } catch (error) {
         console.error("Error fetching PT:", error);
       } finally {

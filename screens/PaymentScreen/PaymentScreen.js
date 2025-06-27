@@ -18,7 +18,6 @@ export default function PaymentScreen({ navigation }) {
   const { cart, getTotalPrice, removeFromCart, clearCart } = useCart();
   const totalPrice = getTotalPrice();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("bank");
-  console.log(cart);
   const handleCheckout = async () => {
     let requestData = {};
 
@@ -44,12 +43,7 @@ export default function PaymentScreen({ navigation }) {
       } else if (cart[0].type === "Normal") {
         response = await cartService.processCartNormal(requestData);
       }
-      console.log("Checkout response:", response);
-      console.log(
-        "Full response structure:",
-        JSON.stringify(response, null, 2)
-      );
-
+      // console.log("Checkout response:", response);
       // Check if response has the expected structure
       let checkoutUrl;
 

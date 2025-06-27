@@ -19,7 +19,6 @@ export default function UserPTSlotScreen() {
         setLoading(true);
         const id = "0ef135db-3438-43ac-b701-c660853d0675"; // Replace with actual user ID if needed
         const response = await ptService.getPTForUser(id);
-        console.log(response);
 
         if (response.status === "200") {
           setPtData(response.data);

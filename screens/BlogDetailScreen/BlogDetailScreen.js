@@ -1,11 +1,18 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
 export default function BlogDetailScreen() {
-  const navigation = useNavigation();
   const route = useRoute();
 
   const { blog } = route.params;
@@ -15,7 +22,9 @@ export default function BlogDetailScreen() {
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Text style={styles.title}>{blog.title}</Text>
         <Image source={{ uri: blog.imageUrl }} style={styles.image} />
-        <Text style={styles.content}>{blog.shortDescription}</Text>
+        <Text style={styles.content}>
+          {blog.shortDescription || blog.summary}
+        </Text>
         {/* Bạn có thể thêm nội dung chi tiết khác nếu muốn */}
       </ScrollView>
     </View>

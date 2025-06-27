@@ -89,7 +89,6 @@ const ProfileScreen = () => {
   const fetchProfileData = async () => {
     try {
       const response = await accountService.getProfile();
-      console.log("userProfile response:", response);
       setUserProfile(response.data);
     } catch (error) {
       console.error("Lỗi khi lấy thông tin hồ sơ:", error);
@@ -114,9 +113,7 @@ const ProfileScreen = () => {
         height: parseFloat(userProfile.height) || 0,
       };
 
-      console.log("Sending update with data:", updateData);
       const response = await accountService.updateProfileUser(updateData);
-      console.log("Update response:", response);
 
       if (global.updateNavigationUser) {
         global.updateNavigationUser();

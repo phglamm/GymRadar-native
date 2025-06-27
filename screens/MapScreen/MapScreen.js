@@ -57,9 +57,7 @@ export default function MapScreen({ route }) {
     }
   }, [targetLatitude, targetLongitude]);
   // Callback for bottom sheet changes
-  const handleSheetChanges = useCallback((index) => {
-    console.log("handleSheetChanges", index);
-  }, []);
+  const handleSheetChanges = useCallback((index) => {}, []);
 
   // Helper function to validate coordinates
   const isValidCoordinate = (lat, lng) => {
@@ -133,11 +131,11 @@ export default function MapScreen({ route }) {
         const { items, total, page: currentPage } = response.data;
 
         setAllGyms(items);
-        console.log("Gyms:", items);
-        console.log(
-          "Valid gyms:",
-          items.filter((gym) => isValidCoordinate(gym.latitude, gym.longitude))
-        );
+        // console.log("Gyms:", items);
+        // console.log(
+        //   "Valid gyms:",
+        //   items.filter((gym) => isValidCoordinate(gym.latitude, gym.longitude))
+        // );
       } catch (error) {
         console.error("Error fetching hot research gym:", error);
       } finally {
@@ -155,7 +153,6 @@ export default function MapScreen({ route }) {
         if (userLocation !== null) {
           const parsed = JSON.parse(userLocation);
           setCoords(parsed.coords);
-          console.log("User location:", parsed.coords);
         }
       } catch (error) {
         console.log("Error reading user location:", error);
@@ -217,8 +214,6 @@ export default function MapScreen({ route }) {
   const validAllGyms = allGyms.filter((gym) =>
     isValidCoordinate(gym.latitude, gym.longitude)
   );
-
-  console.log("Valid all Gyms:", validAllGyms);
 
   const MapStyle = [
     {
@@ -310,7 +305,7 @@ export default function MapScreen({ route }) {
               latitude: gym.latitude,
             }}
             onPress={() => {
-              console.log("Marker pressed:", gym.gymName);
+              // console.log("Marker pressed:", gym.gymName);
               if (
                 mapRef.current &&
                 isValidCoordinate(gym.latitude, gym.longitude)

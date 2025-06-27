@@ -8,7 +8,6 @@ const requestChatBot = async (
   params = {}
 ) => {
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_CHATBOT_URL;
-  console.log(API_BASE_URL);
 
   try {
     const response = await axios({

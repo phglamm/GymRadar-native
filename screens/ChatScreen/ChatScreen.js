@@ -373,7 +373,6 @@ export default function ChatScreen({ navigation }) {
     };
     try {
       const response = await chatbotService.sendMessage(requestData);
-      console.log(response);
       return response.data || response; // Handle both data and direct response
     } catch (error) {
       console.error("API call failed:", error);

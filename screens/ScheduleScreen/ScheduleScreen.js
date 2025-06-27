@@ -165,8 +165,6 @@ export default function ScheduleScreen() {
         date: format(selectedDate, "yyyy-MM-dd"),
       };
 
-      console.log("Booking request:", requestData);
-
       // Call your booking API here
       // const response = await gymService.bookSlot(requestData);
 

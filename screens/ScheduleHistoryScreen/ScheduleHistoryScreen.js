@@ -81,7 +81,6 @@ export default function ScheduleHistoryScreen({ navigation }) {
 
     try {
       const response = await bookingService.getBookingHistoryForUser();
-      console.log("Booking history:", response);
 
       if (response.data) {
         setBookingHistory(response.data.items || []);
@@ -138,7 +137,6 @@ export default function ScheduleHistoryScreen({ navigation }) {
         activeOpacity={0.95}
         onPress={() => {
           // Handle item press - could navigate to details
-          console.log("Booking selected:", booking.id);
         }}
       >
         {/* Gradient Header */}

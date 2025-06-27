@@ -43,7 +43,6 @@ const SplashScreen = ({ navigation }) => {
       });
 
       AsyncStorage.setItem("userLocation", JSON.stringify(location));
-      console.log(location);
     } catch (error) {
       console.error("Error getting location:", error);
       setErrorMsg(`Error getting location: ${error.message}`);

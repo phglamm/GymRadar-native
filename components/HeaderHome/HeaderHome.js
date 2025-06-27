@@ -32,7 +32,6 @@ export default function HeaderHome({ user }) {
       const response = await axios.get(
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code&timezone=Asia/Bangkok`
       );
-      console.log("Weather data:", response.data);
       if (response && response.data.current) {
         setWeather({
           current: {
@@ -60,7 +59,6 @@ export default function HeaderHome({ user }) {
       if (userLocation !== null) {
         const parsed = JSON.parse(userLocation);
         setCoords(parsed.coords);
-        console.log("User location:", parsed.coords);
       }
     } catch (error) {
       console.log("Error reading user location:", error);

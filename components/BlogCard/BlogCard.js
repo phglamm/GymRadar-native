@@ -2,17 +2,20 @@ import { View, Text, StyleSheet, Dimensions, Image } from "react-native";
 import React from "react";
 import { TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width / 2 - 25;
 
 export default function BlogCard({ blog }) {
-  const onPress = () => {
-    console.log("Blog selected:", blog.title);
-  };
+  const navigation = useNavigation();
 
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.8}
+      onPress={() => navigation.navigate("BlogDetailScreen", { blog: blog })}
+    >
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: blog?.imageUrl }}
@@ -32,7 +35,7 @@ export default function BlogCard({ blog }) {
         <Text style={styles.title} numberOfLines={2}>
           {blog?.title}
         </Text>
-        <Text style={styles.summary} numberOfLines={3} ellipsizeMode="tail">
+        <Text style={styles.summary} numberOfLines={2} ellipsizeMode="tail">
           {blog?.summary}
         </Text>
       </View>

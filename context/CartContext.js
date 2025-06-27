@@ -36,7 +36,6 @@ export const CartProvider = ({ children }) => {
 
       if (existingItemIndex !== -1) {
         // Item already exists, you might want to show a message or update quantity
-        console.log("Item already in cart");
         return prevCart;
       }
 

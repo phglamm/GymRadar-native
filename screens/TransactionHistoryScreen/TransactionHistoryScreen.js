@@ -144,7 +144,6 @@ export default function TransactionHistoryScreen() {
           )
         );
       }
-      console.log(response.data.items);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     } finally {

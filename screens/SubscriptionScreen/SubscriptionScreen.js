@@ -26,7 +26,6 @@ export default function SubscriptionScreen() {
       try {
         // Fetch subscriptions from the API
         const response = await premiumService.getAllPremium();
-        console.log(response.data.items);
         setSubscriptions(response.data.items || []);
 
         // Set first subscription as default selected if available
@@ -57,7 +56,6 @@ export default function SubscriptionScreen() {
           orderCode: response.data.orderCode,
         },
       });
-      console.log("Upgrade response:", response);
     } catch (error) {
       console.error("Error upgrading:", error);
       Alert.alert("Lỗi", "Không thể nâng cấp gói dịch vụ. Vui lòng thử lại.");

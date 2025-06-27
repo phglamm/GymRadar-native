@@ -113,8 +113,6 @@ export default function HomeScreen() {
       const { items, total, page: currentPage } = response.data;
 
       setAllGyms(items);
-      console.log("All Gyms:", items);
-      console.log(response);
     } catch (error) {
       console.error("Error fetching hot research gym:", error);
     }
@@ -148,42 +146,25 @@ export default function HomeScreen() {
   const blog = [
     {
       id: 1,
-      title: "Tập 321312",
+      title: "5 Bài Tập Đốt Mỡ Nhanh Nhất Cho Người Mới",
       imageUrl:
-        "https://hips.hearstapps.com/menshealth-uk/main/thumbs/38177/abs.jpg",
-      summary: "1232",
+        "https://i.pinimg.com/736x/0f/f6/69/0ff6690ae16b9358fb62ed4934d8e598.jpg",
+      summary:
+        "Khám phá 5 bài tập đơn giản giúp bạn đốt cháy mỡ và săn chắc cơ thể.",
     },
     {
       id: 2,
-      title: "Tập luyện",
+      title: "Thực Đơn Dinh Dưỡng Cho Gymer 7 Ngày",
       imageUrl:
-        "https://img.freepik.com/free-psd/gym-fitness-facebook-cover-banner-template_106176-3896.jpg?semt=ais_hybrid&w=740",
-      summary:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "https://i.pinimg.com/736x/0e/fc/b5/0efcb577e982d3b47739b3d10d47ce42.jpg",
+      summary: "Chế độ ăn chuẩn khoa học giúp tăng cơ, giảm mỡ hiệu quả.",
     },
     {
       id: 3,
-      title: "Tập luyện",
+      title: "Cách Phục Hồi Cơ Sau Tập Luyện",
       imageUrl:
-        "https://img.freepik.com/free-psd/gym-fitness-facebook-cover-banner-template_106176-3896.jpg?semt=ais_hybrid&w=740",
-      summary:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    },
-    {
-      id: 4,
-      title: "Tập luyện",
-      imageUrl:
-        "https://img.freepik.com/free-psd/gym-fitness-facebook-cover-banner-template_106176-3896.jpg?semt=ais_hybrid&w=740",
-      summary:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    },
-    {
-      id: 5,
-      title: "Tập luyện",
-      imageUrl:
-        "https://img.freepik.com/free-psd/gym-fitness-facebook-cover-banner-template_106176-3896.jpg?semt=ais_hybrid&w=740",
-      summary:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "https://i.pinimg.com/736x/63/69/ab/6369ab27dca3a6331a12c517441fabd2.jpg",
+      summary: "Các kỹ thuật thư giãn giúp phục hồi cơ bắp nhanh chóng.",
     },
   ];
 

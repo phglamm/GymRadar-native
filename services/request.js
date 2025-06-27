@@ -3,7 +3,6 @@ import axios from "axios";
 
 const request = async (method, url, data = null, headers = {}, params = {}) => {
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
-  console.log(API_BASE_URL);
   const token = await AsyncStorage.getItem("token");
 
   const authHeader = token ? { Authorization: `Bearer ${token}` } : {};

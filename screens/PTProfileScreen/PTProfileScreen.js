@@ -20,7 +20,6 @@ const PTProfileScreen = ({ route }) => {
     setLoading(true);
     try {
       const response = await ptService.getPTDetail(ptId);
-      console.log("PT Detail Data:", response.data);
       setPT(response.data);
     } catch (error) {
       console.error("Error fetching PT profile:", error);

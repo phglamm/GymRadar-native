@@ -82,9 +82,7 @@ export default function RegisterScreen() {
     };
 
     try {
-      console.log("Registering user:", requestData);
       const response = await authService.register(requestData);
-      console.log("Registration response:", response);
 
       Alert.alert(
         "Đăng ký thành công!",

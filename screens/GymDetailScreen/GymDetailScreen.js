@@ -31,9 +31,7 @@ export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;
   const bottomSheetRef = useRef(null);
   const snapPoints = useMemo(() => ["50%", "80%"], []);
-  const handleSheetChanges = useCallback((index) => {
-    console.log("handleSheetChanges", index);
-  }, []);
+  const handleSheetChanges = useCallback((index) => {}, []);
   const [loading, setLoading] = useState(false);
   const mapRef = useRef(null);
   const [gymDetail, setGymDetail] = useState({});
@@ -47,8 +45,6 @@ export default function GymDetailScreen({ route }) {
       setLoading(true);
       try {
         const response = await gymService.getGymById(gymId);
-        console.log("gymDetail response:", response);
-        console.log("gymDetail:", response.data);
         setGymDetail(response.data);
       } catch (error) {
         console.error("Error fetching gym detail:", error);
@@ -60,19 +56,20 @@ export default function GymDetailScreen({ route }) {
     const fetchCourseGym = async () => {
       try {
         const response = await gymService.getCourseByGymId(gymId);
-        console.log("Course Gym Response:", response);
-        console.log("Course Gym:", response.data);
+
         const { items, total, page: currentPage } = response.data;
 
         const lowestPackage =
           items.length > 0 ? Math.min(...items.map((item) => item.price)) : 0;
         setLowestPackage(lowestPackage);
-        console.log("Lowest Package:", lowestPackage);
         const courseFiltered = {
-          packageNormal: items.filter((item) => item.type === "Normal"),
-          packagePT: items.filter((item) => item.type === "WithPT"),
+          packageNormal: items
+            .filter((item) => item.type === "Normal")
+            .sort((a, b) => a.price - b.price),
+          packagePT: items
+            .filter((item) => item.type === "WithPT")
+            .sort((a, b) => a.price - b.price),
         };
-        console.log("Course Gym Filtered:", courseFiltered);
         setGymCourse(courseFiltered);
       } catch (error) {
         console.error("Error fetching course gym:", error);

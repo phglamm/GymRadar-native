@@ -17,7 +17,6 @@ export default function SlotsPTScreen({ navigation }) {
 
   useFocusEffect(
     React.useCallback(() => {
-      console.log("Fetching data for SchedulePT screen");
       fetchPTSlots();
     }, [])
   );
@@ -26,7 +25,6 @@ export default function SlotsPTScreen({ navigation }) {
     try {
       const response = await ptService.getPtSlot();
       const { items } = response.data;
-      console.log("ptSlots", items);
       setPtSlots(items);
     } catch (error) {
       console.error("Error fetching Slots:", error);
@@ -41,13 +39,11 @@ export default function SlotsPTScreen({ navigation }) {
   };
 
   const activeSlot = async (id) => {
-    console.log("activeSlot", id);
     try {
       const response = await ptService.activeSlot(id);
       Alert.alert("Thành công", "Đăng ký lịch tập thành công", [
         { text: "OK" },
       ]);
-      console.log("response Active", response);
       fetchPTSlots();
     } catch (error) {
       console.error("Error registering slot:", error);
@@ -56,11 +52,9 @@ export default function SlotsPTScreen({ navigation }) {
   };
 
   const unActiveSlot = async (id) => {
-    console.log("unActiveSlot", id);
     try {
       const response = await ptService.unactiveSlot(id);
       Alert.alert("Thành công", "Hủy lịch tập thành công", [{ text: "OK" }]);
-      console.log("response UnActive", response);
       fetchPTSlots();
     } catch (error) {
       console.error("Error registering slot:", error);

@@ -20,8 +20,8 @@ import { useNavigation } from "@react-navigation/native";
 import authService from "../../services/authService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function LoginScreen() {
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("0973035305");
+  const [password, setPassword] = useState("0973035305");
   const [secureText, setSecureText] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
@@ -42,8 +42,6 @@ export default function LoginScreen() {
 
     try {
       const response = await authService.login(requestData);
-      console.log("login user:", requestData);
-      console.log("Login response:", response);
 
       if (response.data.role === "USER" || response.data.role === "PT") {
         navigation.reset({
@@ -70,7 +68,6 @@ export default function LoginScreen() {
       if (global.updateNavigationUser) {
         global.updateNavigationUser();
       }
-      console.log("User data saved:", user);
     } catch (error) {
       Alert.alert(
         "Đăng nhập thất bại",
@@ -243,9 +240,7 @@ export default function LoginScreen() {
             <Text style={styles.signUpQuestion}>Bạn chưa có tài khoản? </Text>
             <TouchableOpacity
               onPress={() => {
-                // navigation.navigate("Register");
-                Linking.openURL("exp://10.87.63.150:8081/register");
-                console.log(process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY);
+                navigation.navigate("Register");
               }}
               activeOpacity={0.7}
             >

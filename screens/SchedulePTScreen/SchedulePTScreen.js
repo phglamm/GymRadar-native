@@ -157,13 +157,10 @@ export default function SchedulePTScreen() {
         date: dateParam, // Add this if your API supports date filtering
       });
 
-      console.log("API Response:", response.data);
-
       if (response.data) {
         const { id, fullName, ptSlots: ptSlotsData } = response.data;
         setPtData({ id, fullName });
         setPtSlots(ptSlotsData || []);
-        console.log("ptSlots for date", dateParam, ptSlotsData);
       } else {
         setPtData(null);
         setPtSlots([]);
@@ -190,7 +187,6 @@ export default function SchedulePTScreen() {
         slotId,
         date: format(selectedDate, "yyyy-MM-dd"), // Include selected date
       });
-      console.log("Register slot response:", response);
       Alert.alert("Thành công", "Bạn đã đăng ký thành công lịch PT.");
       // Refresh the data
       await fetchPTSlots();

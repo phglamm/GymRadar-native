@@ -52,8 +52,6 @@ const AccountScreen = () => {
         email: response.data.email || "",
         phone: response.data.phone || "",
       });
-
-      console.log("User data:", response.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
       Alert.alert("Lỗi", "Không thể tải thông tin hồ sơ");

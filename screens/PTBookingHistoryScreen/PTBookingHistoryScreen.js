@@ -74,7 +74,6 @@ export default function PTBookingHistoryScreen({ navigation }) {
 
     try {
       const response = await bookingService.getBookingHistoryForPT();
-      console.log("PT Booking history:", response);
 
       if (response.data) {
         setBookingHistory(response.data.items || []);
@@ -115,7 +114,6 @@ export default function PTBookingHistoryScreen({ navigation }) {
         bookingId,
         newStatus
       );
-      console.log("Status update response:", response);
 
       // Update local state immediately for better UX
       setBookingHistory((prevHistory) =>
