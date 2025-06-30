@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -44,12 +44,15 @@ import OrderSuccessScreen from "../screens/OrderSuccessScreen/OrderSuccessScreen
 import ChatScreen from "../screens/ChatScreen/ChatScreen";
 import SearchGymScreen from "../screens/SearchGymScreen/SearchGymScreen";
 import * as Linking from "expo-linking";
+import authService from "../services/authService";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
   const Stack = createNativeStackNavigator();
   const TopTab = createMaterialTopTabNavigator();
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const linking = {
     prefixes: [
@@ -86,23 +89,37 @@ export default function Navigator() {
     },
   };
 
-  // Fetch user data on initial load only
+  // Check authentication on app start
   useEffect(() => {
-    const fetchUser = async () => {
+    const checkAuthentication = async () => {
       try {
-        const userData = await AsyncStorage.getItem("user");
-        if (userData) {
-          setUser(JSON.parse(userData));
+        setIsLoading(true);
+        const authResult = await authService.validateToken();
+
+        if (authResult.isValid) {
+          setIsAuthenticated(true);
+          setUser(authResult.user);
+          console.log("Authentication successful - user:", authResult.user);
+          // Update AsyncStorage with fresh user data
+          await AsyncStorage.setItem("user", JSON.stringify(authResult.user));
         } else {
+          setIsAuthenticated(false);
           setUser(null);
+          console.log("Authentication failed - clearing data");
+          // Clear any invalid stored data
+          await AsyncStorage.multiRemove(["token", "user"]);
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Authentication check failed:", error);
+        setIsAuthenticated(false);
         setUser(null);
+        await AsyncStorage.multiRemove(["token", "user"]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchUser();
+    checkAuthentication();
   }, []);
 
   // Expose a method to update navigation when auth state changes
@@ -110,15 +127,27 @@ export default function Navigator() {
     if (global.updateNavigationUser === undefined) {
       global.updateNavigationUser = async () => {
         try {
-          const userData = await AsyncStorage.getItem("user");
-          if (userData) {
-            setUser(JSON.parse(userData));
+          const authResult = await authService.validateToken();
+
+          if (authResult.isValid) {
+            setIsAuthenticated(true);
+            setUser(authResult.user);
+            console.log(
+              "updateNavigationUser - user updated:",
+              authResult.user
+            );
+            await AsyncStorage.setItem("user", JSON.stringify(authResult.user));
           } else {
+            setIsAuthenticated(false);
             setUser(null);
+            console.log("updateNavigationUser - user cleared");
+            await AsyncStorage.multiRemove(["token", "user"]);
           }
         } catch (error) {
           console.error("Error updating navigation user:", error);
+          setIsAuthenticated(false);
           setUser(null);
+          await AsyncStorage.multiRemove(["token", "user"]);
         }
       };
     }
@@ -557,6 +586,10 @@ export default function Navigator() {
   };
 
   const MainTab = () => {
+    // Debug log to check user role
+    console.log("MainTab rendering with user:", user);
+    console.log("User role:", user?.role);
+
     return (
       <Tab.Navigator
         key={user?.role || "guest"}
@@ -566,7 +599,7 @@ export default function Navigator() {
             routeName === "ChatScreen" ||
             routeName === "CartScreen" ||
             routeName === "PaymentScreen" ||
-            routeName === "OrderSuccessScreen"; // Added OrderSuccessScreen here
+            routeName === "OrderSuccessScreen";
           return {
             tabBarStyle: shouldHideTabBar
               ? { display: "none" }
@@ -605,6 +638,7 @@ export default function Navigator() {
           };
         }}
       >
+        {/* Common tabs for all users */}
         <Tab.Screen
           name="Trang chủ"
           component={HomeStack}
@@ -619,7 +653,9 @@ export default function Navigator() {
             headerShown: false,
           }}
         />
-        {user?.role === "USER" ? (
+
+        {/* Role-specific tabs */}
+        {user?.role === "USER" && (
           <Tab.Screen
             name="Lịch Tập"
             component={ScheduleStack}
@@ -627,7 +663,9 @@ export default function Navigator() {
               headerShown: false,
             }}
           />
-        ) : user?.role === "PT" ? (
+        )}
+
+        {user?.role === "PT" && (
           <Tab.Screen
             name="Đăng Ký Lịch PT"
             component={SchedulePTStack}
@@ -635,9 +673,9 @@ export default function Navigator() {
               headerShown: false,
             }}
           />
-        ) : null}
+        )}
 
-        {user?.role === "USER" ? (
+        {user?.role === "USER" && (
           <Tab.Screen
             name="AI Chatbox"
             component={ChatStack}
@@ -645,8 +683,9 @@ export default function Navigator() {
               headerShown: false,
             }}
           />
-        ) : null}
+        )}
 
+        {/* Profile tab - available for all authenticated users */}
         <Tab.Screen
           name="Tôi"
           component={ProfileStack}
@@ -657,6 +696,25 @@ export default function Navigator() {
       </Tab.Navigator>
     );
   };
+
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#f8f9fa",
+        }}
+      >
+        <ActivityIndicator size="large" color="#FF914D" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: "#666" }}>
+          Đang kiểm tra đăng nhập...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer linking={linking}>
@@ -672,79 +730,86 @@ export default function Navigator() {
               </TouchableOpacity>
             ) : null,
         })}
+        initialRouteName={isAuthenticated ? "MainApp" : "Login"}
       >
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{
-            headerShown: true,
-            title: "Đăng Nhập",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 20,
-              color: "#ED2A46",
-            },
-          }}
-        />
-        <Stack.Screen
-          name="ForgotPasswordScreen1"
-          component={ForgotPasswordScreen1}
-          options={{
-            headerShown: true,
-            title: "Quên Mật Khẩu",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 20,
-              color: "#ED2A46",
-            },
-          }}
-        />
-        <Stack.Screen
-          name="ForgotPasswordScreen2"
-          component={ForgotPasswordScreen2}
-          options={{
-            headerShown: true,
-            title: "Quên Mật Khẩu",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 20,
-              color: "#ED2A46",
-            },
-          }}
-        />
-        <Stack.Screen
-          name="ForgotPasswordScreen3"
-          component={ForgotPasswordScreen3}
-          options={{
-            headerShown: true,
-            title: "Quên Mật Khẩu",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 20,
-              color: "#ED2A46",
-            },
-          }}
-        />
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={{
-            headerShown: true,
-            title: "Đăng Ký",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 20,
-              color: "#ED2A46",
-            },
-          }}
-        />
-        <Stack.Screen name="MainApp" component={MainTab} />
+        {isAuthenticated ? (
+          // User is authenticated - show main app
+          <Stack.Screen name="MainApp" component={MainTab} />
+        ) : (
+          // User is not authenticated - show auth screens
+          <>
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{
+                headerShown: true,
+                title: "Đăng Nhập",
+                headerTitleAlign: "center",
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  color: "#ED2A46",
+                },
+              }}
+            />
+            <Stack.Screen
+              name="ForgotPasswordScreen1"
+              component={ForgotPasswordScreen1}
+              options={{
+                headerShown: true,
+                title: "Quên Mật Khẩu",
+                headerTitleAlign: "center",
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  color: "#ED2A46",
+                },
+              }}
+            />
+            <Stack.Screen
+              name="ForgotPasswordScreen2"
+              component={ForgotPasswordScreen2}
+              options={{
+                headerShown: true,
+                title: "Quên Mật Khẩu",
+                headerTitleAlign: "center",
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  color: "#ED2A46",
+                },
+              }}
+            />
+            <Stack.Screen
+              name="ForgotPasswordScreen3"
+              component={ForgotPasswordScreen3}
+              options={{
+                headerShown: true,
+                title: "Quên Mật Khẩu",
+                headerTitleAlign: "center",
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  color: "#ED2A46",
+                },
+              }}
+            />
+            <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{
+                headerShown: true,
+                title: "Đăng Ký",
+                headerTitleAlign: "center",
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  color: "#ED2A46",
+                },
+              }}
+            />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

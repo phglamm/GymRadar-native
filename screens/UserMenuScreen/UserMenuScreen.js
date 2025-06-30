@@ -14,6 +14,7 @@ import {
 import { TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useCart } from "../../context/CartContext";
+import authService from "../../services/authService";
 
 export default function UserMenuScreen() {
   const [user, setUser] = useState(null);
@@ -113,13 +114,21 @@ export default function UserMenuScreen() {
               style: "destructive", // Red color for destructive action (iOS/Android)
               onPress: async () => {
                 try {
-                  await AsyncStorage.removeItem("user");
-                  await AsyncStorage.removeItem("token");
-                  clearCart(); // Assuming clearCart is defined in your context or service
-                  if (global.updateNavigationUser) {
-                    global.updateNavigationUser();
+                  // Use the authService logout method
+                  const logoutSuccess = await authService.logout();
+
+                  if (logoutSuccess) {
+                    clearCart(); // Clear cart data
+                    if (global.updateNavigationUser) {
+                      global.updateNavigationUser();
+                    }
+                    // Navigation will be handled automatically by the Navigator
+                  } else {
+                    Alert.alert(
+                      "Lỗi",
+                      "Đã có lỗi xảy ra khi đăng xuất. Vui lòng thử lại."
+                    );
                   }
-                  navigation.replace("Login");
                 } catch (error) {
                   console.error("Error during logout:", error);
                   Alert.alert(

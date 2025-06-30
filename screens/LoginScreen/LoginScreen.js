@@ -44,10 +44,20 @@ export default function LoginScreen() {
       const response = await authService.login(requestData);
 
       if (response.data.role === "USER" || response.data.role === "PT") {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "MainApp", params: { screen: "Home" } }],
-        });
+        // Store token and user data
+        await AsyncStorage.setItem("token", response.data.accessToken);
+        const user = {
+          id: response.data.id,
+          fullName: response.data.fullName,
+          phone: response.data.phone,
+          role: response.data.role,
+        };
+        await AsyncStorage.setItem("user", JSON.stringify(user));
+
+        // Update navigation state - this will automatically redirect to MainApp
+        if (global.updateNavigationUser) {
+          global.updateNavigationUser();
+        }
       } else {
         Alert.alert(
           "Thông báo",
@@ -55,18 +65,6 @@ export default function LoginScreen() {
           [{ text: "OK" }]
         );
         return;
-      }
-
-      AsyncStorage.setItem("token", response.data.accessToken);
-      const user = {
-        id: response.data.id,
-        fullName: response.data.fullName,
-        phone: response.data.phone,
-        role: response.data.role,
-      };
-      AsyncStorage.setItem("user", JSON.stringify(user));
-      if (global.updateNavigationUser) {
-        global.updateNavigationUser();
       }
     } catch (error) {
       Alert.alert(
