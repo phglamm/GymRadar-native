@@ -1,234 +1,74 @@
-import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
-  Alert,
+  Image,
   TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  ActivityIndicator,
   RefreshControl,
   Dimensions,
 } from "react-native";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
-import bookingService from "../../services/bookingService";
+import React, { useEffect, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import Foundation from "@expo/vector-icons/Foundation";
+import { useNavigation } from "@react-navigation/native";
+import accountService from "../../services/accountService";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import colors from "../../constants/color";
 
 const { width } = Dimensions.get("window");
 
-// Status color mapping with gradients
-const getStatusColor = (status) => {
-  switch (status) {
-    case "Completed":
-      return {
-        primary: "#28a745",
-        secondary: "#20c997",
-        background: "rgba(40, 167, 69, 0.1)",
-        icon: "✓",
-      };
-    case "Canceled":
-      return {
-        primary: "#dc3545",
-        secondary: "#e83e8c",
-        background: "rgba(220, 53, 69, 0.1)",
-        icon: "✕",
-      };
-    case "Booked":
-    default:
-      return {
-        primary: "#17a2b8",
-        secondary: "#6f42c1",
-        background: "rgba(23, 162, 184, 0.1)",
-        icon: "📅",
-      };
-  }
-};
-
-// Status text in Vietnamese
-const getStatusText = (status) => {
-  switch (status) {
-    case "Completed":
-      return "Hoàn thành";
-    case "Canceled":
-      return "Đã hủy";
-    case "Booked":
-    default:
-      return "Đã đặt";
-  }
-};
-
-export default function PTBookingHistoryScreen({ navigation }) {
-  const [bookingHistory, setBookingHistory] = useState([]);
+export default function BookingHistoryScreen() {
+  const navigation = useNavigation();
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [updatingBooking, setUpdatingBooking] = useState(null);
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-    totalPages: 1,
-  });
 
-  const fetchBookingHistory = async (showLoading = true) => {
-    if (showLoading) setLoading(true);
-
+  const loadBookingHistory = async () => {
     try {
-      const response = await bookingService.getBookingHistoryForPT();
+      setLoading(true);
+      const response = await accountService.getBookingHistory();
+      console.log("Booking History:", response.data);
 
-      if (response.data) {
+      if (response.data && response.data.items) {
         // Sort bookings by date, latest first
-        const sortedBookings = (response.data.items || []).sort((a, b) => {
+        const sortedBookings = response.data.items.sort((a, b) => {
           return new Date(b.date) - new Date(a.date);
         });
-        setBookingHistory(sortedBookings);
-        setPagination({
-          current: response.data.page,
-          pageSize: response.data.size,
-          total: response.data.total,
-          totalPages: response.data.totalPages,
-        });
+        setBookings(sortedBookings);
       }
     } catch (error) {
-      console.error("Error fetching PT booking history:", error);
-      Alert.alert(
-        "Lỗi",
-        "Không thể tải lịch sử đặt chỗ. Vui lòng thử lại sau."
-      );
+      console.error("Error loading booking history:", error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchBookingHistory();
+    loadBookingHistory();
   }, []);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchBookingHistory(false);
-  };
-
-  // Enhanced status update function with proper API call
-  const updateBookingStatus = async (bookingId, newStatus) => {
-    setUpdatingBooking(bookingId);
-
-    try {
-      const response = await bookingService.updateBookingStatus(
-        bookingId,
-        newStatus
-      );
-
-      // Update local state immediately for better UX
-      setBookingHistory((prevHistory) => {
-        const updatedHistory = prevHistory.map((booking) =>
-          booking.id === bookingId ? { ...booking, status: newStatus } : booking
-        );
-        // Sort by date, latest first
-        return updatedHistory.sort(
-          (a, b) => new Date(b.date) - new Date(a.date)
-        );
-      });
-
-      // Refresh data from server
-      await fetchBookingHistory(false);
-
-      const statusMessage =
-        newStatus === "Completed"
-          ? "Buổi tập đã được đánh dấu hoàn thành!"
-          : "Buổi tập đã được hủy!";
-
-      Alert.alert("Thành công", statusMessage);
-    } catch (error) {
-      console.error("Error updating booking status:", error);
-      Alert.alert(
-        "Lỗi",
-        "Không thể cập nhật trạng thái buổi tập. Vui lòng thử lại."
-      );
-    } finally {
-      setUpdatingBooking(null);
-    }
-  };
-
-  // Show status update options - Only for Booked status
-  const showStatusUpdateOptions = (booking) => {
-    const currentStatus = booking.status;
-    const clientName = booking.user.fullName;
-
-    // Only allow updates for Booked status
-    if (currentStatus !== "Booked") {
-      Alert.alert(
-        "Thông báo",
-        `Buổi tập này đã ${getStatusText(
-          currentStatus
-        ).toLowerCase()}, không thể thay đổi trạng thái.`
-      );
-      return;
-    }
-
-    // Show options to Complete or Cancel
-    Alert.alert(
-      "Cập nhật trạng thái buổi tập",
-      `Chọn trạng thái cho buổi tập với ${clientName}:`,
-      [
-        {
-          text: "Đánh dấu hoàn thành",
-          onPress: () =>
-            confirmStatusUpdate(
-              booking.id,
-              "Completed",
-              clientName,
-              "đánh dấu hoàn thành"
-            ),
-        },
-        {
-          text: "Hủy buổi tập",
-          style: "destructive",
-          onPress: () =>
-            confirmStatusUpdate(booking.id, "Canceled", clientName, "hủy"),
-        },
-        {
-          text: "Đóng",
-          style: "cancel",
-        },
-      ]
-    );
-  };
-
-  // Confirmation alert for status update
-  const confirmStatusUpdate = (
-    bookingId,
-    newStatus,
-    clientName,
-    actionText
-  ) => {
-    const confirmationMessage = `Bạn có chắc chắn muốn ${actionText} buổi tập với ${clientName}?`;
-
-    Alert.alert("Xác nhận", confirmationMessage, [
-      {
-        text: "Hủy",
-        style: "cancel",
-      },
-      {
-        text: "Xác nhận",
-        style: newStatus === "Canceled" ? "destructive" : "default",
-        onPress: () => updateBookingStatus(bookingId, newStatus),
-      },
-    ]);
-  };
-
+  // Format date for display
   const formatDate = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return format(date, "dd/MM/yyyy", { locale: vi });
-    } catch (error) {
-      return dateString;
-    }
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
+  // Format time for display
   const formatTime = (timeString) => {
-    if (!timeString) return "";
-    return timeString.substring(0, 5);
+    const [hours, minutes] = timeString.split(":");
+    const hour = parseInt(hours);
+    const minute = parseInt(minutes);
+    const period = hour >= 12 ? "CH" : "SA";
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:${minute.toString().padStart(2, "0")} ${period}`;
   };
 
   // Calculate duration with rounded minutes (concise format)
@@ -249,21 +89,58 @@ export default function PTBookingHistoryScreen({ navigation }) {
     }
   };
 
-  const renderBookingItem = (booking, index) => {
+  // Get status color with gradients (matching PTBookingHistoryScreen)
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Completed":
+        return {
+          primary: "#28a745",
+          secondary: "#20c997",
+          background: "rgba(40, 167, 69, 0.1)",
+          icon: "✓",
+        };
+      case "Canceled":
+        return {
+          primary: "#dc3545",
+          secondary: "#e83e8c",
+          background: "rgba(220, 53, 69, 0.1)",
+          icon: "✕",
+        };
+      case "Booked":
+      default:
+        return {
+          primary: "#17a2b8",
+          secondary: "#6f42c1",
+          background: "rgba(23, 162, 184, 0.1)",
+          icon: "📅",
+        };
+    }
+  };
+
+  // Get status text in Vietnamese (matching PTBookingHistoryScreen)
+  const getStatusText = (status) => {
+    switch (status) {
+      case "Completed":
+        return "Hoàn thành";
+      case "Canceled":
+        return "Đã hủy";
+      case "Booked":
+      default:
+        return "Đã đặt";
+    }
+  };
+
+  const renderBookingCard = (booking, index) => {
     const statusInfo = getStatusColor(booking.status);
     const statusText = getStatusText(booking.status);
-    const canUpdate = booking.status === "Booked"; // Only Booked status can be updated
-    const isUpdating = updatingBooking === booking.id;
 
     return (
       <TouchableOpacity
         key={booking.id}
         style={[styles.bookingItem, { transform: [{ scale: 1 }] }]}
         activeOpacity={0.95}
-        onPress={() => canUpdate && showStatusUpdateOptions(booking)}
-        disabled={isUpdating}
       >
-        {/* Gradient Header */}
+        {/* Header with date and status */}
         <View
           style={[
             styles.bookingHeader,
@@ -293,32 +170,57 @@ export default function PTBookingHistoryScreen({ navigation }) {
 
         {/* Content Container */}
         <View style={styles.contentContainer}>
-          {/* Client Information - Main focus for PT */}
-          <View style={styles.clientCard}>
-            <View style={styles.clientHeader}>
-              <View style={styles.clientAvatar}>
-                <Text style={styles.clientAvatarText}>
-                  {booking.user.fullName.charAt(0).toUpperCase()}
-                </Text>
+          {/* PT Card */}
+          <View style={styles.ptCard}>
+            <View style={styles.ptHeader}>
+              <View style={styles.ptAvatar}>
+                <Image
+                  source={{
+                    uri:
+                      booking.pt.avatar ||
+                      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcREDVautKC6iIhByPKtNOGlHRa2E52Ahxt4jQ&s",
+                  }}
+                  style={styles.ptAvatarImage}
+                />
               </View>
-              <View style={styles.clientInfo}>
-                <Text style={styles.clientLabel}>Khách hàng</Text>
-                <Text style={styles.clientName}>{booking.user.fullName}</Text>
+              <View style={styles.ptInfo}>
+                <Text style={styles.ptLabel}>Personal Trainer</Text>
+                <Text style={styles.ptName}>{booking.pt.fullName}</Text>
+                <View style={styles.ptDetailRow}>
+                  {booking.pt.gender === "Male" ? (
+                    <Foundation name="male-symbol" size={14} color="#64748b" />
+                  ) : (
+                    <Foundation
+                      name="female-symbol"
+                      size={14}
+                      color="#64748b"
+                    />
+                  )}
+                  <Text style={styles.ptDetailText}>
+                    {booking.pt.gender === "Male" ? "Nam" : "Nữ"} •{" "}
+                    {booking.pt.experience} năm kinh nghiệm
+                  </Text>
+                </View>
               </View>
-              {canUpdate && !isUpdating && (
-                <View style={styles.actionIndicator}>
-                  <Text style={styles.actionIcon}>👆</Text>
-                </View>
-              )}
-              {isUpdating && (
-                <View style={styles.loadingIndicator}>
-                  <ActivityIndicator size="small" color="#E42D46" />
-                </View>
-              )}
             </View>
           </View>
 
-          {/* Slot Information */}
+          {/* User Info */}
+          <View style={styles.userCard}>
+            <View style={styles.userHeader}>
+              <View style={styles.userAvatar}>
+                <Text style={styles.userAvatarText}>
+                  {booking.user.fullName.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.userLabel}>Người đặt</Text>
+                <Text style={styles.userName}>{booking.user.fullName}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Slot Info */}
           <View style={styles.slotInfo}>
             <View style={styles.slotHeader}>
               <View style={styles.slotIconContainer}>
@@ -341,44 +243,9 @@ export default function PTBookingHistoryScreen({ navigation }) {
               </View>
             </View>
           </View>
-
-          {/* Enhanced Action Section */}
-          {canUpdate && (
-            <View style={styles.actionSection}>
-              <TouchableOpacity
-                style={[styles.updateButton, { opacity: isUpdating ? 0.6 : 1 }]}
-                onPress={() => showStatusUpdateOptions(booking)}
-                disabled={isUpdating}
-              >
-                {isUpdating ? (
-                  <View style={styles.loadingButtonContent}>
-                    <ActivityIndicator size="small" color="#fff" />
-                    <Text style={styles.updateButtonText}>
-                      Đang cập nhật...
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={styles.updateButtonText}>
-                    Cập nhật trạng thái
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Status info for completed/cancelled bookings */}
-          {!canUpdate && (
-            <View style={styles.statusInfoSection}>
-              <Text style={styles.statusInfoText}>
-                {booking.status === "Completed"
-                  ? "✅ Buổi tập đã hoàn thành"
-                  : "❌ Buổi tập đã bị hủy"}
-              </Text>
-            </View>
-          )}
         </View>
 
-        {/* Decorative bottom border */}
+        {/* Bottom Border */}
         <View
           style={[styles.bottomBorder, { backgroundColor: statusInfo.primary }]}
         />
@@ -386,34 +253,39 @@ export default function PTBookingHistoryScreen({ navigation }) {
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <View style={styles.loadingCard}>
-          <ActivityIndicator size="large" color="#E42D46" />
-          <Text style={styles.loadingText}>Đang tải lịch sử...</Text>
-        </View>
-      </View>
-    );
-  }
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="calendar-outline" size={64} color="#ccc" />
+      <Text style={styles.emptyTitle}>Chưa có lịch sử đặt lịch</Text>
+      <Text style={styles.emptySubtitle}>
+        Hãy đặt lịch với PT để xem lịch sử tại đây
+      </Text>
+    </View>
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadBookingHistory();
+    setRefreshing(false);
+  };
 
   return (
     <View style={styles.container}>
-      {/* Enhanced Summary Header for PT */}
+      {/* Enhanced Summary Header */}
       <View style={styles.summaryContainer}>
         <View style={styles.summaryContent}>
           <View style={styles.summaryIcon}>
-            <Text style={styles.summaryIconText}>💪</Text>
+            <Text style={styles.summaryIconText}>📅</Text>
           </View>
           <View style={styles.summaryInfo}>
-            <Text style={styles.summaryLabel}>Tổng số buổi tập</Text>
-            <Text style={styles.summaryCount}>{pagination.total}</Text>
-            <Text style={styles.summarySubText}>Bạn đã huấn luyện</Text>
+            <Text style={styles.summaryLabel}>Tổng số lịch đặt</Text>
+            <Text style={styles.summaryCount}>{bookings.length}</Text>
+            <Text style={styles.summarySubText}>Lịch sử của bạn</Text>
           </View>
         </View>
         <TouchableOpacity
           style={styles.refreshButton}
-          onPress={() => fetchBookingHistory()}
+          onPress={() => loadBookingHistory()}
         >
           <Text style={styles.refreshIcon}>🔄</Text>
         </TouchableOpacity>
@@ -423,19 +295,19 @@ export default function PTBookingHistoryScreen({ navigation }) {
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookingHistory.filter((b) => b.status === "Booked").length}
+            {bookings.filter((b) => b.status === "Booked").length}
           </Text>
           <Text style={styles.statLabel}>Đã đặt</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookingHistory.filter((b) => b.status === "Completed").length}
+            {bookings.filter((b) => b.status === "Completed").length}
           </Text>
           <Text style={styles.statLabel}>Hoàn thành</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookingHistory.filter((b) => b.status === "Canceled").length}
+            {bookings.filter((b) => b.status === "Canceled").length}
           </Text>
           <Text style={styles.statLabel}>Đã hủy</Text>
         </View>
@@ -456,18 +328,23 @@ export default function PTBookingHistoryScreen({ navigation }) {
           />
         }
       >
-        {bookingHistory.length > 0 ? (
-          bookingHistory.map((booking, index) =>
-            renderBookingItem(booking, index)
-          )
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <View style={styles.loadingCard}>
+              <ActivityIndicator size="large" color="#E42D46" />
+              <Text style={styles.loadingText}>Đang tải lịch sử...</Text>
+            </View>
+          </View>
+        ) : bookings.length > 0 ? (
+          bookings.map((booking, index) => renderBookingCard(booking, index))
         ) : (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIllustration}>
-              <Text style={styles.emptyIcon}>💪</Text>
+              <Text style={styles.emptyIcon}>📅</Text>
             </View>
-            <Text style={styles.emptyText}>Chưa có buổi tập nào</Text>
+            <Text style={styles.emptyText}>Chưa có lịch sử đặt lịch</Text>
             <Text style={styles.emptySubText}>
-              Lịch sử các buổi tập của bạn sẽ xuất hiện ở đây
+              Hãy đặt lịch với PT để xem lịch sử tại đây
             </Text>
           </View>
         )}
@@ -659,7 +536,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
   },
-  clientCard: {
+  ptCard: {
     backgroundColor: "#f8fafc",
     borderRadius: 16,
     padding: 16,
@@ -667,11 +544,11 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: "#E42D46",
   },
-  clientHeader: {
+  ptHeader: {
     flexDirection: "row",
     alignItems: "center",
   },
-  clientAvatar: {
+  ptAvatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -679,34 +556,76 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+    overflow: "hidden",
   },
-  clientAvatarText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
+  ptAvatarImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 22,
   },
-  clientInfo: {
+  ptInfo: {
     flex: 1,
   },
-  clientLabel: {
+  ptLabel: {
     fontSize: 12,
     color: "#64748b",
     fontWeight: "500",
     marginBottom: 2,
   },
-  clientName: {
+  ptName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1e293b",
+    marginBottom: 4,
   },
-  actionIndicator: {
-    padding: 8,
+  ptDetailRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  actionIcon: {
+  ptDetailText: {
+    fontSize: 12,
+    color: "#64748b",
+    marginLeft: 4,
+  },
+  userCard: {
+    backgroundColor: "#f8fafc",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: "#17a2b8",
+  },
+  userHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  userAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#17a2b8",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  userAvatarText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userLabel: {
+    fontSize: 12,
+    color: "#64748b",
+    fontWeight: "500",
+    marginBottom: 2,
+  },
+  userName: {
     fontSize: 16,
-  },
-  loadingIndicator: {
-    padding: 8,
+    fontWeight: "600",
+    color: "#1e293b",
   },
   slotInfo: {
     marginBottom: 16,
@@ -751,44 +670,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#475569",
     fontWeight: "500",
-  },
-  actionSection: {
-    marginTop: 8,
-  },
-  updateButton: {
-    backgroundColor: "#E42D46",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  updateButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  loadingButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  statusInfoSection: {
-    marginTop: 8,
-    padding: 12,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  statusInfoText: {
-    fontSize: 14,
-    color: "#64748b",
-    fontWeight: "500",
-    fontStyle: "italic",
   },
   bottomBorder: {
     height: 4,

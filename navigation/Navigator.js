@@ -21,7 +21,6 @@ import MapScreen from "../screens/MapScreen/MapScreen";
 import TransactionHistoryScreen from "../screens/TransactionHistoryScreen/TransactionHistoryScreen";
 import VoucherScreen from "../screens/VoucherScreen/VoucherScreen";
 import FAQScreen from "../screens/FAQScreen/FAQScreen";
-import ScheduleScreen from "../screens/ScheduleScreen/ScheduleScreen";
 import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
 import AccountScreen from "../screens/AccountScreen/AccountScreen";
 import UpdatePasswordScreen from "../screens/UpdatePasswordScreen/UpdatePasswordScreen";
@@ -37,14 +36,15 @@ import BlogScreen from "../screens/BlogScreen/BlogScreen";
 import BlogDetailScreen from "../screens/BlogDetailScreen/BlogDetailScreen";
 import PaymentScreen from "../screens/PaymentScreen/PaymentScreen";
 import SubscriptionScreen from "../screens/SubscriptionScreen/SubscriptionScreen";
-import ScheduleHistoryScreen from "../screens/ScheduleHistoryScreen/ScheduleHistoryScreen";
 import PTBookingHistoryScreen from "../screens/PTBookingHistoryScreen/PTBookingHistoryScreen";
-import UserPTSlotScreen from "../screens/UserPTSlotScreen/UserPTSlotScreen";
 import OrderSuccessScreen from "../screens/OrderSuccessScreen/OrderSuccessScreen";
 import ChatScreen from "../screens/ChatScreen/ChatScreen";
 import SearchGymScreen from "../screens/SearchGymScreen/SearchGymScreen";
 import * as Linking from "expo-linking";
 import authService from "../services/authService";
+import ChoosingPTScreen from "../screens/ChoosingPTScreen/ChoosingPTScreen";
+import ScheduleScreen from "../screens/ScheduleScreen/ScheduleScreen";
+import BookingHistoryScreen from "../screens/BookingHistoryScreen/BookingHistoryScreen";
 
 export default function Navigator() {
   const Tab = createBottomTabNavigator();
@@ -315,6 +315,20 @@ export default function Navigator() {
         })}
       >
         <Stack.Screen
+          name="ChoosingPTScreen"
+          component={ChoosingPTScreen}
+          options={{
+            headerShown: true,
+            title: "Chọn PT cho lịch tập",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+              color: "#ED2A46",
+            },
+          }}
+        />
+        <Stack.Screen
           name="ScheduleScreen"
           component={ScheduleScreen}
           options={{
@@ -329,8 +343,8 @@ export default function Navigator() {
           }}
         />
         <Stack.Screen
-          name="ScheduleHistoryScreen"
-          component={ScheduleHistoryScreen}
+          name="BookingHistoryScreen"
+          component={BookingHistoryScreen}
           options={{
             headerShown: true,
             title: "Lịch sử đặt lịch",
@@ -391,14 +405,21 @@ export default function Navigator() {
                 name="SchedulePTScreen"
                 component={SchedulePTScreen}
                 options={{
-                  title: "Đăng Ký Lịch PT",
+                  title: "Đăng ký Slot",
                 }}
               />
               <TopTab.Screen
                 name="SlotsPTScreen"
                 component={SlotsPTScreen}
                 options={{
-                  title: "Slots Tập đã đăng ký",
+                  title: "Danh sách Slot",
+                }}
+              />
+              <TopTab.Screen
+                name="PTBookingHistoryScreen"
+                component={PTBookingHistoryScreen}
+                options={{
+                  title: "Slot với khách",
                 }}
               />
             </TopTab.Navigator>
