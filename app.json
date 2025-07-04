@@ -16,7 +16,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.gymradar.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map.",
+        "NSLocationUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map."
       }
     },
     "android": {
