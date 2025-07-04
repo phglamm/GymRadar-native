@@ -15,9 +15,11 @@ import { TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useCart } from "../../context/CartContext";
 import authService from "../../services/authService";
+import DeleteAccountBottomSheet from "../../components/DeleteAccountBottomSheet/DeleteAccountBottomSheet";
 
 export default function UserMenuScreen() {
   const [user, setUser] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { clearCart } = useCart(); // Assuming useCart is defined in your context or service
   useEffect(() => {
     const fetchUser = async () => {
@@ -94,6 +96,13 @@ export default function UserMenuScreen() {
       label: "Tiện Ích Khác",
       navigation: "UserMenu",
       category: "support",
+    },
+    {
+      icon: <Ionicons name="trash-outline" size={28} color="#ED2A46" />,
+      label: "Xoá Tài Khoản",
+      navigation: "UserMenu",
+      category: "settings",
+      onPress: () => setShowDeleteModal(true),
     },
     {
       icon: <Ionicons name="log-out-outline" size={28} color="#ED2A46" />,
@@ -260,6 +269,17 @@ export default function UserMenuScreen() {
           <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
         </View>
       </ScrollView>
+
+      {/* Delete Account Modal */}
+      <DeleteAccountBottomSheet
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirmDelete={() => {
+          // Handle account deletion confirmation
+          console.log("Account deleted");
+        }}
+        clearCart={clearCart}
+      />
     </View>
   );
 }
