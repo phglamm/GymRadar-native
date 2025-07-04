@@ -242,14 +242,11 @@ export default function SlotsPTScreen() {
 
         <View style={styles.weekInfoContainer}>
           <Text style={styles.weekText}>{getWeekRangeText()}</Text>
+          {currentWeekOffset !== 1 && (
+            <Text style={styles.todayButtonText}>Tuần này</Text>
+          )}
           {currentWeekOffset !== 0 && (
-            <TouchableOpacity
-              style={styles.todayButton}
-              onPress={goToCurrentWeek}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.todayButtonText}>Tuần sau</Text>
-            </TouchableOpacity>
+            <Text style={styles.todayButtonText}>Tuần sau</Text>
           )}
         </View>
 
@@ -500,17 +497,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     textAlign: "center",
   },
-  todayButton: {
+
+  todayButtonText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: "600",
     paddingHorizontal: 16,
     paddingVertical: 6,
     backgroundColor: colors.orange,
     borderRadius: 16,
     marginTop: 4,
-  },
-  todayButtonText: {
-    color: colors.white,
-    fontSize: 12,
-    fontWeight: "600",
   },
   datePickerContainer: {
     backgroundColor: colors.white,
