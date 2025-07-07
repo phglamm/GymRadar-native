@@ -200,39 +200,6 @@ export default function LoginScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Social Login Section */}
-          <View style={styles.socialSection}>
-            <View style={styles.dividerContainer}>
-              <View style={styles.divider} />
-              <Text style={styles.orText}>Hoặc đăng nhập bằng</Text>
-              <View style={styles.divider} />
-            </View>
-
-            <View style={styles.socialButtonsContainer}>
-              <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-                <MaterialCommunityIcons
-                  name="facebook"
-                  size={24}
-                  color="#1877F2"
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-                <MaterialCommunityIcons
-                  name="google"
-                  size={24}
-                  color="#EA4335"
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-                <MaterialCommunityIcons
-                  name="apple"
-                  size={24}
-                  color="#000000"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
           {/* Sign Up Section */}
           <View style={styles.signUpSection}>
             <Text style={styles.signUpQuestion}>Bạn chưa có tài khoản? </Text>

@@ -19,7 +19,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map.",
-        "NSLocationUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map."
+        "NSLocationUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map.",
+        "NSPhotoLibraryUsageDescription": "GymRadar needs access to your photo library to allow you to upload images for your profile and gym photos."
       }
     },
     "android": {
