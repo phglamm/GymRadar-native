@@ -138,17 +138,6 @@ export default function ChoosingPTScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Chọn PT</Text>
-          <TouchableOpacity
-            style={styles.historyButton}
-            onPress={() => navigation.navigate("BookingHistoryScreen")}
-          >
-            <Ionicons name="time-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.historyButtonText}>Lịch Sử</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.searchContainer}>
           <View style={styles.searchBox}>
             <Ionicons
@@ -190,6 +179,15 @@ export default function ChoosingPTScreen() {
             renderEmptyState()
           )}
         </ScrollView>
+
+        {/* Floating Action Button for History */}
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={() => navigation.navigate("BookingHistoryScreen")}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="time-outline" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -203,39 +201,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E9ECEF",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#212529",
-  },
-  historyButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FF914D",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-  },
-  historyButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: "#6C757D",
   },
   searchContainer: {
     paddingHorizontal: 20,
@@ -374,5 +339,24 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: "#6C757D",
+  },
+  floatingButton: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FF914D",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
   },
 });

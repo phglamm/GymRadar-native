@@ -10,8 +10,9 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import ptService from "../../services/ptService";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import colors from "../../constants/color";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function SlotsPTScreen() {
   const [slots, setSlots] = useState([]);
@@ -19,6 +20,7 @@ export default function SlotsPTScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const navigation = useNavigation();
 
   // Get array of 7 days for the current week (starting from Monday)
   const getCurrentWeekDays = (weekOffset = 0) => {
@@ -436,6 +438,13 @@ export default function SlotsPTScreen() {
           ))
         )}
       </ScrollView>
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate("PTBookingHistoryScreen")}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="time-outline" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -790,5 +799,24 @@ const styles = StyleSheet.create({
   },
   disabledNavButtonText: {
     color: "#adb5bd",
+  },
+  floatingButton: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FF914D",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
   },
 });

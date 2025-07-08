@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,10 +9,13 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
+  TextInput,
 } from "react-native";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import bookingService from "../../services/bookingService";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const { width } = Dimensions.get("window");
 
@@ -24,14 +27,14 @@ const getStatusColor = (status) => {
         primary: "#28a745",
         secondary: "#20c997",
         background: "rgba(40, 167, 69, 0.1)",
-        icon: "✓",
+        icon: "checkmark-circle",
       };
     case "Canceled":
       return {
         primary: "#dc3545",
         secondary: "#e83e8c",
         background: "rgba(220, 53, 69, 0.1)",
-        icon: "✕",
+        icon: "close-circle",
       };
     case "Booked":
     default:
@@ -39,7 +42,7 @@ const getStatusColor = (status) => {
         primary: "#17a2b8",
         secondary: "#6f42c1",
         background: "rgba(23, 162, 184, 0.1)",
-        icon: "📅",
+        icon: "calendar",
       };
   }
 };
@@ -62,12 +65,23 @@ export default function PTBookingHistoryScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [updatingBooking, setUpdatingBooking] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
     total: 0,
     totalPages: 1,
   });
+
+  // Filter bookings based on search query (customer name)
+  const filteredBookings = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return bookingHistory;
+    }
+    return bookingHistory.filter((booking) =>
+      booking.user.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [bookingHistory, searchQuery]);
 
   const fetchBookingHistory = async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -286,7 +300,7 @@ export default function PTBookingHistoryScreen({ navigation }) {
               },
             ]}
           >
-            <Text style={styles.statusIcon}>{statusInfo.icon}</Text>
+            <Ionicons name={statusInfo.icon} size={14} color="#fff" />
             <Text style={styles.statusText}>{statusText}</Text>
           </View>
         </View>
@@ -307,7 +321,7 @@ export default function PTBookingHistoryScreen({ navigation }) {
               </View>
               {canUpdate && !isUpdating && (
                 <View style={styles.actionIndicator}>
-                  <Text style={styles.actionIcon}>👆</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#64748b" />
                 </View>
               )}
               {isUpdating && (
@@ -322,7 +336,7 @@ export default function PTBookingHistoryScreen({ navigation }) {
           <View style={styles.slotInfo}>
             <View style={styles.slotHeader}>
               <View style={styles.slotIconContainer}>
-                <Text style={styles.slotIcon}>🕐</Text>
+                <MaterialIcons name="access-time" size={20} color="#fff" />
               </View>
               <View style={styles.slotDetails}>
                 <Text style={styles.slotName}>{booking.slot.name}</Text>
@@ -386,6 +400,22 @@ export default function PTBookingHistoryScreen({ navigation }) {
     );
   };
 
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <View style={styles.emptyIllustration}>
+        <MaterialIcons name="fitness-center" size={40} color="#ccc" />
+      </View>
+      <Text style={styles.emptyText}>
+        {searchQuery ? "Không tìm thấy kết quả" : "Chưa có buổi tập nào"}
+      </Text>
+      <Text style={styles.emptySubText}>
+        {searchQuery
+          ? `Không tìm thấy khách hàng nào có tên "${searchQuery}"`
+          : "Lịch sử các buổi tập của bạn sẽ xuất hiện ở đây"}
+      </Text>
+    </View>
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -403,7 +433,7 @@ export default function PTBookingHistoryScreen({ navigation }) {
       <View style={styles.summaryContainer}>
         <View style={styles.summaryContent}>
           <View style={styles.summaryIcon}>
-            <Text style={styles.summaryIconText}>💪</Text>
+            <MaterialIcons name="fitness-center" size={24} color="#fff" />
           </View>
           <View style={styles.summaryInfo}>
             <Text style={styles.summaryLabel}>Tổng số buổi tập</Text>
@@ -415,27 +445,54 @@ export default function PTBookingHistoryScreen({ navigation }) {
           style={styles.refreshButton}
           onPress={() => fetchBookingHistory()}
         >
-          <Text style={styles.refreshIcon}>🔄</Text>
+          <Ionicons name="refresh" size={20} color="#64748b" />
         </TouchableOpacity>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color="#64748b"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm theo tên khách hàng..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor="#94a3b8"
+          />
+          {searchQuery ? (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              style={styles.clearButton}
+            >
+              <Ionicons name="close-circle" size={20} color="#94a3b8" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </View>
 
       {/* Quick Stats */}
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookingHistory.filter((b) => b.status === "Booked").length}
+            {filteredBookings.filter((b) => b.status === "Booked").length}
           </Text>
           <Text style={styles.statLabel}>Đã đặt</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookingHistory.filter((b) => b.status === "Completed").length}
+            {filteredBookings.filter((b) => b.status === "Completed").length}
           </Text>
           <Text style={styles.statLabel}>Hoàn thành</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookingHistory.filter((b) => b.status === "Canceled").length}
+            {filteredBookings.filter((b) => b.status === "Canceled").length}
           </Text>
           <Text style={styles.statLabel}>Đã hủy</Text>
         </View>
@@ -456,21 +513,11 @@ export default function PTBookingHistoryScreen({ navigation }) {
           />
         }
       >
-        {bookingHistory.length > 0 ? (
-          bookingHistory.map((booking, index) =>
-            renderBookingItem(booking, index)
-          )
-        ) : (
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIllustration}>
-              <Text style={styles.emptyIcon}>💪</Text>
-            </View>
-            <Text style={styles.emptyText}>Chưa có buổi tập nào</Text>
-            <Text style={styles.emptySubText}>
-              Lịch sử các buổi tập của bạn sẽ xuất hiện ở đây
-            </Text>
-          </View>
-        )}
+        {filteredBookings.length > 0
+          ? filteredBookings.map((booking, index) =>
+              renderBookingItem(booking, index)
+            )
+          : renderEmptyState()}
 
         {/* Bottom spacing */}
         <View style={styles.bottomSpacing} />
@@ -828,5 +875,33 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 20,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  searchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#1e293b",
+  },
+  clearButton: {
+    marginLeft: 8,
   },
 });

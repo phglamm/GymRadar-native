@@ -18,6 +18,7 @@ import {
   Dimensions,
 } from "react-native";
 import chatbotService from "../../services/chatbotService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const MarkdownText = ({ text, style }) => {
@@ -329,6 +330,7 @@ const FloatingClearButton = ({ onPress, isVisible }) => {
 };
 
 export default function ChatScreen({ navigation }) {
+  const [coords, setCoords] = useState({});
   // Add navigation prop
   const [messages, setMessages] = useState([
     {
@@ -365,12 +367,37 @@ export default function ChatScreen({ navigation }) {
       keyboardDidHideListener?.remove();
     };
   }, []);
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        // First try to get cached location
+        const userLocation = await AsyncStorage.getItem("userLocation");
+        if (userLocation !== null) {
+          const parsed = JSON.parse(userLocation);
+          console.log("📍 Using cached location:", parsed.coords);
+          setCoords(parsed.coords);
+        } else {
+          // If no cached location, request fresh location
+          console.log("🔄 No cached location, requesting fresh location...");
+          await requestFreshLocation();
+        }
+      } catch (error) {
+        console.log("❌ Error reading user location:", error);
+        await requestFreshLocation();
+      }
+    };
+    fetchLocation();
+  }, []);
 
   // API call function
   const callChatAPI = async (prompt) => {
     const requestData = {
       prompt: prompt,
+      longtitude: coords.longitude, // Default to Saigon if no coords
+      latitude: coords.latitude, // Default to Saigon if no coords
     };
+
+    console.log("📡 Sending request to API:", requestData);
     try {
       const response = await chatbotService.sendMessage(requestData);
       return response.data || response; // Handle both data and direct response

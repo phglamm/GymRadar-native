@@ -10,13 +10,16 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  TextInput,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import Foundation from "@expo/vector-icons/Foundation";
 import { useNavigation } from "@react-navigation/native";
 import accountService from "../../services/accountService";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import colors from "../../constants/color";
 
 const { width } = Dimensions.get("window");
@@ -26,6 +29,17 @@ export default function BookingHistoryScreen() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter bookings based on search query
+  const filteredBookings = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return bookings;
+    }
+    return bookings.filter((booking) =>
+      booking.pt.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [bookings, searchQuery]);
 
   const loadBookingHistory = async () => {
     try {
@@ -97,14 +111,14 @@ export default function BookingHistoryScreen() {
           primary: "#28a745",
           secondary: "#20c997",
           background: "rgba(40, 167, 69, 0.1)",
-          icon: "✓",
+          icon: "checkmark-circle",
         };
       case "Canceled":
         return {
           primary: "#dc3545",
           secondary: "#e83e8c",
           background: "rgba(220, 53, 69, 0.1)",
-          icon: "✕",
+          icon: "close-circle",
         };
       case "Booked":
       default:
@@ -112,7 +126,7 @@ export default function BookingHistoryScreen() {
           primary: "#17a2b8",
           secondary: "#6f42c1",
           background: "rgba(23, 162, 184, 0.1)",
-          icon: "📅",
+          icon: "calendar",
         };
     }
   };
@@ -163,7 +177,7 @@ export default function BookingHistoryScreen() {
               },
             ]}
           >
-            <Text style={styles.statusIcon}>{statusInfo.icon}</Text>
+            <Ionicons name={statusInfo.icon} size={14} color="#fff" />
             <Text style={styles.statusText}>{statusText}</Text>
           </View>
         </View>
@@ -224,7 +238,7 @@ export default function BookingHistoryScreen() {
           <View style={styles.slotInfo}>
             <View style={styles.slotHeader}>
               <View style={styles.slotIconContainer}>
-                <Text style={styles.slotIcon}>🕐</Text>
+                <MaterialIcons name="access-time" size={20} color="#fff" />
               </View>
               <View style={styles.slotDetails}>
                 <Text style={styles.slotName}>{booking.slot.name}</Text>
@@ -256,9 +270,13 @@ export default function BookingHistoryScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="calendar-outline" size={64} color="#ccc" />
-      <Text style={styles.emptyTitle}>Chưa có lịch sử đặt lịch</Text>
+      <Text style={styles.emptyTitle}>
+        {searchQuery ? "Không tìm thấy kết quả" : "Chưa có lịch sử đặt lịch"}
+      </Text>
       <Text style={styles.emptySubtitle}>
-        Hãy đặt lịch với PT để xem lịch sử tại đây
+        {searchQuery
+          ? `Không tìm thấy PT nào có tên "${searchQuery}"`
+          : "Hãy đặt lịch với PT để xem lịch sử tại đây"}
       </Text>
     </View>
   );
@@ -275,7 +293,7 @@ export default function BookingHistoryScreen() {
       <View style={styles.summaryContainer}>
         <View style={styles.summaryContent}>
           <View style={styles.summaryIcon}>
-            <Text style={styles.summaryIconText}>📅</Text>
+            <MaterialIcons name="history" size={24} color="#fff" />
           </View>
           <View style={styles.summaryInfo}>
             <Text style={styles.summaryLabel}>Tổng số lịch đặt</Text>
@@ -287,27 +305,54 @@ export default function BookingHistoryScreen() {
           style={styles.refreshButton}
           onPress={() => loadBookingHistory()}
         >
-          <Text style={styles.refreshIcon}>🔄</Text>
+          <Ionicons name="refresh" size={20} color="#64748b" />
         </TouchableOpacity>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color="#64748b"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm theo tên PT..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor="#94a3b8"
+          />
+          {searchQuery ? (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              style={styles.clearButton}
+            >
+              <Ionicons name="close-circle" size={20} color="#94a3b8" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </View>
 
       {/* Quick Stats */}
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookings.filter((b) => b.status === "Booked").length}
+            {filteredBookings.filter((b) => b.status === "Booked").length}
           </Text>
           <Text style={styles.statLabel}>Đã đặt</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookings.filter((b) => b.status === "Completed").length}
+            {filteredBookings.filter((b) => b.status === "Completed").length}
           </Text>
           <Text style={styles.statLabel}>Hoàn thành</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
-            {bookings.filter((b) => b.status === "Canceled").length}
+            {filteredBookings.filter((b) => b.status === "Canceled").length}
           </Text>
           <Text style={styles.statLabel}>Đã hủy</Text>
         </View>
@@ -335,18 +380,12 @@ export default function BookingHistoryScreen() {
               <Text style={styles.loadingText}>Đang tải lịch sử...</Text>
             </View>
           </View>
-        ) : bookings.length > 0 ? (
-          bookings.map((booking, index) => renderBookingCard(booking, index))
+        ) : filteredBookings.length > 0 ? (
+          filteredBookings.map((booking, index) =>
+            renderBookingCard(booking, index)
+          )
         ) : (
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIllustration}>
-              <Text style={styles.emptyIcon}>📅</Text>
-            </View>
-            <Text style={styles.emptyText}>Chưa có lịch sử đặt lịch</Text>
-            <Text style={styles.emptySubText}>
-              Hãy đặt lịch với PT để xem lịch sử tại đây
-            </Text>
-          </View>
+          renderEmptyState()
         )}
 
         {/* Bottom spacing */}
@@ -524,7 +563,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   statusIcon: {
-    fontSize: 12,
     marginRight: 6,
   },
   statusText: {
@@ -709,5 +747,33 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 20,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  searchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#1e293b",
+  },
+  clearButton: {
+    marginLeft: 8,
   },
 });

@@ -412,16 +412,16 @@ export default function Navigator() {
                 name="SlotsPTScreen"
                 component={SlotsPTScreen}
                 options={{
-                  title: "Danh sách Slot",
+                  title: "Xem lịch Book",
                 }}
               />
-              <TopTab.Screen
+              {/* <TopTab.Screen
                 name="PTBookingHistoryScreen"
                 component={PTBookingHistoryScreen}
                 options={{
                   title: "Slot với khách",
                 }}
-              />
+              /> */}
             </TopTab.Navigator>
           )}
         </Stack.Screen>
