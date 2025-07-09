@@ -6,9 +6,10 @@ import {
   ScrollView,
   Dimensions,
   Alert,
-  Linking,
+  Modal,
 } from "react-native";
 import React, { useEffect, useState } from "react";
+import { WebView } from "react-native-webview";
 import premiumService from "../../services/premiumService";
 import { useNavigation } from "@react-navigation/native";
 
@@ -18,6 +19,10 @@ export default function SubscriptionScreen() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showWebView, setShowWebView] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState("");
+  const [orderCode, setOrderCode] = useState("");
+  const [webViewLoading, setWebViewLoading] = useState(true);
 
   // Fetch subscriptions from the API when the component mounts
   const navigation = useNavigation();
@@ -49,13 +54,9 @@ export default function SubscriptionScreen() {
     setLoading(true);
     try {
       const response = await premiumService.buyPremium({ id: selectedPackage });
-      Linking.openURL(response.data.checkoutUrl);
-      navigation.navigate("Trang chủ", {
-        screen: "OrderSuccessScreen",
-        params: {
-          orderCode: response.data.orderCode,
-        },
-      });
+      setCheckoutUrl(response.data.checkoutUrl);
+      setOrderCode(response.data.orderCode);
+      setShowWebView(true);
     } catch (error) {
       console.error("Error upgrading:", error);
       Alert.alert("Lỗi", "Không thể nâng cấp gói dịch vụ. Vui lòng thử lại.");
@@ -151,6 +152,90 @@ export default function SubscriptionScreen() {
     return defaultFeatures.slice(0, 3); // Show fewer features for basic packages
   };
 
+  const handleWebViewNavigationStateChange = (navState) => {
+    const { url } = navState;
+
+    console.log("WebView navigation URL:", url);
+
+    // Check if the URL indicates a successful payment or completion
+    // You can customize these conditions based on your payment provider's redirect URLs
+    if (
+      url.includes("success") ||
+      url.includes("completed") ||
+      url.includes("thank-you") ||
+      url.includes("payment-success") ||
+      url.includes("order-success")
+    ) {
+      handlePaymentSuccess();
+    } else if (
+      url.includes("cancel") ||
+      url.includes("cancelled") ||
+      url.includes("failed") ||
+      url.includes("failure") ||
+      url.includes("error") ||
+      url.includes("payment-failed")
+    ) {
+      handlePaymentCancel();
+    }
+
+    // Optional: Handle deep link back navigation to your app
+    if (url.includes("gymradar://") || url.includes("your-app-scheme://")) {
+      // Parse the URL to determine success or failure
+      if (url.includes("success")) {
+        handlePaymentSuccess();
+      } else {
+        handlePaymentCancel();
+      }
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowWebView(false);
+    navigation.navigate("Trang chủ", {
+      screen: "OrderSuccessScreen",
+      params: {
+        orderCode: orderCode,
+      },
+    });
+  };
+
+  const handlePaymentCancel = () => {
+    setShowWebView(false);
+    Alert.alert("Thông báo", "Thanh toán đã bị hủy hoặc không thành công");
+  };
+
+  const closeWebView = () => {
+    setShowWebView(false);
+    setWebViewLoading(true);
+  };
+
+  const handleWebViewLoad = () => {
+    setWebViewLoading(false);
+  };
+
+  const handleWebViewError = (syntheticEvent) => {
+    const { nativeEvent } = syntheticEvent;
+    console.warn("WebView error: ", nativeEvent);
+    Alert.alert(
+      "Lỗi tải trang",
+      "Không thể tải trang thanh toán. Vui lòng thử lại.",
+      [
+        {
+          text: "Thử lại",
+          onPress: () => {
+            setWebViewLoading(true);
+            // Force reload by setting the URL again
+            setCheckoutUrl(checkoutUrl + "?reload=" + Date.now());
+          },
+        },
+        {
+          text: "Đóng",
+          onPress: closeWebView,
+        },
+      ]
+    );
+  };
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
@@ -223,6 +308,43 @@ export default function SubscriptionScreen() {
       <Text style={styles.footerText}>
         Bạn có thể hủy đăng ký bất cứ lúc nào trong cài đặt tài khoản
       </Text>
+
+      {/* WebView Modal for checkout */}
+      <Modal
+        visible={showWebView}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={closeWebView}
+      >
+        <View style={styles.webViewContainer}>
+          <View style={styles.webViewHeader}>
+            <Text style={styles.webViewTitle}>Thanh toán</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={closeWebView}>
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <WebView
+            source={{ uri: checkoutUrl }}
+            style={styles.webView}
+            onNavigationStateChange={handleWebViewNavigationStateChange}
+            onLoad={handleWebViewLoad}
+            onError={handleWebViewError}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            scalesPageToFit={true}
+            mixedContentMode="always"
+            allowsBackForwardNavigationGestures={true}
+            onLoadStart={() => setWebViewLoading(true)}
+            onLoadEnd={() => setWebViewLoading(false)}
+            renderLoading={() => (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Đang tải...</Text>
+              </View>
+            )}
+          />
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -469,5 +591,51 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     lineHeight: 20,
+  },
+  // WebView styles
+  webViewContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  webViewHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: "#ED2A46",
+    paddingTop: 50, // Account for status bar
+  },
+  webViewTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  closeButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 20,
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  webView: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#666666",
+    marginTop: 10,
   },
 });
