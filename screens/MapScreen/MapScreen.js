@@ -12,13 +12,17 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapView, { Callout, Marker, Circle } from "react-native-maps";
 import { StyleSheet } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Location from "expo-location";
 import gymService from "../../services/gymService";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useNavigation } from "@react-navigation/native";
 import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import {
+  getUserLocation,
+  refreshUserLocation,
+  calculateDistance,
+  isValidCoordinate,
+} from "../../utils/locationUtils";
 
 export default function MapScreen({ route }) {
   const [coords, setCoords] = useState(null);
@@ -60,40 +64,6 @@ export default function MapScreen({ route }) {
   }, [targetLatitude, targetLongitude]);
   // Callback for bottom sheet changes
   const handleSheetChanges = useCallback((index) => {}, []);
-
-  // Helper function to validate coordinates
-  const isValidCoordinate = (lat, lng) => {
-    return (
-      lat !== undefined &&
-      lng !== undefined &&
-      !isNaN(lat) &&
-      !isNaN(lng) &&
-      lat >= -90 &&
-      lat <= 90 &&
-      lng >= -180 &&
-      lng <= 180
-    );
-  };
-
-  // Function to calculate distance between two coordinates in kilometers
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Radius of the earth in km
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) *
-        Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in km
-    return distance;
-  };
-
-  const deg2rad = (deg) => {
-    return deg * (Math.PI / 180);
-  };
 
   // Function to filter gyms by distance
   const filterGymsByDistance = () => {
@@ -149,85 +119,25 @@ export default function MapScreen({ route }) {
   }, []);
 
   useEffect(() => {
-    const fetchLocation = async () => {
+    const initializeLocation = async () => {
       try {
-        // First try to get cached location
-        const userLocation = await AsyncStorage.getItem("userLocation");
-        if (userLocation !== null) {
-          const parsed = JSON.parse(userLocation);
-          console.log("📍 Using cached location:", parsed.coords);
-          setCoords(parsed.coords);
-        } else {
-          // If no cached location, request fresh location
-          console.log("🔄 No cached location, requesting fresh location...");
-          await requestFreshLocation();
-        }
-      } catch (error) {
-        console.log("❌ Error reading user location:", error);
-        await requestFreshLocation();
-      }
-    };
-
-    const requestFreshLocation = async () => {
-      try {
-        console.log("🔍 Checking location permissions...");
-        
-        // Check permission status
-        const { status } = await Location.getForegroundPermissionsAsync();
-        console.log("📱 Current permission status:", status);
-
-        if (status !== 'granted') {
-          console.log("🔒 Requesting location permissions...");
-          const { status: newStatus } = await Location.requestForegroundPermissionsAsync();
-          
-          if (newStatus !== 'granted') {
-            Alert.alert(
-              'Location Permission Required',
-              'GymRadar needs your location to show nearby gyms on the map. Please enable location permissions in your device settings.',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { 
-                  text: 'OK', 
-                  onPress: () => console.log('User acknowledged permission requirement')
-                }
-              ]
-            );
-            return;
-          }
-        }
-
-        console.log("📡 Getting current location...");
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-          timeout: 10000,
-          maximumAge: 300000, // 5 minutes
+        const location = await getUserLocation({
+          permissionOptions: {
+            title: "Location Permission Required",
+            message:
+              "GymRadar needs your location to show nearby gyms on the map. Please enable location permissions in your device settings.",
+          },
         });
 
-        console.log("✅ Fresh location obtained:", location.coords);
-        setCoords(location.coords);
-        await AsyncStorage.setItem("userLocation", JSON.stringify(location));
-
-      } catch (error) {
-        console.error("❌ Error getting fresh location:", error);
-        
-        // Try to get last known location as fallback
-        try {
-          const lastKnownLocation = await Location.getLastKnownPositionAsync({
-            maxAge: 600000, // 10 minutes
-          });
-          
-          if (lastKnownLocation) {
-            console.log("📍 Using last known location:", lastKnownLocation.coords);
-            setCoords(lastKnownLocation.coords);
-            await AsyncStorage.setItem("userLocation", JSON.stringify(lastKnownLocation));
-          }
-        } catch (fallbackError) {
-          console.error("❌ Error getting last known location:", fallbackError);
+        if (location) {
+          setCoords(location.coords);
         }
+      } catch (error) {
+        console.error("❌ Error initializing location:", error);
       }
     };
 
-    fetchLocation();
+    initializeLocation();
   }, []);
 
   useEffect(() => {
@@ -437,52 +347,38 @@ export default function MapScreen({ route }) {
       <TouchableOpacity
         style={styles.locationRefreshButton}
         onPress={async () => {
-          try {
-            console.log("🔄 Manually refreshing location...");
-            
-            const { status } = await Location.getForegroundPermissionsAsync();
-            
-            if (status !== 'granted') {
-              const { status: newStatus } = await Location.requestForegroundPermissionsAsync();
-              
-              if (newStatus !== 'granted') {
-                Alert.alert(
-                  'Location Permission Required',
-                  'Please enable location permissions to refresh your location.',
-                  [{ text: 'OK' }]
+          await refreshUserLocation({
+            permissionOptions: {
+              title: "Location Permission Required",
+              message:
+                "Please enable location permissions to refresh your location.",
+            },
+            onSuccess: (location) => {
+              setCoords(location.coords);
+
+              // Animate map to new location
+              if (mapRef.current) {
+                mapRef.current.animateToRegion(
+                  {
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  },
+                  1000
                 );
-                return;
               }
-            }
 
-            const location = await Location.getCurrentPositionAsync({
-              accuracy: Location.Accuracy.High,
-              timeout: 10000,
-            });
-
-            console.log("✅ Location refreshed:", location.coords);
-            setCoords(location.coords);
-            await AsyncStorage.setItem("userLocation", JSON.stringify(location));
-
-            // Animate map to new location
-            if (mapRef.current) {
-              mapRef.current.animateToRegion({
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }, 1000);
-            }
-
-            Alert.alert("Thành công", "Vị trí đã được cập nhật!");
-
-          } catch (error) {
-            console.error("❌ Error refreshing location:", error);
-            Alert.alert(
-              "Lỗi", 
-              "Không thể cập nhật vị trí. Vui lòng kiểm tra kết nối và thử lại."
-            );
-          }
+              Alert.alert("Thành công", "Vị trí đã được cập nhật!");
+            },
+            onError: (error) => {
+              console.error("❌ Error refreshing location:", error);
+              Alert.alert(
+                "Lỗi",
+                "Không thể cập nhật vị trí. Vui lòng kiểm tra kết nối và thử lại."
+              );
+            },
+          });
         }}
       >
         <FontAwesome5 name="location-arrow" size={20} color="#fff" />

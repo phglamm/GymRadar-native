@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, StyleSheet, Alert, Platform } from "react-native";
-import * as Location from "expo-location";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getUserLocation } from "../../utils/locationUtils";
 
 const SplashScreen = ({ navigation }) => {
   const [errorMsg, setErrorMsg] = useState(null);
@@ -27,68 +26,24 @@ const SplashScreen = ({ navigation }) => {
   const requestLocationPermission = async () => {
     try {
       console.log("Requesting location permissions...");
-      
-      // Check current permission status first
-      const { status: existingStatus } = await Location.getForegroundPermissionsAsync();
-      console.log("Current permission status:", existingStatus);
 
-      let finalStatus = existingStatus;
-
-      // Request permission if not already granted
-      if (existingStatus !== 'granted') {
-        console.log("Requesting foreground permissions...");
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        finalStatus = status;
-        console.log("Permission request result:", status);
-        setPermissionRequested(true);
-      }
-
-      if (finalStatus !== 'granted') {
-        setErrorMsg("Permission to access location was denied");
-        console.log("Location permission denied");
-        
-        Alert.alert(
-          "Location Permission Required",
-          "GymRadar needs your location to find gyms near you. Please enable location access in your device settings.",
-          [
-            { 
-              text: "OK", 
-              onPress: () => console.log("User acknowledged permission denial")
-            }
-          ]
-        );
-        return;
-      }
-
-      console.log("Location permission granted, getting current position...");
-      
-      // Get current location
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-        timeout: 10000, // 10 second timeout
-        maximumAge: 60000, // Accept cached location up to 1 minute old
+      const location = await getUserLocation({
+        permissionOptions: {
+          title: "Location Permission Required",
+          message:
+            "GymRadar needs your location to find gyms near you. Please enable location access in your device settings.",
+        },
       });
 
-      await AsyncStorage.setItem("userLocation", JSON.stringify(location));
-      console.log("Location saved:", location);
-      
+      if (location) {
+        console.log("Location obtained successfully:", location.coords);
+      } else {
+        setErrorMsg("Unable to get location");
+        console.log("Failed to get location");
+      }
     } catch (error) {
       console.error("Error getting location:", error);
       setErrorMsg(`Error getting location: ${error.message}`);
-      
-      // Try to get last known location as fallback
-      try {
-        const lastKnownLocation = await Location.getLastKnownPositionAsync({
-          maxAge: 600000, // 10 minutes
-        });
-        
-        if (lastKnownLocation) {
-          await AsyncStorage.setItem("userLocation", JSON.stringify(lastKnownLocation));
-          console.log("Using last known location:", lastKnownLocation);
-        }
-      } catch (fallbackError) {
-        console.error("Error getting last known location:", fallbackError);
-      }
     }
   };
 
