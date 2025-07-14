@@ -7,43 +7,53 @@ import {
   Dimensions,
   Alert,
   Modal,
+  Platform,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { WebView } from "react-native-webview";
-import premiumService from "../../services/premiumService";
 import { useNavigation } from "@react-navigation/native";
+import Purchases from "react-native-purchases";
+import { PaywallFooterContainer } from "react-native-purchases-ui";
 
 const { width } = Dimensions.get("window");
 
 export default function SubscriptionScreen() {
-  const [subscriptions, setSubscriptions] = useState([]);
+  const [offerings, setOfferings] = useState(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showWebView, setShowWebView] = useState(false);
-  const [checkoutUrl, setCheckoutUrl] = useState("");
-  const [orderCode, setOrderCode] = useState("");
-  const [webViewLoading, setWebViewLoading] = useState(true);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
-  // Fetch subscriptions from the API when the component mounts
   const navigation = useNavigation();
-  useEffect(() => {
-    const fetchSubscriptions = async () => {
-      try {
-        // Fetch subscriptions from the API
-        const response = await premiumService.getAllPremium();
-        setSubscriptions(response.data.items || []);
 
-        // Set first subscription as default selected if available
-        if (response.data.items && response.data.items.length > 0) {
-          setSelectedPackage(response.data.items[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching subscriptions:", error);
-        Alert.alert("Lỗi", "Không thể tải danh sách gói dịch vụ");
-      }
-    };
-    fetchSubscriptions();
+  useEffect(() => {
+    fetchOfferings();
+    fetchCustomerInfo();
   }, []);
+
+  const fetchOfferings = async () => {
+    try {
+      const offerings = await Purchases.getOfferings();
+      setOfferings(offerings);
+
+      // Set the first available package as default
+      if (offerings.current && offerings.current.availablePackages.length > 0) {
+        setSelectedPackage(offerings.current.availablePackages[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching offerings:", error);
+      Alert.alert("Lỗi", "Không thể tải danh sách gói dịch vụ");
+    }
+  };
+
+  const fetchCustomerInfo = async () => {
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      setCustomerInfo(customerInfo);
+    } catch (error) {
+      console.error("Error fetching customer info:", error);
+    }
+  };
 
   const handleUpgrade = async () => {
     if (!selectedPackage) {
@@ -53,188 +63,182 @@ export default function SubscriptionScreen() {
 
     setLoading(true);
     try {
-      const response = await premiumService.buyPremium({ id: selectedPackage });
-      setCheckoutUrl(response.data.checkoutUrl);
-      setOrderCode(response.data.orderCode);
-      setShowWebView(true);
+      const purchaseResult = await Purchases.purchasePackage(selectedPackage);
+
+      if (purchaseResult.customerInfo.entitlements.active["premium"]) {
+        // User now has premium access
+        Alert.alert(
+          "Thành công!",
+          "Bạn đã nâng cấp thành công lên gói Premium!",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+      }
     } catch (error) {
-      console.error("Error upgrading:", error);
-      Alert.alert("Lỗi", "Không thể nâng cấp gói dịch vụ. Vui lòng thử lại.");
+      if (error.userCancelled) {
+        console.log("User cancelled the purchase");
+      } else {
+        console.error("Error purchasing package:", error);
+        Alert.alert("Lỗi", "Không thể nâng cấp gói dịch vụ. Vui lòng thử lại.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const formatPrice = (price) => {
+  const handleRestorePurchases = async () => {
+    setIsRestoring(true);
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+
+      if (customerInfo.entitlements.active["premium"]) {
+        Alert.alert(
+          "Khôi phục thành công!",
+          "Gói Premium của bạn đã được khôi phục!",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+      } else {
+        Alert.alert("Thông báo", "Không tìm thấy gói dịch vụ nào để khôi phục");
+      }
+    } catch (error) {
+      console.error("Error restoring purchases:", error);
+      Alert.alert("Lỗi", "Không thể khôi phục gói dịch vụ");
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const formatPrice = (price, currencyCode = "VND") => {
+    if (Platform.OS === "ios") {
+      return price; // iOS already formats the price
+    }
+
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
-      currency: "VND",
+      currency: currencyCode,
     }).format(price);
   };
 
-  const PackageCard = ({
-    id,
-    title,
-    price,
-    description,
-    features,
-    isPopular,
-    isSelected,
-    onSelect,
-  }) => (
-    <TouchableOpacity
-      style={[
-        styles.packageCard,
-        isSelected && styles.selectedCard,
-        isPopular && styles.popularCard,
-      ]}
-      onPress={() => onSelect(id)}
-      activeOpacity={0.8}
-    >
-      {isPopular && (
-        <View style={styles.popularBadge}>
-          <Text style={styles.popularBadgeText}>HOT</Text>
-        </View>
-      )}
+  const getPeriodText = (period) => {
+    switch (period) {
+      case "P1W":
+        return "/tuần";
+      case "P1M":
+        return "/tháng";
+      case "P3M":
+        return "/3 tháng";
+      case "P6M":
+        return "/6 tháng";
+      case "P1Y":
+        return "/năm";
+      default:
+        return "/tháng";
+    }
+  };
 
-      <View style={styles.packageHeader}>
-        <Text style={[styles.packageTitle, isSelected && styles.selectedText]}>
-          {title}
-        </Text>
-        <View style={styles.priceContainer}>
-          <Text style={[styles.price, isSelected && styles.selectedText]}>
-            {formatPrice(price)}
-          </Text>
-          <Text style={[styles.period, isSelected && styles.selectedText]}>
-            /tháng
-          </Text>
-        </View>
-        {description && (
-          <Text style={[styles.description, isSelected && styles.selectedText]}>
-            {description}
-          </Text>
+  const PackageCard = ({ packageItem, isSelected, onSelect }) => {
+    const isPopular = packageItem.packageType === "MONTHLY"; // You can adjust this logic
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.packageCard,
+          isSelected && styles.selectedCard,
+          isPopular && styles.popularCard,
+        ]}
+        onPress={() => onSelect(packageItem)}
+        activeOpacity={0.8}
+      >
+        {isPopular && (
+          <View style={styles.popularBadge}>
+            <Text style={styles.popularBadgeText}>PHỔ BIẾN</Text>
+          </View>
         )}
-      </View>
 
-      <View style={styles.featuresContainer}>
-        {features.map((feature, index) => (
-          <View key={index} style={styles.featureRow}>
-            <Text style={styles.checkmark}>✓</Text>
-            <Text
-              style={[
-                styles.featureText,
-                isSelected && styles.selectedFeatureText,
-              ]}
-            >
-              {feature}
+        <View style={styles.packageHeader}>
+          <Text
+            style={[styles.packageTitle, isSelected && styles.selectedText]}
+          >
+            {packageItem.product.title}
+          </Text>
+          <View style={styles.priceContainer}>
+            <Text style={[styles.price, isSelected && styles.selectedText]}>
+              {formatPrice(
+                packageItem.product.price,
+                packageItem.product.currencyCode
+              )}
+            </Text>
+            <Text style={[styles.period, isSelected && styles.selectedText]}>
+              {getPeriodText(packageItem.product.subscriptionPeriod)}
             </Text>
           </View>
-        ))}
-      </View>
-    </TouchableOpacity>
-  );
+          {packageItem.product.description && (
+            <Text
+              style={[styles.description, isSelected && styles.selectedText]}
+            >
+              {packageItem.product.description}
+            </Text>
+          )}
+        </View>
 
-  // Default features for premium packages
-  const getDefaultFeatures = (packageName) => {
-    const defaultFeatures = [
+        <View style={styles.featuresContainer}>
+          {getDefaultFeatures().map((feature, index) => (
+            <View key={index} style={styles.featureRow}>
+              <Text style={styles.checkmark}>✓</Text>
+              <Text
+                style={[
+                  styles.featureText,
+                  isSelected && styles.selectedFeatureText,
+                ]}
+              >
+                {feature}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const getDefaultFeatures = () => {
+    return [
       "Chat với PT AI: Không giới hạn",
       "Truy cập tất cả tính năng",
       "Hỗ trợ ưu tiên 24/7",
       "Tính năng nâng cao",
       "Không quảng cáo",
     ];
-
-    // You can customize features based on package name or price
-    if (packageName.toLowerCase().includes("premium")) {
-      return defaultFeatures;
-    }
-
-    return defaultFeatures.slice(0, 3); // Show fewer features for basic packages
   };
 
-  const handleWebViewNavigationStateChange = (navState) => {
-    const { url } = navState;
-
-    console.log("WebView navigation URL:", url);
-
-    // Check if the URL indicates a successful payment or completion
-    // You can customize these conditions based on your payment provider's redirect URLs
-    if (
-      url.includes("success") ||
-      url.includes("completed") ||
-      url.includes("thank-you") ||
-      url.includes("payment-success") ||
-      url.includes("order-success")
-    ) {
-      handlePaymentSuccess();
-    } else if (
-      url.includes("cancel") ||
-      url.includes("cancelled") ||
-      url.includes("failed") ||
-      url.includes("failure") ||
-      url.includes("error") ||
-      url.includes("payment-failed")
-    ) {
-      handlePaymentCancel();
-    }
-
-    // Optional: Handle deep link back navigation to your app
-    if (url.includes("gymradar://") || url.includes("your-app-scheme://")) {
-      // Parse the URL to determine success or failure
-      if (url.includes("success")) {
-        handlePaymentSuccess();
-      } else {
-        handlePaymentCancel();
-      }
-    }
+  const isUserPremium = () => {
+    return customerInfo?.entitlements.active["premium"] !== undefined;
   };
 
-  const handlePaymentSuccess = () => {
-    setShowWebView(false);
-    navigation.navigate("Trang chủ", {
-      screen: "OrderSuccessScreen",
-      params: {
-        orderCode: orderCode,
-      },
-    });
-  };
-
-  const handlePaymentCancel = () => {
-    setShowWebView(false);
-    Alert.alert("Thông báo", "Thanh toán đã bị hủy hoặc không thành công");
-  };
-
-  const closeWebView = () => {
-    setShowWebView(false);
-    setWebViewLoading(true);
-  };
-
-  const handleWebViewLoad = () => {
-    setWebViewLoading(false);
-  };
-
-  const handleWebViewError = (syntheticEvent) => {
-    const { nativeEvent } = syntheticEvent;
-    console.warn("WebView error: ", nativeEvent);
-    Alert.alert(
-      "Lỗi tải trang",
-      "Không thể tải trang thanh toán. Vui lòng thử lại.",
-      [
-        {
-          text: "Thử lại",
-          onPress: () => {
-            setWebViewLoading(true);
-            // Force reload by setting the URL again
-            setCheckoutUrl(checkoutUrl + "?reload=" + Date.now());
-          },
-        },
-        {
-          text: "Đóng",
-          onPress: closeWebView,
-        },
-      ]
+  if (isUserPremium()) {
+    return (
+      <View style={styles.premiumContainer}>
+        <Text style={styles.premiumTitle}>Bạn đã là thành viên Premium!</Text>
+        <Text style={styles.premiumSubtitle}>
+          Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi
+        </Text>
+        <TouchableOpacity
+          style={styles.goBackButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.goBackButtonText}>Quay lại</Text>
+        </TouchableOpacity>
+      </View>
     );
-  };
+  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -246,17 +250,12 @@ export default function SubscriptionScreen() {
       </View>
 
       <View style={styles.packagesContainer}>
-        {subscriptions.map((subscription, index) => (
+        {offerings?.current?.availablePackages?.map((packageItem, index) => (
           <PackageCard
-            key={subscription.id}
-            id={subscription.id}
-            title={subscription.name}
-            price={subscription.price}
-            description={subscription.description}
-            isPopular={index === 0} // Mark first package as popular
-            isSelected={selectedPackage === subscription.id}
+            key={packageItem.identifier}
+            packageItem={packageItem}
+            isSelected={selectedPackage?.identifier === packageItem.identifier}
             onSelect={setSelectedPackage}
-            features={getDefaultFeatures(subscription.name)}
           />
         ))}
       </View>
@@ -305,45 +304,49 @@ export default function SubscriptionScreen() {
         </Text>
       </TouchableOpacity>
 
+      <TouchableOpacity
+        style={styles.restoreButton}
+        onPress={handleRestorePurchases}
+        disabled={isRestoring}
+      >
+        <Text style={styles.restoreButtonText}>
+          {isRestoring ? "ĐANG KHÔI PHỤC..." : "KHÔI PHỤC GÓI DỊCH VỤ"}
+        </Text>
+      </TouchableOpacity>
+
       <Text style={styles.footerText}>
         Bạn có thể hủy đăng ký bất cứ lúc nào trong cài đặt tài khoản
       </Text>
 
-      {/* WebView Modal for checkout */}
+      {/* RevenueCat Paywall UI Modal */}
       <Modal
-        visible={showWebView}
+        visible={showPaywall}
         animationType="slide"
         presentationStyle="fullScreen"
-        onRequestClose={closeWebView}
+        onRequestClose={() => setShowPaywall(false)}
       >
-        <View style={styles.webViewContainer}>
-          <View style={styles.webViewHeader}>
-            <Text style={styles.webViewTitle}>Thanh toán</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={closeWebView}>
-              <Text style={styles.closeButtonText}>✕</Text>
-            </TouchableOpacity>
-          </View>
-          <WebView
-            source={{ uri: checkoutUrl }}
-            style={styles.webView}
-            onNavigationStateChange={handleWebViewNavigationStateChange}
-            onLoad={handleWebViewLoad}
-            onError={handleWebViewError}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            startInLoadingState={true}
-            scalesPageToFit={true}
-            mixedContentMode="always"
-            allowsBackForwardNavigationGestures={true}
-            onLoadStart={() => setWebViewLoading(true)}
-            onLoadEnd={() => setWebViewLoading(false)}
-            renderLoading={() => (
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Đang tải...</Text>
-              </View>
-            )}
-          />
-        </View>
+        <PaywallFooterContainer
+          offering={offerings?.current}
+          onPurchaseStarted={() => setLoading(true)}
+          onPurchaseCompleted={() => {
+            setLoading(false);
+            setShowPaywall(false);
+            fetchCustomerInfo();
+          }}
+          onPurchaseError={() => {
+            setLoading(false);
+            Alert.alert("Lỗi", "Không thể hoàn tất thanh toán");
+          }}
+          onRestoreStarted={() => setIsRestoring(true)}
+          onRestoreCompleted={() => {
+            setIsRestoring(false);
+            fetchCustomerInfo();
+          }}
+          onRestoreError={() => {
+            setIsRestoring(false);
+            Alert.alert("Lỗi", "Không thể khôi phục gói dịch vụ");
+          }}
+        />
       </Modal>
     </ScrollView>
   );
@@ -584,6 +587,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  restoreButton: {
+    backgroundColor: "transparent",
+    marginHorizontal: 20,
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ED2A46",
+  },
+  restoreButtonText: {
+    color: "#ED2A46",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   footerText: {
     textAlign: "center",
     color: "#666666",
@@ -592,50 +610,35 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     lineHeight: 20,
   },
-  // WebView styles
-  webViewContainer: {
+  premiumContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  webViewHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: "#ED2A46",
-    paddingTop: 50, // Account for status bar
   },
-  webViewTitle: {
-    fontSize: 18,
+  premiumTitle: {
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: "#ED2A46",
+    textAlign: "center",
+    marginBottom: 16,
   },
-  closeButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 20,
-    width: 32,
-    height: 32,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeButtonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  webView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  loadingText: {
+  premiumSubtitle: {
     fontSize: 16,
     color: "#666666",
-    marginTop: 10,
+    textAlign: "center",
+    marginBottom: 32,
+  },
+  goBackButton: {
+    backgroundColor: "#ED2A46",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  goBackButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
