@@ -14,17 +14,23 @@ import {
   Alert,
   Dimensions,
   StatusBar,
+  ActionSheetIOS,
+  Platform,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
+import * as ImagePicker from "expo-image-picker";
+import { useAvatar } from "../../context/AvatarContext";
 import accountService from "../../services/accountService";
 
 const { width } = Dimensions.get("window");
 
 const AccountScreen = () => {
   const navigation = useNavigation();
+  const { updateAvatar, getAvatarUrl, syncAvatarFromUserData } = useAvatar(); // Use avatar context
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Original profile from API
   const [userProfile, setUserProfile] = useState({});
@@ -45,6 +51,9 @@ const AccountScreen = () => {
     try {
       const response = await accountService.getProfile();
       setUserProfile(response.data);
+
+      // Sync avatar with context
+      await syncAvatarFromUserData(response.data);
 
       // Initialize form data with user profile
       setFormData({
@@ -67,29 +76,174 @@ const AccountScreen = () => {
     }));
   };
 
-  const handleSave = async () => {
-    if (submitting) return;
+  const showImagePicker = () => {
+    const options = ["Chọn từ thư viện", "Chụp ảnh mới", "Hủy"];
+    const cancelButtonIndex = 2;
 
-    setSubmitting(true);
-    try {
-      // Add your update profile API call here
-      Alert.alert("Thành công", "Cập nhật thông tin thành công");
-      setEditMode(false);
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể cập nhật thông tin");
-    } finally {
-      setSubmitting(false);
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 0) {
+            selectImageFromLibrary();
+          } else if (buttonIndex === 1) {
+            takePhotoWithCamera();
+          }
+        }
+      );
+    } else {
+      // For Android, show Alert
+      Alert.alert("Chọn ảnh đại diện", "Bạn muốn chọn ảnh từ đâu?", [
+        { text: "Thư viện", onPress: selectImageFromLibrary },
+        { text: "Máy ảnh", onPress: takePhotoWithCamera },
+        { text: "Hủy", style: "cancel" },
+      ]);
     }
   };
 
-  const cancelEdit = () => {
-    // Reset form data to original values
-    setFormData({
-      fullName: userProfile.fullName || "",
-      email: userProfile.email || "",
-      phone: userProfile.phone || "",
-    });
-    setEditMode(false);
+  const selectImageFromLibrary = async () => {
+    try {
+      // Request permission to access media library
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Quyền truy cập",
+          "Cần cấp quyền truy cập thư viện ảnh để chọn ảnh đại diện"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        uploadAvatar(result.assets[0]);
+      }
+    } catch (error) {
+      console.error("Error selecting image from library:", error);
+      Alert.alert("Lỗi", "Không thể mở thư viện ảnh");
+    }
+  };
+
+  const takePhotoWithCamera = async () => {
+    try {
+      // Request permission to access camera
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Quyền truy cập",
+          "Cần cấp quyền truy cập máy ảnh để chụp ảnh đại diện"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        uploadAvatar(result.assets[0]);
+      }
+    } catch (error) {
+      console.error("Error taking photo with camera:", error);
+      Alert.alert("Lỗi", "Không thể mở máy ảnh");
+    }
+  };
+
+  const uploadAvatar = async (imageAsset) => {
+    if (!imageAsset.uri) return;
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+
+      // Extract file extension from URI
+      const uriParts = imageAsset.uri.split(".");
+      const fileType = uriParts[uriParts.length - 1];
+
+      formData.append("file", {
+        uri: imageAsset.uri,
+        name: `avatar.${fileType}`,
+        type: `image/${fileType}`,
+      });
+
+      let response;
+      try {
+        // Try primary upload endpoint
+        response = await accountService.uploadAvatar(formData);
+
+        // Get the new avatar URL from response
+        const newAvatarUrl = response.data?.avatar || response.avatar;
+
+        if (newAvatarUrl) {
+          console.log(
+            "📸 Avatar upload successful, updating across app:",
+            newAvatarUrl
+          );
+
+          // Update avatar across the entire app using context
+          await updateAvatar(newAvatarUrl);
+
+          // Update local user profile state
+          setUserProfile((prev) => ({
+            ...prev,
+            avatar: newAvatarUrl,
+          }));
+        }
+      } catch (primaryError) {
+        console.log("Primary upload failed, trying alternative endpoint...");
+        // Try alternative endpoint
+        response = await accountService.updateAvatar(formData);
+
+        // Get the new avatar URL from alternative response
+        const newAvatarUrl = response.data?.avatar || response.avatar;
+
+        if (newAvatarUrl) {
+          // Update avatar across the entire app using context
+          await updateAvatar(newAvatarUrl);
+
+          // Update local user profile state
+          setUserProfile((prev) => ({
+            ...prev,
+            avatar: newAvatarUrl,
+          }));
+        }
+      }
+
+      Alert.alert(
+        "Thành công",
+        "Cập nhật ảnh đại diện thành công! Avatar đã được cập nhật "
+      );
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+
+      // Handle different types of errors
+      let errorMessage = "Không thể cập nhật ảnh đại diện";
+      if (error.response?.status === 413) {
+        errorMessage = "Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn";
+      } else if (error.response?.status === 400) {
+        errorMessage = "Định dạng ảnh không được hỗ trợ";
+      } else if (error.message === "Network Error") {
+        errorMessage = "Lỗi kết nối mạng. Vui lòng thử lại";
+      }
+
+      Alert.alert("Lỗi", errorMessage);
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   if (loading) {
@@ -116,12 +270,25 @@ const AccountScreen = () => {
           <View style={styles.avatarContainer}>
             <Image
               source={{
-                uri: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+                uri: userProfile.avatar || getAvatarUrl(),
               }}
-              style={styles.avatar}
+              style={[styles.avatar, uploadingAvatar && styles.avatarUploading]}
             />
-            <TouchableOpacity style={styles.cameraButton}>
-              <Icon name="camera" size={16} color="#FFFFFF" />
+            {uploadingAvatar && (
+              <View style={styles.avatarLoadingOverlay}>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+              </View>
+            )}
+            <TouchableOpacity
+              style={styles.cameraButton}
+              onPress={showImagePicker}
+              disabled={uploadingAvatar}
+            >
+              {uploadingAvatar ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Icon name="camera" size={16} color="#FFFFFF" />
+              )}
             </TouchableOpacity>
           </View>
 
@@ -293,6 +460,20 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 4,
     borderColor: "#FFFFFF",
+  },
+  avatarUploading: {
+    opacity: 0.7,
+  },
+  avatarLoadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 50,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   cameraButton: {
     position: "absolute",

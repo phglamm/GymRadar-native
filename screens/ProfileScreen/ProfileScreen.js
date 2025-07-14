@@ -15,9 +15,11 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { useAvatar } from "../../context/AvatarContext";
 import accountService from "./../../services/accountService";
 
 const ProfileScreen = () => {
+  const { getAvatarUrl } = useAvatar(); // Use avatar context
   const [userProfile, setUserProfile] = useState({
     fullName: "",
     email: "",
@@ -236,7 +238,7 @@ const ProfileScreen = () => {
             <View style={styles.avatarContainer}>
               <Image
                 source={{
-                  uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNL_ZnOTpXSvhf1UaK7beHey2BX42U6solRA&s",
+                  uri: userProfile.avatar || getAvatarUrl(),
                 }}
                 style={styles.avatar}
               />

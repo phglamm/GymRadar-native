@@ -137,6 +137,11 @@ export default function Navigator() {
               authResult.user
             );
             await AsyncStorage.setItem("user", JSON.stringify(authResult.user));
+
+            // Refresh avatar context when user data is updated
+            if (global.refreshAvatar) {
+              global.refreshAvatar();
+            }
           } else {
             setIsAuthenticated(false);
             setUser(null);

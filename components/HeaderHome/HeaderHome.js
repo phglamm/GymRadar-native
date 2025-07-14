@@ -4,12 +4,14 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { useCart } from "../../context/CartContext";
+import { useAvatar } from "../../context/AvatarContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
@@ -18,8 +20,8 @@ export default function HeaderHome({ user }) {
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
   const { cart, getCartCount } = useCart();
+  const { getAvatarUrl } = useAvatar(); // Use avatar context
   const [weather, setWeather] = useState({});
-
   const [coords, setCoords] = useState(null);
   const fetchWeather = async () => {
     setLoading(true);
@@ -113,9 +115,15 @@ export default function HeaderHome({ user }) {
 
             <View style={styles.userInfo}>
               <View style={styles.avatarContainer}>
-                <Text style={styles.avatarText}>
+                {/* <Text style={styles.avatarText}>
                   {(user?.fullName || "U").charAt(0).toUpperCase()}
-                </Text>
+                </Text> */}
+                <Image
+                  source={{
+                    uri: getAvatarUrl(),
+                  }}
+                  style={[styles.avatar]}
+                />
               </View>
               <Text style={styles.userName}>
                 {user?.fullName || "Người dùng"}
@@ -301,11 +309,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "rgba(255,255,255,0.3)",
   },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "white",
-  },
+  // avatarText: {
+  //   fontSize: 18,
+  //   fontWeight: "bold",
+  //   color: "white",
+  // },
   actionSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -381,5 +389,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF3B30",
     borderWidth: 1,
     borderColor: "white",
+  },
+  avatar: {
+    width: 45,
+    height: 45,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
   },
 });

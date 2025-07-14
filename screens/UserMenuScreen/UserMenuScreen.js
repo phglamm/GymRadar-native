@@ -14,6 +14,7 @@ import {
 import { TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useCart } from "../../context/CartContext";
+import { useAvatar } from "../../context/AvatarContext";
 import authService from "../../services/authService";
 import DeleteAccountBottomSheet from "../../components/DeleteAccountBottomSheet/DeleteAccountBottomSheet";
 
@@ -21,6 +22,7 @@ export default function UserMenuScreen() {
   const [user, setUser] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { clearCart } = useCart(); // Assuming useCart is defined in your context or service
+  const { getAvatarUrl, clearAvatar } = useAvatar(); // Use avatar context
   useEffect(() => {
     const fetchUser = async () => {
       const userData = await AsyncStorage.getItem("user");
@@ -128,6 +130,7 @@ export default function UserMenuScreen() {
 
                   if (logoutSuccess) {
                     clearCart(); // Clear cart data
+                    clearAvatar(); // Clear avatar data
                     if (global.updateNavigationUser) {
                       global.updateNavigationUser();
                     }
@@ -191,11 +194,7 @@ export default function UserMenuScreen() {
             <View style={styles.avatarContainer}>
               <Image
                 source={{
-                  uri: `${
-                    user && user.avatar
-                      ? user.avatar
-                      : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNL_ZnOTpXSvhf1UaK7beHey2BX42U6solRA&s"
-                  }`,
+                  uri: getAvatarUrl() || user?.avatar,
                 }}
                 style={styles.userAvatar}
               />
