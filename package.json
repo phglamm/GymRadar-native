@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~5.0.4",
     "@gorhom/bottom-sheet": "^5.1.4",
     "@microsoft/signalr": "^8.0.7",
     "@react-native-async-storage/async-storage": "^2.1.2",
@@ -22,11 +23,17 @@
     "axios": "^1.9.0",
     "date-fns": "^4.1.0",
     "expo": "53.0.15",
+    "expo-constants": "~17.1.6",
+    "expo-dev-client": "~5.2.4",
+    "expo-iap": "^2.5.2",
     "expo-linear-gradient": "~14.1.5",
+    "expo-linking": "~7.1.6",
     "expo-location": "~18.1.6",
+    "expo-notifications": "~0.31.4",
     "expo-status-bar": "~2.2.3",
     "gymradar-native": "file:",
     "react": "19.0.0",
+    "react-dom": "19.0.0",
     "react-native": "0.79.4",
     "react-native-geolocation-service": "^5.3.1",
     "react-native-gesture-handler": "~2.24.0",
@@ -36,6 +43,8 @@
     "react-native-pager-view": "6.7.1",
     "react-native-paper": "^5.14.1",
     "react-native-permissions": "^5.4.0",
+    "react-native-purchases": "^8.11.9",
+    "react-native-purchases-ui": "^8.11.9",
     "react-native-reanimated": "~3.17.4",
     "react-native-reanimated-carousel": "^4.0.2",
     "react-native-safe-area-context": "^5.4.0",
@@ -44,15 +53,9 @@
     "react-native-swiper": "^1.6.0",
     "react-native-toast-message": "^2.3.0",
     "react-native-vector-icons": "^10.2.0",
-    "reanimated-bottom-sheet": "^1.0.0-alpha.22",
-    "expo-linking": "~7.1.6",
-    "expo-constants": "~17.1.6",
-    "expo-dev-client": "~5.2.2",
-    "react-dom": "19.0.0",
     "react-native-web": "^0.20.0",
-    "@expo/metro-runtime": "~5.0.4",
     "react-native-webview": "13.13.5",
-    "expo-notifications": "~0.31.4"
+    "reanimated-bottom-sheet": "^1.0.0-alpha.22"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

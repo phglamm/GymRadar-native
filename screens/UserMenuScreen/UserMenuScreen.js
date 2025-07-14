@@ -61,12 +61,12 @@ export default function UserMenuScreen() {
   if (user && user.role === "USER") {
     menuItems = [
       ...menuItems,
-      {
-        icon: <Ionicons name="time-outline" size={28} color="#ED2A46" />,
-        label: "Nâng Cấp Gói",
-        navigation: "SubscriptionScreen",
-        category: "services",
-      },
+      // {
+      //   icon: <Ionicons name="time-outline" size={28} color="#ED2A46" />,
+      //   label: "Nâng Cấp Gói",
+      //   navigation: "SubscriptionScreen",
+      //   category: "services",
+      // },
       {
         icon: <Ionicons name="ticket-outline" size={28} color="#ED2A46" />,
         label: "Ưu Đãi",
