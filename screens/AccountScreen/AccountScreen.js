@@ -382,7 +382,7 @@ const AccountScreen = () => {
               <Icon name="chevron-right" size={16} color="#999" />
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.actionCard}
               onPress={() => navigation.navigate("SubscriptionScreen")}
             >
@@ -398,7 +398,7 @@ const AccountScreen = () => {
                 </Text>
               </View>
               <Icon name="chevron-right" size={16} color="#999" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
               style={styles.actionCard}

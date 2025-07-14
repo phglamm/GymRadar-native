@@ -551,7 +551,7 @@ export default function Navigator() {
             },
           }}
         />
-        <Stack.Screen
+        {/* <Stack.Screen
           name="SubscriptionScreen"
           component={SubscriptionScreen}
           options={{
@@ -564,7 +564,7 @@ export default function Navigator() {
               color: "#ED2A46",
             },
           }}
-        />
+        /> */}
         <Stack.Screen
           name="TransactionHistoryScreen"
           component={TransactionHistoryScreen}
