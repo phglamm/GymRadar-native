@@ -47,7 +47,7 @@ const authService = {
   // Logout method to clear stored data
   logout: async () => {
     try {
-      await AsyncStorage.multiRemove(["token", "user"]);
+      await AsyncStorage.multiRemove(["token", "user", "userLocation"]);
       return true;
     } catch (error) {
       console.error("Logout error:", error);

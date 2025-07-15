@@ -53,6 +53,7 @@ export default function LoginScreen() {
           role: response.data.role,
         };
         await AsyncStorage.setItem("user", JSON.stringify(user));
+        await AsyncStorage.setItem("userAvatar", response.data.avatar);
 
         // Update navigation state - this will automatically redirect to MainApp
         if (global.updateNavigationUser) {
