@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import * as ImagePicker from "expo-image-picker";
+import * as Device from "expo-device";
 import { useAvatar } from "../../context/AvatarContext";
 import accountService from "../../services/accountService";
 
@@ -136,6 +137,15 @@ const AccountScreen = () => {
 
   const takePhotoWithCamera = async () => {
     try {
+      // Check if running on simulator
+      if (!Device.isDevice) {
+        Alert.alert(
+          "Máy ảnh không khả dụng",
+          "Máy ảnh không hoạt động trên simulator. Vui lòng sử dụng thiết bị thật hoặc chọn ảnh từ thư viện."
+        );
+        return;
+      }
+
       // Request permission to access camera
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -159,7 +169,19 @@ const AccountScreen = () => {
       }
     } catch (error) {
       console.error("Error taking photo with camera:", error);
-      Alert.alert("Lỗi", "Không thể mở máy ảnh");
+
+      // Check for specific camera errors
+      if (
+        error.message.includes("Camera not available") ||
+        error.message.includes("simulator")
+      ) {
+        Alert.alert(
+          "Máy ảnh không khả dụng",
+          "Máy ảnh không hoạt động trên simulator. Vui lòng sử dụng thiết bị thật hoặc chọn ảnh từ thư viện."
+        );
+      } else {
+        Alert.alert("Lỗi", "Không thể mở máy ảnh");
+      }
     }
   };
 
