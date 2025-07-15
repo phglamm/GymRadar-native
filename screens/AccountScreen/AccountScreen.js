@@ -284,11 +284,7 @@ const AccountScreen = () => {
               onPress={showImagePicker}
               disabled={uploadingAvatar}
             >
-              {uploadingAvatar ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Icon name="camera" size={16} color="#FFFFFF" />
-              )}
+              <Icon name="camera" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 
