@@ -20,7 +20,8 @@
         "NSLocationWhenInUseUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map.",
         "NSLocationUsageDescription": "GymRadar needs your location to find gyms near you and show them on the map.",
-        "NSPhotoLibraryUsageDescription": "GymRadar needs access to your photo library to allow you to upload images for your profile and gym photos."
+        "NSPhotoLibraryUsageDescription": "GymRadar needs access to your photo library to allow you to upload images for your profile and gym photos.",
+        "NSCameraUsageDescription": "GymRadar needs access to your camera to allow you to take photos for your profile and gym photos."
       }
     },
     "android": {
@@ -30,6 +31,13 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
       "config": {
         "googleMaps": {
           "apiKey": "process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY"
@@ -46,7 +54,14 @@
     },
     "owner": "lamphong1507",
     "plugins": [
-      "expo-iap"
+      "expo-iap",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "GymRadar needs access to your photo library to allow you to upload images for your profile and gym photos.",
+          "cameraPermission": "GymRadar needs access to your camera to allow you to take photos for your profile and gym photos."
+        }
+      ]
     ]
   }
 }

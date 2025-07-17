@@ -29,7 +29,6 @@ const AccountScreen = () => {
   const navigation = useNavigation();
   const { updateAvatar, getAvatarUrl, syncAvatarFromUserData } = useAvatar(); // Use avatar context
   const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
@@ -78,6 +77,11 @@ const AccountScreen = () => {
   };
 
   const showImagePicker = () => {
+    // Prevent multiple calls if already uploading
+    if (uploadingAvatar) {
+      return;
+    }
+
     const options = ["Chọn từ thư viện", "Chụp ảnh mới", "Hủy"];
     const cancelButtonIndex = 2;
 
@@ -114,7 +118,21 @@ const AccountScreen = () => {
       if (status !== "granted") {
         Alert.alert(
           "Quyền truy cập",
-          "Cần cấp quyền truy cập thư viện ảnh để chọn ảnh đại diện"
+          "Cần cấp quyền truy cập thư viện ảnh để chọn ảnh đại diện",
+          [
+            { text: "Hủy", style: "cancel" },
+            {
+              text: "Cài đặt",
+              onPress: () => {
+                if (Platform.OS === "ios") {
+                  Alert.alert(
+                    "Hướng dẫn",
+                    "Vào Cài đặt > GymRadar > Ảnh để cấp quyền"
+                  );
+                }
+              },
+            },
+          ]
         );
         return;
       }
@@ -124,14 +142,26 @@ const AccountScreen = () => {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        exif: false, // Disable EXIF data to reduce potential issues
       });
 
-      if (!result.canceled && result.assets[0]) {
+      if (!result.canceled && result.assets && result.assets[0]) {
         uploadAvatar(result.assets[0]);
       }
     } catch (error) {
       console.error("Error selecting image from library:", error);
-      Alert.alert("Lỗi", "Không thể mở thư viện ảnh");
+
+      let errorMessage = "Không thể mở thư viện ảnh";
+
+      if (error.message?.includes("Permission")) {
+        errorMessage =
+          "Không có quyền truy cập thư viện ảnh. Vui lòng cấp quyền trong Cài đặt.";
+      } else if (error.message?.includes("User cancelled")) {
+        // Don't show error for user cancellation
+        return;
+      }
+
+      Alert.alert("Lỗi", errorMessage);
     }
   };
 
@@ -146,47 +176,94 @@ const AccountScreen = () => {
         return;
       }
 
+      // Check camera availability first
+      const cameraAvailable = await ImagePicker.getCameraPermissionsAsync();
+
       // Request permission to access camera
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
       if (status !== "granted") {
         Alert.alert(
           "Quyền truy cập",
-          "Cần cấp quyền truy cập máy ảnh để chụp ảnh đại diện"
+          "Cần cấp quyền truy cập máy ảnh để chụp ảnh đại diện",
+          [
+            { text: "Hủy", style: "cancel" },
+            {
+              text: "Cài đặt",
+              onPress: () => {
+                // On iOS, guide user to settings
+                if (Platform.OS === "ios") {
+                  Alert.alert(
+                    "Hướng dẫn",
+                    "Vào Cài đặt > GymRadar > Máy ảnh để cấp quyền"
+                  );
+                }
+              },
+            },
+          ]
         );
         return;
       }
 
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
+      // Additional check for camera availability on device
+      try {
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+          exif: false, // Disable EXIF data to reduce potential issues
+        });
 
-      if (!result.canceled && result.assets[0]) {
-        uploadAvatar(result.assets[0]);
+        if (!result.canceled && result.assets && result.assets[0]) {
+          uploadAvatar(result.assets[0]);
+        }
+      } catch (cameraError) {
+        console.error("Camera launch error:", cameraError);
+
+        // Handle specific camera launch errors
+        if (
+          cameraError.message?.includes("Camera not available") ||
+          cameraError.message?.includes("No camera available")
+        ) {
+          Alert.alert(
+            "Máy ảnh không khả dụng",
+            "Không thể truy cập máy ảnh. Vui lòng thử lại hoặc chọn ảnh từ thư viện."
+          );
+        } else {
+          throw cameraError; // Re-throw to be caught by outer catch
+        }
       }
     } catch (error) {
       console.error("Error taking photo with camera:", error);
 
-      // Check for specific camera errors
+      // Handle different types of errors more specifically
+      let errorMessage = "Không thể mở máy ảnh";
+
       if (
-        error.message.includes("Camera not available") ||
-        error.message.includes("simulator")
+        error.message?.includes("Camera not available") ||
+        error.message?.includes("simulator") ||
+        error.message?.includes("No camera available")
       ) {
-        Alert.alert(
-          "Máy ảnh không khả dụng",
-          "Máy ảnh không hoạt động trên simulator. Vui lòng sử dụng thiết bị thật hoặc chọn ảnh từ thư viện."
-        );
-      } else {
-        Alert.alert("Lỗi", "Không thể mở máy ảnh");
+        errorMessage =
+          "Máy ảnh không khả dụng trên thiết bị này. Vui lòng chọn ảnh từ thư viện.";
+      } else if (error.message?.includes("Permission")) {
+        errorMessage =
+          "Không có quyền truy cập máy ảnh. Vui lòng cấp quyền trong Cài đặt.";
+      } else if (error.message?.includes("User cancelled")) {
+        // Don't show error for user cancellation
+        return;
       }
+
+      Alert.alert("Lỗi", errorMessage);
     }
   };
 
   const uploadAvatar = async (imageAsset) => {
-    if (!imageAsset.uri) return;
+    if (!imageAsset?.uri) {
+      Alert.alert("Lỗi", "Không thể đọc thông tin ảnh");
+      return;
+    }
 
     setUploadingAvatar(true);
     try {
@@ -194,7 +271,17 @@ const AccountScreen = () => {
 
       // Extract file extension from URI
       const uriParts = imageAsset.uri.split(".");
-      const fileType = uriParts[uriParts.length - 1];
+      const fileType = uriParts[uriParts.length - 1] || "jpg";
+
+      // Validate file type
+      const allowedTypes = ["jpg", "jpeg", "png", "webp"];
+      if (!allowedTypes.includes(fileType.toLowerCase())) {
+        Alert.alert(
+          "Lỗi",
+          "Định dạng ảnh không được hỗ trợ. Vui lòng chọn file JPG, PNG hoặc WEBP"
+        );
+        return;
+      }
 
       formData.append("file", {
         uri: imageAsset.uri,
@@ -247,19 +334,26 @@ const AccountScreen = () => {
 
       Alert.alert(
         "Thành công",
-        "Cập nhật ảnh đại diện thành công! Avatar đã được cập nhật "
+        "Cập nhật ảnh đại diện thành công! Avatar đã được cập nhật"
       );
     } catch (error) {
       console.error("Error uploading avatar:", error);
 
       // Handle different types of errors
       let errorMessage = "Không thể cập nhật ảnh đại diện";
+
       if (error.response?.status === 413) {
-        errorMessage = "Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn";
+        errorMessage = "Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 5MB";
       } else if (error.response?.status === 400) {
-        errorMessage = "Định dạng ảnh không được hỗ trợ";
+        errorMessage = "Định dạng ảnh không được hỗ trợ hoặc file bị lỗi";
+      } else if (error.response?.status === 401) {
+        errorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại";
+      } else if (error.response?.status === 500) {
+        errorMessage = "Lỗi máy chủ. Vui lòng thử lại sau";
       } else if (error.message === "Network Error") {
-        errorMessage = "Lỗi kết nối mạng. Vui lòng thử lại";
+        errorMessage = "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối và thử lại";
+      } else if (error.code === "ENOTFOUND") {
+        errorMessage = "Không thể kết nối tới máy chủ. Vui lòng thử lại";
       }
 
       Alert.alert("Lỗi", errorMessage);
