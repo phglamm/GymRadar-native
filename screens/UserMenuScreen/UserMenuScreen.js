@@ -265,7 +265,7 @@ export default function UserMenuScreen() {
 
         {/* Version Info */}
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
+          <Text style={styles.versionText}>Phiên bản 1.2025.01</Text>
         </View>
       </ScrollView>
 
