@@ -39,7 +39,7 @@ const authService = {
     } catch (error) {
       console.error("Token validation failed:", error);
       // Token is invalid, remove it
-      await AsyncStorage.multiRemove(["token", "user"]);
+      await AsyncStorage.multiRemove(["token", "user", "userAvatar"]);
       return { isValid: false };
     }
   },
@@ -47,7 +47,7 @@ const authService = {
   // Logout method to clear stored data
   logout: async () => {
     try {
-      await AsyncStorage.multiRemove(["token", "user"]);
+      await AsyncStorage.multiRemove(["token", "user", "userAvatar"]);
       return true;
     } catch (error) {
       console.error("Logout error:", error);

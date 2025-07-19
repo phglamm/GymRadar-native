@@ -42,13 +42,21 @@ export const AvatarProvider = ({ children }) => {
       setUserAvatar(newAvatarUrl);
 
       // Save to AsyncStorage for persistence
-      await AsyncStorage.setItem("userAvatar", newAvatarUrl);
+      if (newAvatarUrl === null || newAvatarUrl === undefined) {
+        await AsyncStorage.removeItem("userAvatar");
+      } else {
+        await AsyncStorage.setItem("userAvatar", newAvatarUrl);
+      }
 
       // Also update the user object in AsyncStorage if it exists
       const userData = await AsyncStorage.getItem("user");
       if (userData) {
         const user = JSON.parse(userData);
-        user.avatar = newAvatarUrl;
+        if (newAvatarUrl === null || newAvatarUrl === undefined) {
+          delete user.avatar;
+        } else {
+          user.avatar = newAvatarUrl;
+        }
         await AsyncStorage.setItem("user", JSON.stringify(user));
       }
 
@@ -75,7 +83,7 @@ export const AvatarProvider = ({ children }) => {
   const getAvatarUrl = () => {
     return (
       userAvatar ||
-      "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNL_ZnOTpXSvhf1UaK7beHey2BX42U6solRA&s"
     );
   };
 
@@ -99,6 +107,15 @@ export const AvatarProvider = ({ children }) => {
         console.log("🔄 Syncing avatar from user data:", userData.avatar);
         setUserAvatar(userData.avatar);
         await AsyncStorage.setItem("userAvatar", userData.avatar);
+      } else if (
+        userData &&
+        (userData.avatar === null || userData.avatar === undefined)
+      ) {
+        console.log(
+          "🔄 Clearing avatar from user data (null/undefined received)"
+        );
+        setUserAvatar("");
+        await AsyncStorage.removeItem("userAvatar");
       }
     } catch (error) {
       console.error("❌ Error syncing avatar from user data:", error);

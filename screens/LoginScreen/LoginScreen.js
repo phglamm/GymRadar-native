@@ -20,8 +20,8 @@ import { useNavigation } from "@react-navigation/native";
 import authService from "../../services/authService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function LoginScreen() {
-  const [phone, setPhone] = useState("0973035305");
-  const [password, setPassword] = useState("0973035305");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
   const [secureText, setSecureText] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
@@ -36,8 +36,8 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     const requestData = {
-      phone,
-      password,
+      phone: phone.trim(),
+      password: password.trim(),
     };
 
     try {
@@ -53,7 +53,14 @@ export default function LoginScreen() {
           role: response.data.role,
         };
         await AsyncStorage.setItem("user", JSON.stringify(user));
-        await AsyncStorage.setItem("userAvatar", response.data.avatar);
+
+        // Handle avatar - only store if it's not null/undefined
+        if (response.data.avatar) {
+          await AsyncStorage.setItem("userAvatar", response.data.avatar);
+        } else {
+          // Remove any existing avatar if the response doesn't have one
+          await AsyncStorage.removeItem("userAvatar");
+        }
 
         // Update navigation state - this will automatically redirect to MainApp
         if (global.updateNavigationUser) {
