@@ -13,12 +13,10 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CarouselNative from "../../components/Carousel/Carousel";
 import { TouchableOpacity } from "react-native";
-import { StarRatingDisplay } from "react-native-star-rating-widget";
 import { useNavigation } from "@react-navigation/native";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";
 const { width } = Dimensions.get("window");
-import AntDesign from "@expo/vector-icons/AntDesign";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import gymService from "../../services/gymService";
@@ -26,8 +24,6 @@ import MapView, { Marker } from "react-native-maps";
 import { ActivityIndicator } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useCart } from "../../context/CartContext";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
-import { SafeAreaView } from "react-native";
 
 export default function GymDetailScreen({ route }) {
   const { gymId } = route.params;

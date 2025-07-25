@@ -54,7 +54,6 @@
     },
     "owner": "lamphong1507",
     "plugins": [
-      "expo-iap",
       [
         "expo-image-picker",
         {
