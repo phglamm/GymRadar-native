@@ -25,7 +25,9 @@
     "expo": "53.0.15",
     "expo-constants": "~17.1.6",
     "expo-dev-client": "~5.2.4",
+    "expo-device": "~7.1.4",
     "expo-iap": "^2.5.2",
+    "expo-image-picker": "~16.1.4",
     "expo-linear-gradient": "~14.1.5",
     "expo-linking": "~7.1.6",
     "expo-location": "~18.1.6",
@@ -49,15 +51,11 @@
     "react-native-reanimated-carousel": "^4.0.2",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "~4.11.1",
-    "react-native-star-rating-widget": "^1.9.2",
     "react-native-swiper": "^1.6.0",
-    "react-native-toast-message": "^2.3.0",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
-    "reanimated-bottom-sheet": "^1.0.0-alpha.22",
-    "expo-image-picker": "~16.1.4",
-    "expo-device": "~7.1.4"
+    "reanimated-bottom-sheet": "^1.0.0-alpha.22"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
