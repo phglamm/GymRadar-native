@@ -6,6 +6,9 @@ import {
   Image,
   ScrollView,
   Alert,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CarouselNative from "../../components/Carousel/Carousel";
@@ -18,7 +21,6 @@ const { width } = Dimensions.get("window");
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import Toast from "react-native-toast-message";
 import gymService from "../../services/gymService";
 import MapView, { Marker } from "react-native-maps";
 import { ActivityIndicator } from "react-native";
@@ -39,6 +41,14 @@ export default function GymDetailScreen({ route }) {
   const [lowestPackage, setLowestPackage] = useState(null);
   const { cart, addToCart, getCartCount } = useCart();
   const navigation = useNavigation();
+
+  // Comment-related states
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsPage, setCommentsPage] = useState(1);
+  const [hasMoreComments, setHasMoreComments] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [isPostingComment, setIsPostingComment] = useState(false);
 
   useEffect(() => {
     const fetchGymDetail = async () => {
@@ -78,37 +88,68 @@ export default function GymDetailScreen({ route }) {
 
     fetchGymDetail();
     fetchCourseGym();
+    fetchComments();
   }, [gymId]);
 
-  const comments = [
-    {
-      id: 1,
-      name: "Nguyễn Văn A",
-      comment: "Gym rất đẹp, nhân viên thân thiện",
-      rating: 5,
-      avatar:
-        "https://static.vecteezy.com/system/resources/thumbnails/027/951/137/small_2x/stylish-spectacles-guy-3d-avatar-character-illustrations-png.png",
-      date: "2023-10-01",
-    },
-    {
-      id: 2,
-      name: "Nguyễn Văn B",
-      comment: "Giá cả hợp lý, dịch vụ tốt",
-      rating: 4,
-      avatar:
-        "https://static.vecteezy.com/system/resources/thumbnails/027/951/137/small_2x/stylish-spectacles-guy-3d-avatar-character-illustrations-png.png",
-      date: "2023-10-02",
-    },
-    {
-      id: 3,
-      name: "Nguyễn Văn C",
-      comment: "Không gian rộng rãi, thoáng mát",
-      avatar:
-        "https://static.vecteezy.com/system/resources/thumbnails/027/951/137/small_2x/stylish-spectacles-guy-3d-avatar-character-illustrations-png.png",
-      date: "2023-10-03",
-      rating: 5,
-    },
-  ];
+  // Fetch comments function
+  const fetchComments = async (page = 1, reset = false) => {
+    setCommentsLoading(true);
+    try {
+      const response = await gymService.getCommentsByGymId(gymId, {
+        page,
+        size: 3,
+      });
+
+      const { items, totalPages } = response.data;
+
+      if (reset || page === 1) {
+        setComments(items);
+      } else {
+        setComments((prevComments) => [...prevComments, ...items]);
+      }
+
+      setCommentsPage(page);
+      setHasMoreComments(page < totalPages);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      Alert.alert("Lỗi", "Không thể tải bình luận");
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  // Post comment function
+  const handlePostComment = async () => {
+    if (!newComment.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận");
+      return;
+    }
+
+    setIsPostingComment(true);
+    try {
+      await gymService.postComment(gymId, {
+        content: newComment.trim(),
+      });
+
+      setNewComment("");
+      Alert.alert("Thành công", "Bình luận thành công");
+
+      // Refresh comments
+      fetchComments(1, true);
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      Alert.alert("Lỗi", "Không thể đăng bình luận");
+    } finally {
+      setIsPostingComment(false);
+    }
+  };
+
+  // Load more comments
+  const handleLoadMoreComments = () => {
+    if (!commentsLoading && hasMoreComments) {
+      fetchComments(commentsPage + 1);
+    }
+  };
 
   if (loading) {
     return (
@@ -191,9 +232,9 @@ export default function GymDetailScreen({ route }) {
     navigation.navigate("PTinCourseScreen", { gymPackage: gymPackage });
   };
 
-  const averageRating =
-    comments.reduce((sum, comment) => sum + comment.rating, 0) /
-    comments.length;
+  // Since the API doesn't return ratings in comments, we'll use a default rating
+  const averageRating = 4.5; // You can make this dynamic based on your requirements
+  const totalReviews = comments.length;
 
   return (
     <View style={styles.container}>
@@ -212,128 +253,160 @@ export default function GymDetailScreen({ route }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Enhanced Carousel with Overlay */}
-        <View style={styles.carouselContainer}>
-          <CarouselNative
-            width={width}
-            height={350}
-            autoPlay={true}
-            scrollAnimationDuration={1000}
-            style={styles.carousel}
-            data={
-              gymDetail?.images || [
-                "https://levelfyc.com/wp-content/uploads/2024/08/khong-gian-4.jpg",
-              ]
-            }
-          />
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.7)"]}
-            style={styles.carouselOverlay}
-          />
-        </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Enhanced Carousel with Overlay */}
+          <View style={styles.carouselContainer}>
+            <CarouselNative
+              width={width}
+              height={350}
+              autoPlay={true}
+              scrollAnimationDuration={1000}
+              style={styles.carousel}
+              data={
+                gymDetail?.images || [
+                  "https://levelfyc.com/wp-content/uploads/2024/08/khong-gian-4.jpg",
+                ]
+              }
+            />
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.7)"]}
+              style={styles.carouselOverlay}
+            />
+          </View>
 
-        {/* Enhanced Main Card */}
-        <View style={styles.cardDetail}>
-          <View style={styles.headerSection}>
-            <View style={styles.titleContainer}>
-              <Text style={styles.gymName}>{gymDetail?.gymName}</Text>
-              {gymDetail.hotResearch && (
-                <View style={styles.hotBadge}>
-                  <FontAwesome6 name="fire" size={14} color="#FFF" />
-                  <Text style={styles.hotText}>HOT</Text>
+          {/* Enhanced Main Card */}
+          <View style={styles.cardDetail}>
+            <View style={styles.headerSection}>
+              <View style={styles.titleContainer}>
+                <Text style={styles.gymName}>{gymDetail?.gymName}</Text>
+                {gymDetail.hotResearch && (
+                  <View style={styles.hotBadge}>
+                    <FontAwesome6 name="fire" size={14} color="#FFF" />
+                    <Text style={styles.hotText}>HOT</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.locationContainer}>
+                <Ionicons name="location-outline" size={16} color="#666" />
+                <Text style={styles.gymAddress}>{gymDetail?.address}</Text>
+              </View>
+
+              <View style={styles.priceRatingContainer}>
+                <View style={styles.priceContainer}>
+                  <Text style={styles.priceLabel}>Từ </Text>
+                  <Text style={styles.gymStartPrice}>
+                    {lowestPackage?.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    })}
+                  </Text>
+                  <Text style={styles.priceUnit}>/tháng</Text>
                 </View>
-              )}
-            </View>
 
-            <View style={styles.locationContainer}>
-              <Ionicons name="location-outline" size={16} color="#666" />
-              <Text style={styles.gymAddress}>{gymDetail?.address}</Text>
-            </View>
-
-            <View style={styles.priceRatingContainer}>
-              <View style={styles.priceContainer}>
-                <Text style={styles.priceLabel}>Từ </Text>
-                <Text style={styles.gymStartPrice}>
-                  {lowestPackage?.toLocaleString("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  })}
-                </Text>
-                <Text style={styles.priceUnit}>/tháng</Text>
-              </View>
-
-              <View style={styles.ratingBadge}>
-                <Ionicons name="star" size={16} color="#FFD700" />
-                <Text style={styles.ratingText}>
-                  {averageRating.toFixed(1)}
-                </Text>
-                <Text style={styles.reviewCount}>({comments.length})</Text>
+                <View style={styles.ratingBadge}>
+                  <Ionicons name="star" size={16} color="#FFD700" />
+                  <Text style={styles.ratingText}>
+                    {averageRating.toFixed(1)}
+                  </Text>
+                  <Text style={styles.reviewCount}>({totalReviews})</Text>
+                </View>
               </View>
             </View>
-          </View>
 
-          {/* Enhanced Action Buttons */}
-          <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.secondaryButton]}
-              onPress={() => navigation.navigate("GymPTScreen", { gymId })}
-            >
-              <MaterialIcons name="fitness-center" size={20} color="#ED2A46" />
-              <Text style={styles.secondaryButtonText}>Danh Sách PT</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, styles.primaryButton]}
-              onPress={() => bottomSheetRef.current?.expand()}
-            >
-              <Ionicons name="list-outline" size={20} color="#FFF" />
-              <Text style={styles.primaryButtonText}>Gói Tập Luyện</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Enhanced Description Section */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeader}>
-              <Ionicons
-                name="information-circle-outline"
-                size={20}
-                color="#ED2A46"
-              />
-              <Text style={styles.sectionTitle}>Mô tả</Text>
-            </View>
-            <Text style={styles.descriptionText}>
-              {gymDetail?.description ||
-                "Loren ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"}
-            </Text>
-          </View>
-
-          {/* Enhanced Map Section */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="map-outline" size={20} color="#ED2A46" />
-              <Text style={styles.sectionTitle}>Vị trí</Text>
-            </View>
-
-            <View style={styles.mapContainer}>
-              <MapView
-                ref={mapRef}
-                style={styles.map}
-                initialRegion={{
-                  longitude: gymDetail?.longitude || 106.6297,
-                  latitude: gymDetail?.latitude || 10.8231,
-                  longitudeDelta: 0.01,
-                  latitudeDelta: 0.01,
-                }}
-                showsPointsOfInterest={false}
-                zoomEnabled={false}
-                scrollEnabled={false}
+            {/* Enhanced Action Buttons */}
+            <View style={styles.actionButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.secondaryButton]}
+                onPress={() => navigation.navigate("GymPTScreen", { gymId })}
               >
-                <Marker
-                  coordinate={{
-                    longitude: gymDetail?.longitude,
-                    latitude: gymDetail?.latitude,
+                <MaterialIcons
+                  name="fitness-center"
+                  size={20}
+                  color="#ED2A46"
+                />
+                <Text style={styles.secondaryButtonText}>Danh Sách PT</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.primaryButton]}
+                onPress={() => bottomSheetRef.current?.expand()}
+              >
+                <Ionicons name="list-outline" size={20} color="#FFF" />
+                <Text style={styles.primaryButtonText}>Gói Tập Luyện</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Enhanced Description Section */}
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={20}
+                  color="#ED2A46"
+                />
+                <Text style={styles.sectionTitle}>Mô tả</Text>
+              </View>
+              <Text style={styles.descriptionText}>
+                {gymDetail?.description ||
+                  "Loren ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"}
+              </Text>
+            </View>
+
+            {/* Enhanced Map Section */}
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <Ionicons name="map-outline" size={20} color="#ED2A46" />
+                <Text style={styles.sectionTitle}>Vị trí</Text>
+              </View>
+
+              <View style={styles.mapContainer}>
+                <MapView
+                  ref={mapRef}
+                  style={styles.map}
+                  initialRegion={{
+                    longitude: gymDetail?.longitude || 106.6297,
+                    latitude: gymDetail?.latitude || 10.8231,
+                    longitudeDelta: 0.01,
+                    latitudeDelta: 0.01,
                   }}
+                  showsPointsOfInterest={false}
+                  zoomEnabled={false}
+                  scrollEnabled={false}
+                >
+                  <Marker
+                    coordinate={{
+                      longitude: gymDetail?.longitude,
+                      latitude: gymDetail?.latitude,
+                    }}
+                    onPress={() => {
+                      navigation.navigate("Bản Đồ", {
+                        screen: "MapScreen",
+                        params: {
+                          longitude: gymDetail?.longitude,
+                          latitude: gymDetail?.latitude,
+                        },
+                      });
+                    }}
+                    tracksViewChanges={true}
+                  >
+                    <View style={styles.markerContainer}>
+                      <Image
+                        source={require("../../assets/LogoColor.png")}
+                        style={styles.markerImage}
+                      />
+                      {gymDetail.hotResearch && (
+                        <FontAwesome6 name="fire" size={20} color="#ED2A46" />
+                      )}
+                    </View>
+                  </Marker>
+                </MapView>
+                <TouchableOpacity
+                  style={styles.mapOverlay}
                   onPress={() => {
                     navigation.navigate("Bản Đồ", {
                       screen: "MapScreen",
@@ -343,73 +416,110 @@ export default function GymDetailScreen({ route }) {
                       },
                     });
                   }}
-                  tracksViewChanges={true}
                 >
-                  <View style={styles.markerContainer}>
-                    <Image
-                      source={require("../../assets/LogoColor.png")}
-                      style={styles.markerImage}
-                    />
-                    {gymDetail.hotResearch && (
-                      <FontAwesome6 name="fire" size={20} color="#ED2A46" />
-                    )}
-                  </View>
-                </Marker>
-              </MapView>
-              <TouchableOpacity
-                style={styles.mapOverlay}
-                onPress={() => {
-                  navigation.navigate("Bản Đồ", {
-                    screen: "MapScreen",
-                    params: {
-                      longitude: gymDetail?.longitude,
-                      latitude: gymDetail?.latitude,
-                    },
-                  });
-                }}
-              >
-                <Text style={styles.mapOverlayText}>
-                  Nhấn để xem bản đồ đầy đủ
-                </Text>
-              </TouchableOpacity>
+                  <Text style={styles.mapOverlayText}>
+                    Nhấn để xem bản đồ đầy đủ
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Enhanced Reviews Section */}
-        <View style={styles.reviewsSection}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="chatbubbles-outline" size={20} color="#ED2A46" />
-            <Text style={styles.sectionTitle}>Đánh Giá & Nhận Xét</Text>
-          </View>
+          {/* Enhanced Reviews Section */}
+          <View style={styles.reviewsSection}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="chatbubbles-outline" size={20} color="#ED2A46" />
+              <Text style={styles.sectionTitle}>Bình Luận & Nhận Xét</Text>
+            </View>
 
-          <View style={styles.reviewsContainer}>
-            {comments.map((comment) => (
-              <View key={comment.id} style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <View style={styles.userInfo}>
-                    <Image
-                      source={{ uri: comment.avatar }}
-                      style={styles.avatar}
-                    />
-                    <View style={styles.userDetails}>
-                      <Text style={styles.userName}>{comment.name}</Text>
-                      <Text style={styles.reviewDate}>{comment.date}</Text>
+            {/* Comment Input Section */}
+            <View style={styles.commentInputContainer}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Viết bình luận của bạn..."
+                value={newComment}
+                onChangeText={setNewComment}
+                multiline
+                numberOfLines={3}
+                maxLength={500}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.postCommentButton,
+                  !newComment.trim() && styles.postCommentButtonDisabled,
+                ]}
+                onPress={handlePostComment}
+                disabled={isPostingComment || !newComment.trim()}
+              >
+                {isPostingComment ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Ionicons name="send" size={20} color="#FFF" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.reviewsContainer}>
+              {comments.map((comment) => (
+                <View key={comment.id} style={styles.reviewCard}>
+                  <View style={styles.reviewHeader}>
+                    <View style={styles.userInfo}>
+                      <View style={styles.avatarPlaceholder}>
+                        <Image
+                          source={{
+                            uri:
+                              comment.avatar ||
+                              "https://static.vecteezy.com/system/resources/thumbnails/027/951/137/small_2x/stylish-spectacles-guy-3d-avatar-character-illustrations-png.png",
+                          }}
+                          style={styles.avatarImage}
+                        />
+                      </View>
+                      <View style={styles.userDetails}>
+                        <Text style={styles.userName}>{comment.fullName}</Text>
+                        <Text style={styles.reviewDate}>
+                          {new Date(comment.createAt).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                  <StarRatingDisplay
-                    starSize={18}
-                    rating={comment?.rating || 0}
-                    maxStars={5}
-                    enableHalfStar={true}
-                  />
+                  <Text style={styles.reviewText}>{comment.content}</Text>
                 </View>
-                <Text style={styles.reviewText}>{comment.comment}</Text>
-              </View>
-            ))}
+              ))}
+
+              {/* Load More Button */}
+              {hasMoreComments && (
+                <TouchableOpacity
+                  style={styles.loadMoreButton}
+                  onPress={handleLoadMoreComments}
+                  disabled={commentsLoading}
+                >
+                  {commentsLoading ? (
+                    <ActivityIndicator size="small" color="#ED2A46" />
+                  ) : (
+                    <>
+                      <Text style={styles.loadMoreText}>
+                        Xem thêm bình luận
+                      </Text>
+                      <Ionicons name="chevron-down" size={16} color="#ED2A46" />
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+
+              {comments.length === 0 && !commentsLoading && (
+                <View style={styles.emptyCommentsContainer}>
+                  <Ionicons name="chatbubbles-outline" size={48} color="#CCC" />
+                  <Text style={styles.emptyCommentsText}>
+                    Chưa có bình luận nào. Hãy là người đầu tiên!
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Enhanced Bottom Sheet */}
       <BottomSheet
@@ -998,5 +1108,95 @@ const styles = StyleSheet.create({
     backgroundColor: "#4CAF50",
     borderRadius: 20,
     padding: 8,
+  },
+
+  // Comment Input Styles
+  commentInputContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginBottom: 20,
+    gap: 12,
+  },
+
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    textAlignVertical: "top",
+    maxHeight: 100,
+    backgroundColor: "#F8F9FA",
+  },
+
+  postCommentButton: {
+    backgroundColor: "#ED2A46",
+    borderRadius: 25,
+    width: 50,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#ED2A46",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+
+  postCommentButtonDisabled: {
+    backgroundColor: "#CCC",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+
+  // Updated Avatar Styles
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F0F0F0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
+  },
+
+  // Load More Button Styles
+  loadMoreButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: "#ED2A46",
+    borderRadius: 25,
+    marginTop: 16,
+    gap: 8,
+  },
+
+  loadMoreText: {
+    color: "#ED2A46",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  // Empty Comments Styles
+  emptyCommentsContainer: {
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+
+  emptyCommentsText: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    marginTop: 12,
   },
 });
