@@ -4,8 +4,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
+  BackHandler,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import cartService from "../../services/cartService";
 
 const THEME_COLORS = {
@@ -23,31 +26,25 @@ export default function OrderSuccessScreen({ route, navigation }) {
 
   // Get order data from route params if available
   const { orderCode } = route?.params || {};
+  const { code } = route?.params || {};
+  const { amount } = route?.params || {};
 
-  useEffect(() => {
-    const params = {
-      orderCode: orderCode, // Default order code for testing
-    };
-    // Simulate API call to check order status
-    const interval = setInterval(async () => {
-      const response = await cartService.checkStatus(params);
-      setOrderStatus(response.data.status === "00" ? "success" : "failed"); // Update order status based on API response
-      if (response.data.status === "00") {
-        clearInterval(interval); // Stop checking if order is successful
+  useFocusEffect(
+    useCallback(() => {
+      setOrderStatus(code === "00" ? "success" : "failed"); // Update order status based on API response
+      if (code === "00") {
         setOrderData({
-          status: response.data.status, // Change this to test different scenarios
-          orderCode: response.data.orderCode || orderCode || "123456",
-          amount: response.data.amount || 100000, // Default amount if not provided
-          description: response.data.description || "Thanh toán đơn hàng",
+          status: code, // Change this to test different scenarios
+          orderCode: orderCode || "000000",
+          amount: amount || 0,
+          description: "Thanh toán đơn hàng thành công",
         });
         setOrderStatus("success");
-      } else if (response.data.status === "01") {
-        clearInterval(interval); // Stop checking if order is successful
+      } else if (code === "01") {
         setOrderStatus("failed");
       }
-    }, 5000); // Check every 5 seconds
-    return () => clearInterval(interval); // Cleanup interval on unmount
-  }, []);
+    }, [code, orderCode, amount])
+  );
 
   const formatAmount = (amount) => {
     return new Intl.NumberFormat("vi-VN", {

@@ -57,9 +57,6 @@ export default function PaymentScreen({ navigation }) {
 
       if (checkoutUrl && typeof checkoutUrl === "string") {
         Linking.openURL(checkoutUrl);
-        navigation.navigate("OrderSuccessScreen", {
-          orderCode: response.data.orderCode,
-        });
       } else {
         console.error("Invalid or missing checkoutUrl:", checkoutUrl);
         Alert.alert(
