@@ -155,6 +155,14 @@ const GymCard = ({ gym, onPress }) => {
               resizeMode="cover"
             />
           )}
+          {/* Distance Badge */}
+          {gym.distance_km !== undefined && (
+            <View style={styles.distanceBadge}>
+              <Text style={styles.distanceBadgeText}>
+                {gym.distance_km === 0 ? "< 0.1 km" : `${gym.distance_km} km`}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Gym Info */}
@@ -393,8 +401,8 @@ export default function ChatScreen({ navigation }) {
   const callChatAPI = async (prompt) => {
     const requestData = {
       prompt: prompt,
-      longtitude: coords.longitude, // Default to Saigon if no coords
       latitude: coords.latitude, // Default to Saigon if no coords
+      longitude: coords.longitude, // Default to Saigon if no coords
     };
 
     console.log("📡 Sending request to API:", requestData);
@@ -1026,13 +1034,36 @@ const styles = StyleSheet.create({
     height: 200,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
-
+    position: "relative",
     overflow: "hidden",
     // marginRight: 16,
   },
   gymImage: {
     width: "100%",
     height: "100%",
+  },
+  distanceBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  distanceBadgeText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "center",
   },
   placeholderImage: {
     width: "100%",

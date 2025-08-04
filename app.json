@@ -3,7 +3,7 @@
     "name": "GymRadar",
     "scheme": "gymradar",
     "slug": "gymradar",
-    "version": "1.2025.01",
+    "version": "1.2025.03",
     "orientation": "portrait",
     "icon": "./assets/LogoColor.png",
     "userInterfaceStyle": "light",
