@@ -389,8 +389,6 @@ export default function Navigator() {
         >
           {() => (
             <TopTab.Navigator
-              lazy={true}
-              lazyPreloadDistance={0}
               screenOptions={{
                 tabBarIndicatorStyle: {
                   backgroundColor: "#ED2A46",
@@ -404,6 +402,11 @@ export default function Navigator() {
                   borderBottomColor: "#E0E0E0",
                 },
                 tabBarActiveTintColor: "#ED2A46",
+                tabBarInactiveTintColor: "#666",
+                tabBarLabelStyle: {
+                  fontWeight: "bold",
+                  fontSize: 14,
+                },
               }}
             >
               <TopTab.Screen
