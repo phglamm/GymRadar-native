@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { TouchableWithoutFeedback } from "react-native";
 import {
   View,
@@ -375,37 +376,75 @@ export default function ChatScreen({ navigation }) {
       keyboardDidHideListener?.remove();
     };
   }, []);
-  useEffect(() => {
-    const fetchLocation = async () => {
-      try {
-        // First try to get cached location
-        const userLocation = await AsyncStorage.getItem("userLocation");
-        if (userLocation !== null) {
-          const parsed = JSON.parse(userLocation);
-          console.log("📍 Using cached location:", parsed.coords);
-          setCoords(parsed.coords);
-        } else {
-          // If no cached location, request fresh location
-          console.log("🔄 No cached location, requesting fresh location...");
-          await requestFreshLocation();
-        }
-      } catch (error) {
-        console.log("❌ Error reading user location:", error);
-        await requestFreshLocation();
-      }
-    };
-    fetchLocation();
-  }, []);
 
-  // API call function
+  // Fetch location every time the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      const fetchLocation = async () => {
+        try {
+          console.log("🔄 Fetching location on screen focus...");
+
+          // First try to get cached location
+          const userLocation = await AsyncStorage.getItem("userLocation");
+          if (userLocation !== null) {
+            const parsed = JSON.parse(userLocation);
+            console.log("📍 Using cached location:", parsed.coords);
+            setCoords(parsed.coords);
+          } else {
+            // If no cached location, use default coordinates (Ho Chi Minh City center)
+            console.log("🔄 No cached location, using default coordinates");
+            const defaultCoords = {
+              latitude: 10.776889,
+              longitude: 106.700981,
+            };
+            setCoords(defaultCoords);
+            console.log("📍 Set default location:", defaultCoords);
+          }
+        } catch (error) {
+          console.log("❌ Error reading user location:", error);
+          // Use default coordinates as fallback
+          const fallbackCoords = {
+            latitude: 10.776889,
+            longitude: 106.700981,
+          };
+          setCoords(fallbackCoords);
+          console.log("📍 Using fallback location:", fallbackCoords);
+        }
+      };
+
+      fetchLocation();
+    }, [])
+  );
+
+  // Format messages for API conversation history
+  const formatConversationHistory = (messages) => {
+    return messages
+      .filter((msg) => msg.role) // Only include messages with roles
+      .map((msg) => ({
+        role: msg.role,
+        content: msg.text,
+        timestamp: msg.timestamp
+          ? msg.timestamp.toISOString()
+          : new Date().toISOString(),
+      }));
+  };
+
+  // API call function with conversation history
   const callChatAPI = async (prompt) => {
+    // Format current conversation history for the request
+    const conversationHistory = formatConversationHistory(messages);
+
     const requestData = {
       prompt: prompt,
-      latitude: coords.latitude, // Default to Saigon if no coords
-      longitude: coords.longitude, // Default to Saigon if no coords
+      longitude: coords.longitude,
+      latitude: coords.latitude,
+      conversation_history: conversationHistory, // Include conversation history
     };
 
     console.log("📡 Sending request to API:", requestData);
+
+    // Log detailed conversation history for debugging
+
     try {
       const response = await chatbotService.sendMessage(requestData);
       return response.data || response; // Handle both data and direct response
@@ -455,10 +494,11 @@ export default function ChatScreen({ navigation }) {
     if (inputText.trim() === "" || isLoading) return;
 
     const userMessage = {
-      id: Date.now(),
+      id: "user-" + Date.now(),
       text: inputText,
       isAI: false,
       timestamp: new Date(),
+      role: "user",
     };
 
     const userPrompt = inputText.trim();
@@ -488,23 +528,34 @@ export default function ChatScreen({ navigation }) {
       }
 
       const aiResponse = {
-        id: Date.now() + 1,
+        id: "ai-" + Date.now(),
         text: aiResponseText,
         isAI: true,
         timestamp: new Date(),
+        role: "assistant",
         gyms: gyms, // Store gyms data for card rendering
         hasGyms: gyms && gyms.length > 0, // Flag to indicate this message has gym cards
       };
 
       setMessages((prev) => [...prev, aiResponse]);
+
+      // Log conversation history response if available
+      if (response.conversation_history) {
+        console.log(
+          "📜 Server returned conversation history with",
+          response.conversation_history.length,
+          "messages"
+        );
+      }
     } catch (error) {
       console.error("Error sending message:", error);
 
       const errorMessage = {
-        id: Date.now() + 1,
+        id: "error-" + Date.now(),
         text: "Xin lỗi, đã có lỗi xảy ra khi kết nối với server. Vui lòng thử lại sau.",
         isAI: true,
         timestamp: new Date(),
+        role: "assistant",
         isError: true,
       };
 
