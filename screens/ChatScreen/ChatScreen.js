@@ -18,6 +18,7 @@ import {
   Image,
   Dimensions,
 } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import chatbotService from "../../services/chatbotService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -183,15 +184,54 @@ const GymCard = ({ gym, onPress }) => {
 
 // Gym Cards List Component
 const GymCardsList = ({ gyms, onGymPress }) => {
+  const [visibleCount, setVisibleCount] = useState(
+    Math.max(3, Math.min(gyms.length, 3))
+  );
+  const initialCount = Math.max(3, Math.min(gyms.length, 3));
+  const hasMore = visibleCount < gyms.length;
+  const canCollapse = visibleCount > initialCount;
+
+  const handleShowMore = () => {
+    setVisibleCount((prev) => Math.min(prev + 5, gyms.length));
+  };
+
+  const handleCollapse = () => {
+    setVisibleCount(initialCount);
+  };
+
   return (
     <View style={styles.gymCardsContainer}>
       <FlatList
-        data={gyms}
+        data={gyms.slice(0, visibleCount)}
         renderItem={({ item }) => <GymCard gym={item} onPress={onGymPress} />}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={false} // Disable scroll since it's inside another FlatList
+        scrollEnabled={false}
       />
+
+      <View style={styles.buttonContainer}>
+        {hasMore && (
+          <TouchableOpacity
+            style={styles.showMoreButton}
+            onPress={handleShowMore}
+          >
+            <Text style={styles.showMoreText}>
+              Hiển thị thêm 5 gym ({gyms.length - visibleCount} còn lại)
+            </Text>
+            <Ionicons name="chevron-down" size={16} color="#ED2A46" />
+          </TouchableOpacity>
+        )}
+
+        {canCollapse && (
+          <TouchableOpacity
+            style={styles.collapseButton}
+            onPress={handleCollapse}
+          >
+            <Text style={styles.collapseText}>Thu gọn</Text>
+            <Ionicons name="chevron-up" size={16} color="#666" />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };
@@ -1149,6 +1189,51 @@ const styles = StyleSheet.create({
   gymSince: {
     fontSize: 13,
     color: "#9CA3AF",
+  },
+
+  // Show More Button Styles
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+    marginHorizontal: 8,
+    gap: 8,
+  },
+  showMoreButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF5F6",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ED2A46",
+  },
+  showMoreText: {
+    fontSize: 14,
+    color: "#ED2A46",
+    fontWeight: "600",
+    marginRight: 8,
+  },
+  collapseButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8F9FA",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    minWidth: 100,
+  },
+  collapseText: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "600",
+    marginRight: 8,
   },
 
   // Typing indicator styles

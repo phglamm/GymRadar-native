@@ -187,7 +187,8 @@ export default function HomeScreen() {
   const renderBlogCard = (item) => {
     return <BlogCard blog={item} />;
   };
-
+  const hotResearchGym = allGyms.filter((gym) => gym.hotResearch === true);
+  console.log(allGyms);
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <HeaderHome user={user} />
@@ -234,14 +235,14 @@ export default function HomeScreen() {
                   <ActivityIndicator size="large" color="#ED2A46" />
                 </View>
               </>
-            ) : allGyms && allGyms.length > 0 ? (
+            ) : hotResearchGym && hotResearchGym.length > 0 ? (
               <PairedSwiper
-                data={allGyms}
+                data={hotResearchGym}
                 renderItem={renderGymCard}
                 showsPagination={true}
                 itemsPerSlide={2}
                 height={240}
-                loop={allGyms.length > 2}
+                loop={hotResearchGym.length > 2}
                 dotStyle={styles.paginationDot}
                 activeDotStyle={styles.activePaginationDot}
                 containerStyle={styles.swiperContainer}
